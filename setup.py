@@ -39,7 +39,7 @@ setup(
     include_package_data=True,
     keywords='rltg',
     name='rltg',
-    packages=find_packages(include=['rltg']),
+    packages=find_packages(include=['rltg*']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,

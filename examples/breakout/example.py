@@ -1,10 +1,9 @@
 from breakout_env.envs.Breakout import Breakout
-from breakout_env.wrappers.observation_wrappers import BreakoutDiscreteStateWrapper, BreakoutFullObservableStateWrapper
+from breakout_env.wrappers.observation_wrappers import BreakoutFullObservableStateWrapper
 from gym.spaces import Discrete
 
 from examples.breakout.breakout_example import BreakoutBUTemporalEvaluator
-from rltg.Renderer import Renderer
-from rltg.agents.RLAgent import RLAgent
+from rltg.utils.Renderer import Renderer
 from rltg.agents.TGAgent import TGAgent
 from rltg.brains.TDBrain import Sarsa
 from rltg.exploration_policies.RandomPolicyWithDecay import RandomPolicy
