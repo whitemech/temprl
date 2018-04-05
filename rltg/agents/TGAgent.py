@@ -1,38 +1,26 @@
-from abc import abstractmethod
-
 from typing import List
 
 from rltg.agents.RLAgent import RLAgent
-from rltg.brains.Brain import Brain
-from rltg.exploration_policies.ExplorationPolicy import ExplorationPolicy
-from rltg.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
+from rltg.agents.feature_extraction import FeatureExtractor
+from rltg.agents.brains.Brain import Brain
+from rltg.agents.exploration_policies import ExplorationPolicy
+from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
 
 
 class TGAgent(RLAgent):
     def __init__(self,
+                 sensors: FeatureExtractor,
                  exploration_policy:ExplorationPolicy,
                  brain:Brain,
                  temporal_evaluators:List[TemporalEvaluator]):
-        super().__init__(exploration_policy, brain)
+        super().__init__(sensors, exploration_policy, brain)
         self.temporal_evaluators = temporal_evaluators
 
 
-    # @abstractmethod
-    # def state_extractor(self, world_state, automata_states:List):
-    #     raise NotImplementedError
-    #
-    # @abstractmethod
-    # def reward_extractor(self, world_reward, automata_rewards:List):
-    #     raise NotImplementedError
-
     # TODO: make this component more generic, maybe in a separate module
     def state_extractor(self, world_state, automata_states: List):
-        res = world_state.encode_number_discretized()
-        res *= 105
-        for idx, states in enumerate(automata_states):
-            res += states
-            res *= len(self.temporal_evaluators[idx].automaton.states)
-        return res
+        state = tuple([world_state]+automata_states)
+        return state
 
     # TODO: make this component more generic, maybe in a separate module
     def reward_extractor(self, world_reward, automata_rewards: List):

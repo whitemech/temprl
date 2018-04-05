@@ -1,33 +1,67 @@
-def main():
-    env = None
-    agent = None
-    num_episodes = 0
-    # agent = RLAgent(env, RandomPolicyWithDecay(2), Sarsa(2))
+import numpy as np
+from gym import Env
 
-    # Main training loop
-    for ep in range(num_episodes):
-        t = 0
-        total_reward = 0
+from rltg.agents.RLAgent import RLAgent
+from rltg.utils.StatsManager import StatsManager
 
-        state = env.reset()
-        state, reward, done, info = env.step(1)
 
-        while not done:
-            action = agent.act(state)
-            state2, reward, done, info = env.step(action)
-            total_reward += reward
+def goal_perc_threshold(*args, **kwargs):
+    goal_percentage = kwargs["goal_percentage"]
+    return goal_percentage >= 100.00
 
-            agent.observe(state, action, reward, state2)
-            agent.replay()
 
-            state = state2
+ID2ACTION = {0: 2, 1: 3}
+class Trainer(object):
+    def __init__(self, env:Env, agent:RLAgent, stopping_conditions=[goal_perc_threshold], n_episodes=1000, resume=False):
+        self.env = env
+        self.agent = agent
+        self.stopping_conditions = stopping_conditions
+        self.n_episodes = n_episodes
+        self.resume = resume
 
-            if done:
+    def main(self):
+        env = self.env
+        agent = self.agent
+        num_episodes = self.n_episodes
+
+        stats = StatsManager()
+
+        if self.resume:
+            agent.load("agent_data")
+
+        # Main training loop
+        for ep in range(num_episodes):
+
+            total_reward = 0
+
+            state = env.reset()
+            state, reward, done, info = env.step(1)
+
+            while not done:
+                action = agent.act(state)
+                state2, reward, done, info = env.step(ID2ACTION[action])
+                # state2, reward, done, info = env.step(action)
+                total_reward += reward
+
+                agent.observe(state, action, reward, state2)
+                agent.replay()
+
+                state = state2
+
+                if done:
+                    break
+
+                agent.update()
+
+            stats.update(len(agent.brain.Q), total_reward, info["goal"])
+            stats.print_summary(ep, agent.brain.episode_iteration, len(agent.brain.Q), total_reward, agent.exploration_policy.epsilon, info["goal"])
+
+            if all([s(goal_percentage=np.mean(stats.goals[-300:])*100) for s in self.stopping_conditions]):
                 break
 
-            t += 1
+            agent.reset()
+            if ep%100==0:
+                agent.save("agent_data")
 
-        agent.reset()
 
-if __name__ == '__main__':
-    main()
+        stats.plot()

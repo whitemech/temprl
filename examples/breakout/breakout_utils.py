@@ -1,10 +1,10 @@
 import numpy as np
-from pythogic.base.Formula import Formula, AtomicFormula, PathExpressionSequence, PathExpressionStar, \
+from pythogic.base.Formula import AtomicFormula, PathExpressionSequence, PathExpressionStar, \
     PathExpressionEventually, And, Not
 from pythogic.base.Alphabet import Alphabet
 from pythogic.base.Symbol import Symbol
 
-from rltg.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
+from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
 
 
 class BreakoutBUTemporalEvaluator(TemporalEvaluator):

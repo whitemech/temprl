@@ -8,7 +8,7 @@ class ExplorationPolicy(ABC):
 
     @abstractmethod
     def update(self, *args):
-        """Called at each action"""
+        """Called at each episode iteration"""
         raise NotImplementedError
 
     @abstractmethod
