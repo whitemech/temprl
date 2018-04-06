@@ -2,6 +2,7 @@ import numpy as np
 from gym import Env
 
 from rltg.agents.RLAgent import RLAgent
+from rltg.utils.Renderer import Renderer
 from rltg.utils.StatsManager import StatsManager
 
 
@@ -12,12 +13,13 @@ def goal_perc_threshold(*args, **kwargs):
 
 ID2ACTION = {0: 2, 1: 3}
 class Trainer(object):
-    def __init__(self, env:Env, agent:RLAgent, stopping_conditions=[goal_perc_threshold], n_episodes=1000, resume=False):
+    def __init__(self, env:Env, agent:RLAgent, stopping_conditions=[goal_perc_threshold], n_episodes=1000, resume=True, render=False):
         self.env = env
         self.agent = agent
         self.stopping_conditions = stopping_conditions
         self.n_episodes = n_episodes
         self.resume = resume
+        self.render = render
 
     def main(self):
         env = self.env
@@ -28,6 +30,8 @@ class Trainer(object):
 
         if self.resume:
             agent.load("agent_data")
+        if self.render:
+            renderer = Renderer()
 
         # Main training loop
         for ep in range(num_episodes):
@@ -51,7 +55,10 @@ class Trainer(object):
                 if done:
                     break
 
+
                 agent.update()
+                if self.render:
+                    renderer.update(env.render())
 
             stats.update(len(agent.brain.Q), total_reward, info["goal"])
             stats.print_summary(ep, agent.brain.episode_iteration, len(agent.brain.Q), total_reward, agent.exploration_policy.epsilon, info["goal"])

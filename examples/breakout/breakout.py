@@ -33,8 +33,10 @@ def main():
     observation_space = env.observation_space
     action_space = env.action_space
     print(observation_space, action_space)
-    agent = RLAgent(IdentityFeatureExtractor(Discrete(80*80*105)), RandomPolicy(action_space), Sarsa(Discrete(80*80*105), action_space, alpha=None, nsteps=200))
-    tr = Trainer(env, agent, n_episodes=10000)
+    agent = RLAgent(IdentityFeatureExtractor(Discrete(80*80*105)),
+                    RandomPolicy(action_space, epsilon_start=1.0, epsilon_end=0.001, decaying_steps=2000000),
+                    Sarsa(Discrete(80*80*105), action_space, alpha=None, nsteps=100))
+    tr = Trainer(env, agent, n_episodes=10001, resume=False, render=False)
     tr.main()
 
 

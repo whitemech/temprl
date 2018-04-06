@@ -55,5 +55,5 @@ class RLAgent(ABC):
             self.exploration_policy = pickle.load(fin)
         with open(filepath + "/brain.dump", "rb") as fin:
             self.brain = pickle.load(fin)
-        with open(filepath + "/sensors.dump", "wb") as fin:
+        with open(filepath + "/sensors.dump", "rb") as fin:
             self.sensors = pickle.load(fin)
