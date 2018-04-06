@@ -13,7 +13,7 @@ def goal_perc_threshold(*args, **kwargs):
 
 ID2ACTION = {0: 2, 1: 3}
 class Trainer(object):
-    def __init__(self, env:Env, agent:RLAgent, stopping_conditions=[goal_perc_threshold], n_episodes=1000, resume=True, render=False):
+    def __init__(self, env:Env, agent:RLAgent, stopping_conditions=[goal_perc_threshold], n_episodes=1000, resume=False, render=False):
         self.env = env
         self.agent = agent
         self.stopping_conditions = stopping_conditions
@@ -29,7 +29,7 @@ class Trainer(object):
         stats = StatsManager()
 
         if self.resume:
-            agent.load("agent_data")
+            agent.load("data/agent_data")
         if self.render:
             renderer = Renderer()
 
@@ -55,7 +55,6 @@ class Trainer(object):
                 if done:
                     break
 
-
                 agent.update()
                 if self.render:
                     renderer.update(env.render())
@@ -63,12 +62,13 @@ class Trainer(object):
             stats.update(len(agent.brain.Q), total_reward, info["goal"])
             stats.print_summary(ep, agent.brain.episode_iteration, len(agent.brain.Q), total_reward, agent.exploration_policy.epsilon, info["goal"])
 
-            if all([s(goal_percentage=np.mean(stats.goals[-300:])*100) for s in self.stopping_conditions]):
+            # stopping conditions
+            if all([s(goal_percentage=np.mean(stats.goals[-300:])*100) if len(stats.goals)>=300 else False for s in self.stopping_conditions]):
                 break
 
             agent.reset()
             if ep%100==0:
-                agent.save("agent_data")
+                agent.save("data/agent_data")
 
 
         stats.plot()

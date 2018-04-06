@@ -8,6 +8,8 @@ from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
 
 
 class TGAgent(RLAgent):
+    """Temporal Goal agent"""
+
     def __init__(self,
                  sensors: FeatureExtractor,
                  exploration_policy:ExplorationPolicy,
@@ -29,7 +31,7 @@ class TGAgent(RLAgent):
 
     def act(self, state):
         sw = state
-        automata_states = [te.update(state)[0] for te in self.temporal_evaluators]
+        automata_states = [te.get_state() for te in self.temporal_evaluators]
         new_state = self.state_extractor(sw, automata_states)
         return super().act(new_state)
 

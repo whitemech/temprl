@@ -24,11 +24,14 @@ class TemporalEvaluator(ABC):
 
     def update(self, state):
         """update the automaton.
-        :returns (automaton_state, reward)"""
+        :returns (new_automaton_state, reward)"""
         features = self.goal_feature_extractor(state)
         propositional = self.fromFeaturesToPropositional(features)
         self.simulator.make_transition(propositional)
         return self.simulator.cur_state, self.automaton.reward if self.simulator.is_true() else 0
+
+    def get_state(self):
+        return self.simulator.cur_state
 
     def reset(self):
         self.simulator.reset()
