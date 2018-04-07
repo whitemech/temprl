@@ -3,7 +3,7 @@ import cv2
 
 class Renderer(object):
 
-    def __init__(self, width=600, height=600, window_name='obs', delay=1, video=False):
+    def __init__(self, width=600, height=600, window_name='obs', delay=1, skip_frame=1, video=False):
         self.window_name = window_name
         self.delay = delay
         cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -13,12 +13,17 @@ class Renderer(object):
         if video:
             self.vid = cv2.VideoWriter('demo.avi', cv2.VideoWriter_fourcc(*"XVID"), float(30), (160, 210), False)
 
+        self.counter = 0
+        self.skip_frame = skip_frame
+
 
     def update(self, screen):
-        cv2.imshow(self.window_name, screen)
-        cv2.waitKey(self.delay)
-        if self.video:
-            self.vid.write(screen)
+        self.counter += 1
+        if self.counter%self.skip_frame==0:
+            cv2.imshow(self.window_name, screen)
+            cv2.waitKey(self.delay)
+            if self.video:
+                self.vid.write(screen)
 
     def release(self):
         if self.video:

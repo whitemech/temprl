@@ -21,7 +21,7 @@ class TGAgent(RLAgent):
 
     # TODO: make this component more generic, maybe in a separate module
     def state_extractor(self, world_state, automata_states: List):
-        state = tuple([world_state]+automata_states)
+        state = tuple([world_state]+list(automata_states))
         return state
 
     # TODO: make this component more generic, maybe in a separate module
@@ -36,7 +36,7 @@ class TGAgent(RLAgent):
         return super().act(new_state)
 
     def observe(self, state, action, reward, state2):
-        old_states_automata = [te.update(state)[0] for te in self.temporal_evaluators]
+        old_states_automata = [te.get_state() for te in self.temporal_evaluators]
         states_automata, rewards_automata = zip(*[te.update(state2) for te in self.temporal_evaluators])
 
         # TODO: this must be properly defined depending from the context

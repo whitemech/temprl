@@ -1,13 +1,72 @@
 import numpy as np
+from gym.spaces import Dict, Discrete, Box, Tuple
 from pythogic.base.Formula import AtomicFormula, PathExpressionSequence, PathExpressionStar, \
     PathExpressionEventually, And, Not
 from pythogic.base.Alphabet import Alphabet
 from pythogic.base.Symbol import Symbol
 
+from rltg.agents.feature_extraction import FeatureExtractor, TupleFeatureExtractor
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
 
+# world state space
+breakout_obs_space = Dict({
+    "paddle_x": Discrete(161),
+    "ball_x": Discrete(161),
+    "ball_y": Discrete(211),
+    "bricks_status_matrix": Box(low=0, high=1, shape=(3, 18), dtype=np.uint8)
+})
 
-class BreakoutBUTemporalEvaluator(TemporalEvaluator):
+
+class BreakoutRobotFeatureExtractor(FeatureExtractor):
+    def __init__(self):
+        # the input space expected by the feature extractor
+        obs_space = breakout_obs_space
+        output_space = Tuple((
+            obs_space.spaces["paddle_x"],
+            obs_space.spaces["ball_x"],
+            obs_space.spaces["ball_y"]
+        ))
+
+        self.from_tuple_to_int = TupleFeatureExtractor(output_space)
+        self.output_space = self.from_tuple_to_int.output_space
+
+        super().__init__(obs_space, self.output_space)
+
+    def _extract(self, input):
+        return self.from_tuple_to_int((
+            input["paddle_x"]//2,
+            input["ball_x"]//2,
+            input["ball_y"]//2
+        ))
+
+
+class BreakoutRowBottomUpRobotFeatureExtractor(FeatureExtractor):
+    def __init__(self, automata_state_space):
+        self.feat_ext = BreakoutRobotFeatureExtractor()
+        self.input_space = Tuple((self.feat_ext.input_space, automata_state_space))
+        self.output_space = self.feat_ext.output_space
+        super().__init__(self.input_space, self.output_space)
+
+    def _extract(self, input):
+        return self.feat_ext(input[0])
+
+
+class BreakoutRowBottomUpGoalFeatureExtractor(FeatureExtractor):
+    def __init__(self):
+
+        # the input space expected by the feature extractor
+        obs_space = breakout_obs_space
+
+        # the output space is just the matrix representing the bricks status
+        output_space = obs_space.spaces["bricks_status_matrix"]
+
+        super().__init__(obs_space, output_space)
+
+    def _extract(self, input):
+        return input["bricks_status_matrix"]
+
+
+class BreakoutRowBottomUpTemporalEvaluator(TemporalEvaluator):
     """Breakout bottom-up rows deletion temporal evaluator"""
 
     def __init__(self):
@@ -24,12 +83,10 @@ class BreakoutBUTemporalEvaluator(TemporalEvaluator):
             And.chain([atoms[0], atoms[1], atoms[2]])
         )
         reward = 10000
-        super().__init__(alphabet, f, reward)
 
 
-    def feature_extractor(self, state):
-        # TODO: state here is a BreakoutState, but this is wrong! It should extend Space
-        return state.bricks.bricks_status_matrix
+        super().__init__(BreakoutRowBottomUpGoalFeatureExtractor(), alphabet, f, reward)
+
 
     def fromFeaturesToPropositional(self, features):
         matrix = features
