@@ -5,7 +5,7 @@ from pythogic.base.Formula import AtomicFormula, PathExpressionSequence, PathExp
 from pythogic.base.Alphabet import Alphabet
 from pythogic.base.Symbol import Symbol
 
-from rltg.agents.feature_extraction import FeatureExtractor, TupleFeatureExtractor
+from rltg.agents.feature_extraction import FeatureExtractor, TupleFeatureExtractor, RobotFeatureExtractor
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
 
 # world state space
@@ -17,38 +17,29 @@ breakout_obs_space = Dict({
 })
 
 
-class BreakoutRobotFeatureExtractor(FeatureExtractor):
-    def __init__(self):
+class BreakoutRobotFeatureExtractor(RobotFeatureExtractor):
+    def __init__(self, with_automata_states=False):
         # the input space expected by the feature extractor
         obs_space = breakout_obs_space
+
         output_space = Tuple((
             obs_space.spaces["paddle_x"],
             obs_space.spaces["ball_x"],
             obs_space.spaces["ball_y"]
         ))
+        self.with_automata_states = with_automata_states
 
         self.from_tuple_to_int = TupleFeatureExtractor(output_space)
         self.output_space = self.from_tuple_to_int.output_space
 
         super().__init__(obs_space, self.output_space)
 
-    def _extract(self, input):
+    def _extract(self, input, automata_states=None):
         return self.from_tuple_to_int((
             input["paddle_x"]//2,
             input["ball_x"]//2,
-            input["ball_y"]//2
+            input["ball_y"]//2,
         ))
-
-
-class BreakoutRowBottomUpRobotFeatureExtractor(FeatureExtractor):
-    def __init__(self, automata_state_space):
-        self.feat_ext = BreakoutRobotFeatureExtractor()
-        self.input_space = Tuple((self.feat_ext.input_space, automata_state_space))
-        self.output_space = self.feat_ext.output_space
-        super().__init__(self.input_space, self.output_space)
-
-    def _extract(self, input):
-        return self.feat_ext(input[0])
 
 
 class BreakoutRowBottomUpGoalFeatureExtractor(FeatureExtractor):
@@ -62,7 +53,7 @@ class BreakoutRowBottomUpGoalFeatureExtractor(FeatureExtractor):
 
         super().__init__(obs_space, output_space)
 
-    def _extract(self, input):
+    def _extract(self, input, **kwargs):
         return input["bricks_status_matrix"]
 
 
@@ -83,7 +74,6 @@ class BreakoutRowBottomUpTemporalEvaluator(TemporalEvaluator):
             And.chain([atoms[0], atoms[1], atoms[2]])
         )
         reward = 10000
-
 
         super().__init__(BreakoutRowBottomUpGoalFeatureExtractor(), alphabet, f, reward)
 

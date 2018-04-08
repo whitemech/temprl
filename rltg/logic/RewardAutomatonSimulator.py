@@ -20,10 +20,14 @@ class RewardAutomatonSimulator(Simulator):
     def make_transition(self, s:Symbol):
         super().make_transition(s)
         reward = 0
+
         if self.cur_state not in self.visited_states:
+            # get the total reward if we are in the final state
             if self.is_true():
                 reward = self.dfa.get_reward()
             else:
+                # get a fraction of the total reward to facilitate exploration
+                # if we are in the Sink state, fail (highly negative reward).
                 # TODO: backpropagation of the reward
                 if isinstance(self.id2state[self.cur_state], Sink):
                     reward = -10000

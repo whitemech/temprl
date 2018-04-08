@@ -5,12 +5,12 @@ import _pickle as pickle
 
 from rltg.agents.brains.Brain import Brain
 from rltg.agents.exploration_policies import ExplorationPolicy
-from rltg.agents.feature_extraction import FeatureExtractor
+from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtractor
 
 
 class RLAgent(ABC):
 
-    def __init__(self, sensors: FeatureExtractor, exploration_policy:ExplorationPolicy, brain:Brain):
+    def __init__(self, sensors: RobotFeatureExtractor, exploration_policy:ExplorationPolicy, brain:Brain):
         if sensors.output_space != brain.observation_space:
             raise ValueError("space dimensions are not compatible.")
         self.sensors = sensors
@@ -25,7 +25,7 @@ class RLAgent(ABC):
         return action
 
     def observe(self, state, action, reward, state2):
-        """Called at each observation"""
+        """Called at each observation. """
         features_1 = self.sensors(state)
         features_2 = self.sensors(state2)
         self.brain.observe(features_1, action, reward, features_2)
