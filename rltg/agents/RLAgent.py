@@ -10,15 +10,27 @@ from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtract
 
 class RLAgent(ABC):
 
-    def __init__(self, sensors: RobotFeatureExtractor, exploration_policy:ExplorationPolicy, brain:Brain):
+    def __init__(self, sensors: RobotFeatureExtractor, exploration_policy:ExplorationPolicy, brain:Brain, eval:bool=False):
         if sensors.output_space != brain.observation_space:
             raise ValueError("space dimensions are not compatible.")
         self.sensors = sensors
         self.exploration_policy = exploration_policy
         self.brain = brain
+        self.eval = eval
+
+    def set_eval(self, eval:bool):
+        """Setter method for "eval" field.
+        If eval is True, prevent the brain to learn (testing mode)
+        else work as usual (learning mode)"""
+        self.eval = eval
 
     def act(self, state):
-        action = self.exploration_policy.explore()
+        """From the state, choose the action.
+        :param state: the state from which the agent makes a move.
+        :raises ValueError: if It the state is not contained into sensors.input_space"""
+        action = None
+        if not self.eval:
+            action = self.exploration_policy.explore()
         if action is None:
             features = self.sensors(state)
             action = self.brain.choose_action(features)
@@ -28,18 +40,22 @@ class RLAgent(ABC):
         """Called at each observation. """
         features_1 = self.sensors(state)
         features_2 = self.sensors(state2)
-        self.brain.observe(features_1, action, reward, features_2)
+        if not self.eval:
+            self.brain.observe(features_1, action, reward, features_2)
 
     def replay(self):
-        self.brain.learn()
+        if not self.eval:
+            self.brain.learn()
 
     def update(self):
         """Called at the end of each iteration"""
-        self.brain.update()
+        if not self.eval:
+            self.brain.update()
         self.exploration_policy.update()
 
     def reset(self):
-        self.brain.reset()
+        if not self.eval:
+            self.brain.reset()
         self.exploration_policy.reset()
 
     def save(self, filepath):

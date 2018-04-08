@@ -13,7 +13,8 @@ class ExplorationPolicy(ABC):
 
     @abstractmethod
     def explore(self, *args):
-        """Decides what to do as the next action"""
+        """Decides what to do as the next action. The actual implementation must be defined into the "_explore" method.
+        :returns the action to pick or None if the exploration policy decides to don't explore."""
         raise NotImplementedError
 
     @abstractmethod

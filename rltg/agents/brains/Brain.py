@@ -4,6 +4,10 @@ from gym.core import Space
 
 
 class Brain(ABC):
+    """The class which implements the core of the algorithms,
+    Important note: the implementations of the abstract methods
+    should provide """
+
     def __init__(self, observation_space:Space, action_space:Space):
         self.observation_space = observation_space
         self.action_space = action_space
@@ -32,15 +36,28 @@ class Brain(ABC):
 
     def reset(self):
         """action performed at the end of each episode
-        Subclasses should call this method.
+        Subclasses implementations should call this method.
         """
         self.episode += 1
         self.episode_iteration = 0
 
     def update(self):
         """action performed at the end of each iteration
-        Subclasses should call this method.
+        Subclass implementations should call this method.
         """
         self.episode_iteration += 1
         self.iteration += 1
 
+
+# class NoLearningBrain(Brain):
+#     """A dummy brain used only for overwrite the "learning" methods so that they have no effect.
+#       It is used for testing the Brain, so that during the evaluation process it does not learn"""
+#
+#     def __init__(self, brain:Brain):
+#         self.__dict__ = brain.__dict__.copy()
+#         def dummy_method(self, *args):
+#             pass
+#         self.learn   = dummy_method
+#         self.observe = dummy_method
+#         self.reset   = dummy_method
+#         self.update  = dummy_method
