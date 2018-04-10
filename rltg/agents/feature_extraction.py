@@ -25,6 +25,8 @@ class FeatureExtractor(ABC):
     @abstractmethod
     def _extract(self, input, **kwargs):
         """
+        Extract the feature from `input` (contained into `self.input_space`).
+        The features must be contained into `self.output_space`.
         :param   input:  a state belonging to input_space
         :returns output: a state belonging to output_space
         """
@@ -81,7 +83,7 @@ class TupleFeatureExtractor(FeatureExtractor):
     consider the scenario with this observation space: Tuple((Discrete(10), Discrete(20))
     The state (5, 11) which is contained in the observation space, is converted in the following way:
     >>>extracted_feature = (11*20 + 5)*10
-    we start from the biggest space component, otherwise this method wouldn't work.
+    we sort the space components in descending order, otherwise this method wouldn't work.
     """
 
     def __init__(self, space:Tuple):

@@ -5,7 +5,7 @@ from rltg.agents.exploration_policies.ExplorationPolicy import ExplorationPolicy
 
 class RandomPolicy(ExplorationPolicy):
 
-    def __init__(self, n_actions, epsilon_start=1.0, epsilon_end=0.01, decaying_steps=20000):
+    def __init__(self, n_actions, epsilon_start=1.0, epsilon_end=0.1, decaying_steps=20000):
         super().__init__()
         self.n_actions = n_actions
         self.epsilon_start = epsilon_start
