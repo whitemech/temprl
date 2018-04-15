@@ -56,21 +56,21 @@ def temporal_goal():
 
     agent = TGAgent(robot_feat_ext,
                     RandomPolicy(action_space, epsilon_start=1.0, epsilon_end=0.01, decaying_steps=3000000),
-                    Sarsa(feature_space, action_space, alpha=None, nsteps=100),
+                    Sarsa(feature_space, action_space, alpha=None, gamma=0.995, nsteps=100),
                     [temp_eval])
 
     return env, agent
 
 
 def main():
-    env, agent = normal_goal()
-    # env, agent = temporal_goal()
+    # env, agent = normal_goal()
+    env, agent = temporal_goal()
     tr = Trainer(
         env, agent,
-        n_episodes=12001,
+        n_episodes=20001,
         resume=True,
-        # renderer=Renderer(skip_frame=2),
-        eval=True,
+        eval=False,
+        # renderer=Renderer(skip_frame=5),
     )
     tr.main()
 

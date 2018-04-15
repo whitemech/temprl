@@ -59,6 +59,7 @@ class TDBrain(Brain):
             n_reward_return += partial_history[i][2] * math.pow(self.gamma, i)
 
         if not last:
+            # add the value of the Q function, depending on the type of algorithm (see the getQa method)
             _, _, _, s_tn = partial_history[-1]
             Q_tn = self.getQa(s_tn)
             n_reward_return += math.pow(self.gamma, N) * Q_tn

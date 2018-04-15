@@ -12,5 +12,4 @@ pytest==3.4.2
 pytest-runner==2.11.1
 
 git+https://github.com/MarcoFavorito/breakout-env@master#egg=breakout_env
-git+https://github.com/MarcoFavorito/pythogic@develop#egg=pythogic
-git+https://github.com/MarcoFavorito/pythomata@develop#egg=pythomata
+flloat

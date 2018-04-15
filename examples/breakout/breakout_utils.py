@@ -1,9 +1,8 @@
 import numpy as np
+from flloat.base.Alphabet import Alphabet
+from flloat.base.Symbol import Symbol
+from flloat.parser.ldlf import LDLfParser
 from gym.spaces import Dict, Discrete, Box, Tuple
-from pythogic.base.Formula import AtomicFormula, PathExpressionSequence, PathExpressionStar, \
-    PathExpressionEventually, And, Not
-from pythogic.base.Alphabet import Alphabet
-from pythogic.base.Symbol import Symbol
 from typing import List
 
 from rltg.agents.feature_extraction import FeatureExtractor, TupleFeatureExtractor, RobotFeatureExtractor
@@ -90,19 +89,21 @@ class BreakoutRowBottomUpTemporalEvaluator(TemporalEvaluator):
     def __init__(self):
         self.row_symbols = [Symbol(r) for r in ["r0", "r1", "r2"]]
         rows = self.row_symbols
-        atoms = [AtomicFormula(r) for r in rows]
-        alphabet = Alphabet(set(rows))
-        f = PathExpressionEventually(
-            PathExpressionSequence.chain([
-                PathExpressionStar(And.chain([Not(atoms[0]), Not(atoms[1]), Not(atoms[2])])),
-                PathExpressionStar(And.chain([atoms[0], Not(atoms[1]), Not(atoms[2])])),
-                PathExpressionStar(And.chain([atoms[0], atoms[1], Not(atoms[2])])),
-            ]),
-            And.chain([atoms[0], atoms[1], atoms[2]])
-        )
+        # alphabet = Alphabet(set(rows))
+        # f = PathExpressionEventually(
+        #     PathExpressionSequence.chain([
+        #         PathExpressionStar(And.chain([Not(atoms[0]), Not(atoms[1]), Not(atoms[2])])),
+        #         PathExpressionStar(And.chain([atoms[0], Not(atoms[1]), Not(atoms[2])])),
+        #         PathExpressionStar(And.chain([atoms[0], atoms[1], Not(atoms[2])])),
+        #     ]),
+        #     And.chain([atoms[0], atoms[1], atoms[2]])
+        # )
+
+        parser = LDLfParser()
+        f = parser("<(!r0 & !r1 & !r2)*;(r0 & !r1 & !r2)*;(r0 & r1 & !r2)*; r0 & r1 & r2>tt")
         reward = 10000
 
-        super().__init__(BreakoutRowBottomUpGoalFeatureExtractor(), alphabet, f, reward)
+        super().__init__(BreakoutRowBottomUpGoalFeatureExtractor(), set(rows), f, reward)
 
 
     def fromFeaturesToPropositional(self, features):

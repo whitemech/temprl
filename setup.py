@@ -11,7 +11,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = ["gym", ]
+requirements = ["gym", "flloat" ]
 
 setup_requirements = ['pytest-runner', ]
 
@@ -44,10 +44,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/MarcoFavorito/rltg',
-    dependency_links=[
-        'http://github.com/MarcoFavorito/pythogic/develop#egg=pythogic',
-        'http://github.com/MarcoFavorito/pythomata/develop#egg=pythomata'
-    ],
     version='0.1.0',
     zip_safe=False,
 )

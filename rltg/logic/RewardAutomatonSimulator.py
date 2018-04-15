@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Set
 
+from flloat.semantics.pl import PLInterpretation
 from pythomata.base.DFA import DFA
 from pythomata.base.Simulator import Simulator
 from pythomata.base.Symbol import Symbol
@@ -17,8 +18,9 @@ class RewardAutomatonSimulator(Simulator):
         super().reset()
         self.visited_states = {self.cur_state}
 
-    def make_transition(self, s:Symbol):
-        super().make_transition(s)
+    def make_transition(self, s:Set[Symbol]):
+        i = PLInterpretation(s)
+        super().make_transition(i)
         reward = 0
 
         if self.cur_state not in self.visited_states:

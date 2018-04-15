@@ -1,12 +1,12 @@
-from pythogic.base.Alphabet import Alphabet
-from pythogic.base.Formula import Formula
-from pythogic.base.utils import _to_pythomata_dfa
-from pythogic.ldlf_empty_traces.LDLf_EmptyTraces import LDLf_EmptyTraces
+from flloat.base.Alphabet import Alphabet
+from flloat.base.Symbol import Symbol
+from flloat.syntax.ldlf import LDLfFormula
 from pythomata.base.DFA import DFA
+from typing import Set
 
 
 class RewardAutomaton(DFA):
-    def __init__(self, dfa:DFA, alphabet:Alphabet, f:Formula, reward):
+    def __init__(self, dfa:DFA, alphabet:Alphabet, f:LDLfFormula, reward):
         super().__init__(
             dfa.alphabet,
             dfa.states,
@@ -20,10 +20,8 @@ class RewardAutomaton(DFA):
         self.reward = reward
 
     @staticmethod
-    def _fromFormula(alphabet:Alphabet, f:Formula, reward):
-        ldlf = LDLf_EmptyTraces(alphabet)
-        nfa_dict = ldlf.to_nfa(f)
-        dfa = _to_pythomata_dfa(nfa_dict)
+    def _fromFormula(alphabet:Set[Symbol], f:LDLfFormula, reward):
+        dfa = f.to_automaton(alphabet, determinize=True, minimize=True)
         return RewardAutomaton(dfa, dfa.alphabet, f, reward)
 
     def _fromDFA(self, dfa:DFA):
