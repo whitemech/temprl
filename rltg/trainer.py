@@ -3,7 +3,7 @@ from gym import Env
 
 from rltg.agents.RLAgent import RLAgent
 from rltg.agents.TGAgent import TGAgent
-from rltg.utils.Renderer import Renderer
+from rltg.utils.Renderer import PixelRenderer
 from rltg.utils.StatsManager import StatsManager
 
 
@@ -26,7 +26,7 @@ class Trainer(object):
     def __init__(self, env:Env, agent:RLAgent, n_episodes=1000,
                  eval=False,
                  resume=False,
-                 renderer:Renderer=None,
+                 renderer:PixelRenderer=None,
                  stopping_conditions=(goal_perc_threshold, check_automata_in_final_state)):
         self.env = env
         self.agent = agent

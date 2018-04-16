@@ -68,24 +68,15 @@ class BreakoutRowBottomUpGoalFeatureExtractor(FeatureExtractor):
 class BreakoutRowBottomUpTemporalEvaluator(TemporalEvaluator):
     """Breakout temporal evaluator for delete rows from the bottom to the top"""
 
-    def __init__(self):
+    def __init__(self, on_the_fly=False):
         self.row_symbols = [Symbol(r) for r in ["r0", "r1", "r2"]]
         rows = self.row_symbols
-        # alphabet = Alphabet(set(rows))
-        # f = PathExpressionEventually(
-        #     PathExpressionSequence.chain([
-        #         PathExpressionStar(And.chain([Not(atoms[0]), Not(atoms[1]), Not(atoms[2])])),
-        #         PathExpressionStar(And.chain([atoms[0], Not(atoms[1]), Not(atoms[2])])),
-        #         PathExpressionStar(And.chain([atoms[0], atoms[1], Not(atoms[2])])),
-        #     ]),
-        #     And.chain([atoms[0], atoms[1], atoms[2]])
-        # )
 
         parser = LDLfParser()
         f = parser("<(!r0 & !r1 & !r2)*;(r0 & !r1 & !r2)*;(r0 & r1 & !r2)*; r0 & r1 & r2>tt")
         reward = 10000
 
-        super().__init__(BreakoutRowBottomUpGoalFeatureExtractor(), set(rows), f, reward)
+        super().__init__(BreakoutRowBottomUpGoalFeatureExtractor(), set(rows), f, reward, on_the_fly=on_the_fly)
 
 
     def fromFeaturesToPropositional(self, features):

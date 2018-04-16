@@ -1,7 +1,9 @@
+from time import sleep
+
 import cv2
 
 
-class Renderer(object):
+class PixelRenderer(object):
 
     def __init__(self, width=600, height=600, window_name='obs', delay=1, skip_frame=1, video=False):
         self.window_name = window_name
@@ -28,3 +30,16 @@ class Renderer(object):
     def release(self):
         if self.video:
             self.vid.release()
+
+class PygameRenderer():
+    def __init__(self, delay=0.1, skip_frame=1):
+        self.counter = 0
+        self.skip_frame = skip_frame
+        self.delay = delay
+
+    def update(self, env):
+        self.counter += 1
+        if self.counter % self.skip_frame == 0:
+            env.render()
+            sleep(self.delay)
+

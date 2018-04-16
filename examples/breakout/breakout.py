@@ -7,7 +7,7 @@ from rltg.agents.TGAgent import TGAgent
 from rltg.agents.brains.TDBrain import Sarsa, QLearning
 from rltg.agents.exploration_policies.RandomPolicy import RandomPolicy
 from rltg.trainer import Trainer
-from rltg.utils.Renderer import Renderer
+from rltg.utils.Renderer import PixelRenderer
 
 conf = {
     "observation": "number_discretized",
@@ -50,7 +50,7 @@ def temporal_goal():
     # print(observation_space, action_space, feature_space)
 
     agent = TGAgent(BreakoutRobotFeatureExtractor(),
-                    RandomPolicy(env.action_space, epsilon_start=1.0, epsilon_end=0.01, decaying_steps=5000000),
+                    RandomPolicy(env.action_space, epsilon_start=1.0, epsilon_end=0.01, decaying_steps=7500000),
                     Sarsa(None, env.action_space, alpha=None, gamma=0.99, nsteps=200),
                     [BreakoutRowBottomUpTemporalEvaluator()])
 
@@ -58,12 +58,12 @@ def temporal_goal():
 
 
 def main():
-    env, agent = normal_goal()
-    # env, agent = temporal_goal()
+    # env, agent = normal_goal()
+    env, agent = temporal_goal()
     tr = Trainer(
         env, agent,
         n_episodes=20001,
-        resume=True,
+        resume=False,
         eval=False,
         # renderer=Renderer(skip_frame=5),
     )
