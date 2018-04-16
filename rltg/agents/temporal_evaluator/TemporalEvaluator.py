@@ -20,7 +20,7 @@ class TemporalEvaluator(ABC):
         self.simulator = RewardAutomatonSimulator(self._automaton)
 
     @abstractmethod
-    def fromFeaturesToPropositional(self, features) -> Symbol:
+    def fromFeaturesToPropositional(self, features) -> Set[Symbol]:
         raise NotImplementedError
 
     def update(self, state):

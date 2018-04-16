@@ -18,7 +18,7 @@ breakout_obs_space = Dict({
 
 
 class BreakoutRobotFeatureExtractor(RobotFeatureExtractor):
-    def __init__(self, automata_states_len:List[int]=[]):
+    def __init__(self):#, automata_states_len:List[int]=[]):
         """
         Build the Robot Feature Extractor for the Breakout Task.
         As main features, are considered only the x component of the paddle position and the ball coordinates.
@@ -37,35 +37,17 @@ class BreakoutRobotFeatureExtractor(RobotFeatureExtractor):
             obs_space.spaces["ball_x"],
             obs_space.spaces["ball_y"]
         )
+        output_space = Tuple(robot_feature_space)
 
-        # considering the automata states
-        self.automata_states_len = automata_states_len
-        if automata_states_len:
-            # if automata state space size is provided, add it to the robot feature space as tuple
-            # Tuple(extracted_fe
-            output_space = Tuple(robot_feature_space + tuple([Discrete(n) for n in automata_states_len]))
-        else:
-            # otherwise, consider only the robot features
-            output_space = Tuple(robot_feature_space)
+        super().__init__(obs_space, output_space)
 
-        # Use the TupleFeatureExtractor to map any Tuple space, where each component is a Discrete space, to an integer.
-        self.from_tuple_to_int = TupleFeatureExtractor(output_space)
-
-        # set the ouptut space
-        self.output_space = self.from_tuple_to_int.output_space
-
-        super().__init__(obs_space, self.output_space)
-
-    def _extract(self, input, automata_states=None):
+    def _extract(self, input, **kwargs):
         tuple_state = (
             input["paddle_x"] // 2,
             input["ball_x"] // 2,
             input["ball_y"] // 2,
         )
-        if automata_states is not None:
-            tuple_state = tuple_state + tuple(automata_states)
-
-        return self.from_tuple_to_int(tuple_state)
+        return tuple_state
 
 
 class BreakoutRowBottomUpGoalFeatureExtractor(FeatureExtractor):

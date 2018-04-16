@@ -1,13 +1,15 @@
 import random
 
+from gym import Space
+
 from rltg.agents.exploration_policies.ExplorationPolicy import ExplorationPolicy
 
 
 class RandomPolicy(ExplorationPolicy):
 
-    def __init__(self, n_actions, epsilon_start=1.0, epsilon_end=0.1, decaying_steps=20000):
+    def __init__(self, action_space:Space, epsilon_start=1.0, epsilon_end=0.1, decaying_steps=20000):
         super().__init__()
-        self.n_actions = n_actions
+        self.action_space = action_space
         self.epsilon_start = epsilon_start
         self.epsilon_end = epsilon_end
         self.exploration_steps = decaying_steps
@@ -25,7 +27,7 @@ class RandomPolicy(ExplorationPolicy):
     def explore(self, *args):
         action_id = None
         if random.random() < self.epsilon:
-            action_id = random.randrange(self.n_actions.n)
+            action_id =self.action_space.sample()
         return action_id
 
     def reset(self, *args):

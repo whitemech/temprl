@@ -24,19 +24,17 @@ conf = {
 
 def normal_goal():
     env = Breakout(conf)
-    # env = BreakoutDiscreteStateWrapper(env)
-    # env = BreakoutVectorStateWrapper(env)
     env = BreakoutFullObservableStateWrapper(env)
 
-    observation_space = env.observation_space
-    action_space = env.action_space
-    feat_ext = BreakoutRobotFeatureExtractor()
-    feature_space = feat_ext.output_space
+    # observation_space = env.observation_space
+    # action_space = env.action_space
+    # feat_ext = BreakoutRobotFeatureExtractor()
+    # feature_space = feat_ext.output_space
+    # print(observation_space, action_space, feature_space)
 
-    print(observation_space, action_space, feature_space)
-    agent = RLAgent(feat_ext,
-                    RandomPolicy(action_space, epsilon_start=1.0, epsilon_end=0.01, decaying_steps=5000000),
-                    Sarsa(feature_space, action_space, alpha=None, nsteps=100))
+    agent = RLAgent(BreakoutRobotFeatureExtractor(),
+                    RandomPolicy(env.action_space, epsilon_start=1.0, epsilon_end=0.01, decaying_steps=7500000),
+                    Sarsa(None, env.action_space, alpha=None, gamma=0.99, nsteps=100))
 
     return env, agent
 
@@ -45,26 +43,23 @@ def temporal_goal():
     env = Breakout(conf)
     env = BreakoutFullObservableStateWrapper(env)
 
-    observation_space = env.observation_space
-    action_space = env.action_space
+    # observation_space = env.observation_space
+    # action_space = env.action_space
+    # robot_feat_ext = BreakoutRobotFeatureExtractor()
+    # feature_space = robot_feat_ext.output_space
+    # print(observation_space, action_space, feature_space)
 
-    temp_eval = BreakoutRowBottomUpTemporalEvaluator()
-    robot_feat_ext = BreakoutRobotFeatureExtractor([len(temp_eval.simulator.state2id)])
-    feature_space = robot_feat_ext.output_space
-
-    print(observation_space, action_space, feature_space)
-
-    agent = TGAgent(robot_feat_ext,
-                    RandomPolicy(action_space, epsilon_start=1.0, epsilon_end=0.01, decaying_steps=3000000),
-                    Sarsa(feature_space, action_space, alpha=None, gamma=0.995, nsteps=100),
-                    [temp_eval])
+    agent = TGAgent(BreakoutRobotFeatureExtractor(),
+                    RandomPolicy(env.action_space, epsilon_start=1.0, epsilon_end=0.01, decaying_steps=5000000),
+                    Sarsa(None, env.action_space, alpha=None, gamma=0.99, nsteps=200),
+                    [BreakoutRowBottomUpTemporalEvaluator()])
 
     return env, agent
 
 
 def main():
-    # env, agent = normal_goal()
-    env, agent = temporal_goal()
+    env, agent = normal_goal()
+    # env, agent = temporal_goal()
     tr = Trainer(
         env, agent,
         n_episodes=20001,

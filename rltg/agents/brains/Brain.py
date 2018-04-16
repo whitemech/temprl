@@ -9,6 +9,12 @@ class Brain(ABC):
     should provide """
 
     def __init__(self, observation_space:Space, action_space:Space):
+        """
+        :param observation_space: instance of Space or None. If None, it means that the observation space
+                                  is not known a priori and so it is not needed for the algorithm.
+        :param action_space:      instance of Space.
+        """
+
         self.observation_space = observation_space
         self.action_space = action_space
 

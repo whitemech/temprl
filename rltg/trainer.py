@@ -2,18 +2,32 @@ import numpy as np
 from gym import Env
 
 from rltg.agents.RLAgent import RLAgent
+from rltg.agents.TGAgent import TGAgent
 from rltg.utils.Renderer import Renderer
 from rltg.utils.StatsManager import StatsManager
 
 
-def goal_perc_threshold(*args, **kwargs):
-    goal_percentage = kwargs["goal_percentage"]
+def goal_perc_threshold(*args, **kwargs)->bool:
+    goal_history = kwargs["goal_history"]
+    if len(goal_history)<100:
+        return False
+    goal_percentage = np.mean(goal_history[-100:])*100
     return goal_percentage >= 97.00
+
+def check_automata_in_final_state(*args, **kwargs)->bool:
+    temporal_evaluators = kwargs["temporal_evaluators"]
+    # all the automata has to be in their final state
+    return all(t.simulator.is_true() for t in temporal_evaluators)
+
 
 
 ID2ACTION = {0: 2, 1: 3}
 class Trainer(object):
-    def __init__(self, env:Env, agent:RLAgent, stopping_conditions=[goal_perc_threshold], n_episodes=1000, eval=False, resume=False, renderer:Renderer=None):
+    def __init__(self, env:Env, agent:RLAgent, n_episodes=1000,
+                 eval=False,
+                 resume=False,
+                 renderer:Renderer=None,
+                 stopping_conditions=(goal_perc_threshold, check_automata_in_final_state)):
         self.env = env
         self.agent = agent
         self.stopping_conditions = stopping_conditions
@@ -72,7 +86,9 @@ class Trainer(object):
             stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.exploration_policy.epsilon, info["goal"])
 
             # stopping conditions
-            if all([s(goal_percentage=np.mean(stats.goals[-100:])*100) if len(stats.goals)>=100 else False for s in self.stopping_conditions]):
+            temporal_evaluators = agent.temporal_evaluators if isinstance(agent, TGAgent) else []
+            if all([s(goal_history=stats.goals, temporal_evaluators=temporal_evaluators)
+                    for s in self.stopping_conditions]):
                 break
 
             agent.reset()

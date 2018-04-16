@@ -1,3 +1,5 @@
+import functools
+import operator
 import typing
 from abc import ABC, abstractmethod
 
@@ -12,6 +14,9 @@ class FeatureExtractor(ABC):
         self.output_space = output_space
 
     def __call__(self, input, **kwargs):
+        """Extract features from the input and make sanity check
+        of the input and the output dimensions of the abstract method '_extract'"""
+
         if not self.input_space.contains(input):
             raise ValueError("input space dimensions are not correct.")
 
@@ -34,38 +39,8 @@ class FeatureExtractor(ABC):
 
 
 class RobotFeatureExtractor(FeatureExtractor):
-
-    class RobotState(object):
-        """An helper state wrapper to make RobotFeatureExtractor more modular
-        Actually this class is used only in the implementation of the TGAgent
-        """
-        def __init__(self, world_state, automata_states: typing.Tuple):
-            self.world_state = world_state
-            self.automata_states = automata_states
-
-    def __init__(self, input_space: Space, output_space: Space):
-        super().__init__(input_space, output_space)
-
-    def __call__(self, input, **kwargs):
-        """
-        :param   input: world_state or an instance of RobotState (only when called by a TGAgent)
-        :return: the output of the abstract method "_extract"
-        """
-        if isinstance(input, self.RobotState):
-            return super().__call__(input.world_state, automata_states=input.automata_states)
-        else:
-            return super().__call__(input)
-
-    @abstractmethod
-    def _extract(self, input, automata_states: typing.Tuple=None):
-        """
-        :param   input:            a state belonging to input_space
-        :param   automata_states:  tuple of ids of automata states.
-                                   It should be considered only if the feature extractor
-                                   is destined to a Temporal Goal task.
-        :returns output:           a state belonging to output_space
-        """
-        raise NotImplementedError
+    """A specialization of the FeatureExtractor used from RLAgent."""
+    pass
 
 
 
@@ -80,10 +55,16 @@ class IdentityFeatureExtractor(FeatureExtractor):
 class TupleFeatureExtractor(FeatureExtractor):
     """Collapse a tuple state to an integer, according to the ranges of each dimensions.
     For example:
-    consider the scenario with this observation space: Tuple((Discrete(10), Discrete(20))
-    The state (5, 11) which is contained in the observation space, is converted in the following way:
-    >>>extracted_feature = (11*20 + 5)*10
-    we sort the space components in descending order, otherwise this method wouldn't work.
+    consider the scenario with this observation space: Tuple((Discrete(10), Discrete(5), Discrete(20))
+    The state (9, 3, 11) which is contained in the observation space, is converted in the following way:
+    >>>extracted_feature = (11*10 + 9)*5+3
+    598
+    The maximum state (19, 9, 4) is represented in this transformed space as:
+    >>>extracted_feature = (19*10 + 9)*5+4
+    999
+    which is equal to 20*10*5 - 1
+
+    we sort the space components in descending order of their dimensions, otherwise this method wouldn't work.
     """
 
     def __init__(self, space:Tuple):
@@ -91,27 +72,30 @@ class TupleFeatureExtractor(FeatureExtractor):
         # TODO: generalize to different subspaces?
         assert isinstance(space, Tuple) and all(isinstance(s, Discrete) for s in space.spaces)
 
-        # compute output dimension by computing the max id state
-        dim = 1
-        for s in space.spaces:
-            dim *= s.n * (s.n-1)
+        # compute output dimension by multiplying all the dimensions
+        # i.e.: given a space (N0, N1, N2 ... Nn)
+        # the total dimension is: N0*N1*...*Nn
+        tot_dim = functools.reduce(operator.mul, map(lambda x: x.n, space.spaces))
 
-        super().__init__(space, Discrete(dim))
-
-        # sort subspaces from the biggest to the smaller
+        # sort subspaces from the biggest to the smaller, keeping its component id in the input space
         self.id2space_sorted = sorted(enumerate(space.spaces), key=lambda x: -x[1].n)
+
+        super().__init__(space, Discrete(tot_dim))
 
 
     def _extract(self, input, **kwargs):
-        state = 0
+
+        # new_input = [input[id] for id, _ in self.id2space_sorted]
+
+        # sort the input by descending size of the space components
+        state = input[self.id2space_sorted[0][0]]
+
         # collapse the input into only one number,
         # for doing this, we need to start
-        # from the biggest space to the lowest.
-        for id, space in self.id2space_sorted:
-            state += input[id]
+        # from the biggest space to the smallest.
+        for id, space in self.id2space_sorted[1:]:
             state *= space.n
-
-        # just add the last dimension component
-        # state += input[-1]
+            state += input[id]
 
         return state
+
