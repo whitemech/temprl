@@ -58,8 +58,8 @@ def temporal_goal():
 
 
 def main():
-    env, agent = normal_goal()
-    # env, agent = temporal_goal()
+    # env, agent = normal_goal()
+    env, agent = temporal_goal()
     tr = Trainer(
         env, agent,
         n_episodes=20001,

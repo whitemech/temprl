@@ -1,5 +1,11 @@
 from typing import List
 
+import pickle
+
+import os
+
+import re
+
 from rltg.agents.RLAgent import RLAgent
 from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtractor, TupleFeatureExtractor
 from rltg.agents.brains.Brain import Brain
@@ -16,6 +22,7 @@ class TGAgent(RLAgent):
                  exploration_policy:ExplorationPolicy,
                  brain:Brain,
                  temporal_evaluators:List[TemporalEvaluator]):
+        assert len(temporal_evaluators)>=1
         super().__init__(sensors, exploration_policy, brain)
         self.temporal_evaluators = temporal_evaluators
 
@@ -73,3 +80,20 @@ class TGAgent(RLAgent):
         super().reset()
         for te in self.temporal_evaluators:
             te.reset()
+
+    def save(self, filepath):
+        super().save(filepath)
+        for idx, te in enumerate(self.temporal_evaluators):
+            with open(filepath + "/te%02d.dump"%idx, "wb") as fout:
+                te.reset()
+                pickle.dump(te, fout)
+
+    def load(self, filepath):
+        super().load(filepath)
+        temporal_evaluators_files = sorted([f for f in os.listdir(filepath) if re.match(r'te.*\.dump', f)])
+        temporal_evaluators = []
+        for idx, te_name in enumerate(temporal_evaluators_files):
+            with open(filepath + "/%s" % te_name, "rb") as fin:
+                te = pickle.load(fin)
+                temporal_evaluators.append(te)
+        self.temporal_evaluators = temporal_evaluators
