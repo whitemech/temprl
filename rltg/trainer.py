@@ -80,7 +80,7 @@ class Trainer(object):
 
                 agent.update()
                 if self.renderer:
-                    self.renderer.update(env.render())
+                    self.renderer.update(env)
 
             stats.update(len(agent.brain.Q), total_reward, info["goal"])
             stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.exploration_policy.epsilon, info["goal"])
@@ -95,5 +95,5 @@ class Trainer(object):
             if ep%100==0:
                 agent.save("data/agent_data")
 
-
+        agent.save("data/agent_data")
         stats.plot()

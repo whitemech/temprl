@@ -52,6 +52,9 @@ class TDBrain(Brain):
 
 
     def _nsteps_update(self, partial_history, last=False):
+        if len(partial_history)<1:
+            return
+
         n_reward_return = 0
         N = len(partial_history)
         # gamma^0*r0 + gamma^1*r1 + ... + gamma^N-1*r_n-1

@@ -54,16 +54,3 @@ class Brain(ABC):
         self.episode_iteration += 1
         self.iteration += 1
 
-
-# class NoLearningBrain(Brain):
-#     """A dummy brain used only for overwrite the "learning" methods so that they have no effect.
-#       It is used for testing the Brain, so that during the evaluation process it does not learn"""
-#
-#     def __init__(self, brain:Brain):
-#         self.__dict__ = brain.__dict__.copy()
-#         def dummy_method(self, *args):
-#             pass
-#         self.learn   = dummy_method
-#         self.observe = dummy_method
-#         self.reset   = dummy_method
-#         self.update  = dummy_method

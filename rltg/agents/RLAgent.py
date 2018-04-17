@@ -62,8 +62,7 @@ class RLAgent(object):
         self._observe(features_1, action, reward, features_2)
 
     def _observe(self, features, action, reward, features2):
-        if not self.eval:
-            self.brain.observe(features, action, reward, features2)
+        self.brain.observe(features, action, reward, features2)
 
     def replay(self):
         if not self.eval:
@@ -83,8 +82,10 @@ class RLAgent(object):
 
     def save(self, filepath):
         with open(filepath + "/exploration_policy.dump", "wb") as fout:
+            self.exploration_policy.reset()
             pickle.dump(self.exploration_policy, fout)
         with open(filepath + "/brain.dump", "wb") as fout:
+            self.brain.reset()
             pickle.dump(self.brain, fout)
         with open(filepath + "/sensors.dump", "wb") as fout:
             pickle.dump(self.sensors, fout)

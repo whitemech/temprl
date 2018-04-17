@@ -19,7 +19,8 @@ class PixelRenderer(object):
         self.skip_frame = skip_frame
 
 
-    def update(self, screen):
+    def update(self, env):
+        screen = env.render()
         self.counter += 1
         if self.counter%self.skip_frame==0:
             cv2.imshow(self.window_name, screen)

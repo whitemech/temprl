@@ -58,10 +58,6 @@ class TGAgent(RLAgent):
         return super()._act(features)
 
     def observe(self, state, action, reward, state2):
-        if self.eval:
-            # evaluation mode: do nothing
-            return
-
         # get the current automata states
         old_states_automata = [te.get_state() for te in self.temporal_evaluators]
         # update the automata states given the new observed state and collect the reward
