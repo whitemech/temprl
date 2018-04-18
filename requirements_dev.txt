@@ -1,4 +1,4 @@
-pip==9.0.1
+pip==9.0.3
 bumpversion==0.5.3
 wheel==0.30.0
 watchdog==0.8.3
@@ -10,3 +10,6 @@ twine==1.10.0
 
 pytest==3.4.2
 pytest-runner==2.11.1
+
+git+https://github.com/MarcoFavorito/breakout-env@master#egg=breakout_env
+flloat
