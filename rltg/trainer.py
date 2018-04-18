@@ -1,3 +1,5 @@
+import shutil
+
 import numpy as np
 from gym import Env
 
@@ -6,6 +8,7 @@ from rltg.agents.TGAgent import TGAgent
 from rltg.utils.Renderer import PixelRenderer
 from rltg.utils.StatsManager import StatsManager
 
+import os
 
 def goal_perc_threshold(*args, **kwargs)->bool:
     goal_history = kwargs["goal_history"]
@@ -27,7 +30,8 @@ class Trainer(object):
                  eval=False,
                  resume=False,
                  renderer:PixelRenderer=None,
-                 stopping_conditions=(goal_perc_threshold, check_automata_in_final_state)):
+                 stopping_conditions=(goal_perc_threshold, check_automata_in_final_state),
+                 agent_data_dir="agent_data"):
         self.env = env
         self.agent = agent
         self.stopping_conditions = stopping_conditions
@@ -35,6 +39,12 @@ class Trainer(object):
         self.resume = resume
         self.eval = eval
         self.renderer = renderer
+
+        if not self.resume:
+            shutil.rmtree(agent_data_dir, ignore_errors=True)
+            os.mkdir(agent_data_dir)
+
+        self.agent_data_dir = agent_data_dir
 
         if self.eval:
             self.agent.set_eval(self.eval)
@@ -48,7 +58,7 @@ class Trainer(object):
         stats = StatsManager()
 
         if self.resume:
-            agent.load("data/agent_data")
+            agent.load(self.agent_data_dir)
 
         # Main training loop
         for ep in range(num_episodes):
@@ -93,7 +103,7 @@ class Trainer(object):
 
             agent.reset()
             if ep%100==0:
-                agent.save("data/agent_data")
+                agent.save(self.agent_data_dir)
 
-        agent.save("data/agent_data")
+        agent.save(self.agent_data_dir)
         stats.plot()
