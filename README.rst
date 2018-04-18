@@ -20,7 +20,7 @@ RLTG
 
 
 
-Framework for Reinforcement Learning with Temporal Goals.
+Framework for Reinforcement Learning with Temporal Goals defined by LDLf formulas.
 
 
 * Free software: MIT license
@@ -30,7 +30,11 @@ Framework for Reinforcement Learning with Temporal Goals.
 Features
 --------
 
-* TODO
+* Effective Modularization of a Reinforcement Learning system;
+* Easy setup of the "training loop";
+* RL algorithms (here "Brain") supported: Sarsa and QLearning multi-step
+* Exploration policy supported: random policy;
+* Support for temporal goal defined by LDLf formulas.
 
 Credits
 -------

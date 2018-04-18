@@ -1,11 +1,10 @@
 """Base class for every RL agent."""
-from abc import ABC
 
 import _pickle as pickle
 
 from rltg.agents.brains.Brain import Brain
 from rltg.agents.exploration_policies import ExplorationPolicy
-from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtractor
+from rltg.agents.feature_extraction import RobotFeatureExtractor
 
 
 class RLAgent(object):
