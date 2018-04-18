@@ -24,11 +24,14 @@ class RewardAutomaton(DFA):
         dfa = f.to_automaton(alphabet, determinize=True, minimize=True)
         return RewardAutomaton(dfa, dfa.alphabet, f, reward)
 
-    def _fromDFA(self, dfa:DFA):
-        return
-
     def get_reward(self):
         return self.reward
 
     def complete(self):
         return RewardAutomaton(self._dfa.complete(), self.alphabet, self.f, self.reward)
+
+    def minimize(self):
+        return RewardAutomaton(self._dfa.minimize(), self.alphabet, self.f, self.reward)
+
+    def trim(self):
+        return RewardAutomaton(self._dfa.trim(), self.alphabet, self.f, self.reward)
