@@ -4,9 +4,7 @@ from gym.core import Space
 
 
 class Brain(ABC):
-    """The class which implements the core of the algorithms,
-    Important note: the implementations of the abstract methods
-    should provide """
+    """The class which implements the core of the algorithms"""
 
     def __init__(self, observation_space:Space, action_space:Space):
         """

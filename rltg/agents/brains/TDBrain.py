@@ -28,11 +28,11 @@ class TDBrain(Brain):
         return action
 
     def learn(self):
-        if self.episode_iteration < self.nsteps:
+        if self.episode_iteration + 1< self.nsteps:
             # no enough observations
             return
 
-        tau = self.episode_iteration - self.nsteps
+        tau = self.episode_iteration + 1 - self.nsteps
         self._nsteps_update(self.obs_history[tau: tau + self.nsteps])
 
     def observe(self, state, action, reward, state2):

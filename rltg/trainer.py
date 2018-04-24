@@ -85,10 +85,8 @@ class Trainer(object):
                 state = state2
 
                 steps += 1
-                if done:
-                    break
-
                 agent.update()
+
                 if self.renderer:
                     self.renderer.update(env)
 
