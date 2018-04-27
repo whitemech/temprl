@@ -19,6 +19,7 @@ class Brain(ABC):
         self.episode = 0
         self.iteration = 0
         self.episode_iteration = 0
+        self.obs_history = []
 
     @abstractmethod
     def choose_action(self, state):
@@ -36,7 +37,7 @@ class Brain(ABC):
         """Called at each observation.
         E.g. in args there can be the S,A,R,S' tuple for save it in a buffer
         that will be read in the "learn" method."""
-        raise NotImplementedError
+        self.obs_history.append(args)
 
     def reset(self):
         """action performed at the end of each episode

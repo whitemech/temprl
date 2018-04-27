@@ -12,9 +12,10 @@ import os
 
 def goal_perc_threshold(*args, **kwargs)->bool:
     goal_history = kwargs["goal_history"]
-    if len(goal_history)<100:
+    window_size = kwargs["window_size"]
+    if len(goal_history)<window_size:
         return False
-    goal_percentage = np.mean(goal_history[-100:])*100
+    goal_percentage = np.mean(goal_history[-window_size:])*100
     return goal_percentage >= 97.00
 
 def check_automata_in_final_state(*args, **kwargs)->bool:
@@ -30,6 +31,7 @@ class Trainer(object):
                  eval=False,
                  resume=False,
                  renderer:PixelRenderer=None,
+                 window_size=100,
                  stopping_conditions=(goal_perc_threshold, check_automata_in_final_state),
                  agent_data_dir="agent_data"):
         self.env = env
@@ -39,6 +41,7 @@ class Trainer(object):
         self.resume = resume
         self.eval = eval
         self.renderer = renderer
+        self.window_size = window_size
 
         if not self.resume:
             shutil.rmtree(agent_data_dir, ignore_errors=True)
@@ -53,9 +56,13 @@ class Trainer(object):
         env = self.env
         agent = self.agent
         num_episodes = self.n_episodes
-        steps = 0
 
-        stats = StatsManager()
+        if isinstance(agent, TGAgent):
+            temporal_evaluators = agent.temporal_evaluators
+        else:
+            temporal_evaluators = []
+
+        stats = StatsManager(self.window_size)
 
         if self.resume:
             agent.load(self.agent_data_dir)
@@ -69,17 +76,15 @@ class Trainer(object):
             state = env.reset()
             done = False
 
-            while not done:
+
+            while not done and all(not t.is_failed() for t in temporal_evaluators):
                 action = agent.act(state)
                 state2, reward, done, info = env.step(action)
                 agent.observe(state, action, reward, state2)
                 agent.replay()
 
                 # add the observed reward (including the automaton reward)
-                try:
-                    total_reward += agent.brain.obs_history[-1][2]
-                except:
-                    total_reward += reward
+                total_reward += agent.brain.obs_history[-1][2]
 
 
                 state = state2
@@ -95,13 +100,17 @@ class Trainer(object):
 
             # stopping conditions
             temporal_evaluators = agent.temporal_evaluators if isinstance(agent, TGAgent) else []
-            if all([s(goal_history=stats.goals, temporal_evaluators=temporal_evaluators)
+            if all([s(goal_history=stats.goals, temporal_evaluators=temporal_evaluators, window_size=self.window_size)
                     for s in self.stopping_conditions]):
                 break
+
+            # print(agent.temporal_evaluators[0].simulator.dfaotf.cur_state)
+            # agent.temporal_evaluators[0].simulator._automaton.to_dot("temp%d"%ep)
 
             agent.reset()
             if ep%100==0:
                 agent.save(self.agent_data_dir)
+
 
         agent.save(self.agent_data_dir)
         stats.plot()

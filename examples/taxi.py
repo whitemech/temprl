@@ -16,9 +16,10 @@ if __name__ == '__main__':
     agent = RLAgent(
         IdentityFeatureExtractor(observation_space),
         RandomPolicy(action_space, epsilon_end=0.0, decaying_steps=50),
-        QLearning(observation_space, action_space, alpha=0.8, nsteps=1)
+        QLearning(observation_space, action_space, alpha=0.8, nsteps=2)
     )
 
-    tr = Trainer(env, agent, n_episodes=10000, resume=False)
+    tr = Trainer(env, agent, n_episodes=10000, resume=False, window_size=1000)
+    # tr = Trainer(env, agent, n_episodes=10000, window_size=100, resume=True, eval=True)
     tr.main()
 

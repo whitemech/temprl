@@ -72,18 +72,20 @@ class BreakoutGoalFeatureExtractor(FeatureExtractor):
 class BreakoutCompleteLinesTemporalEvaluator(TemporalEvaluator):
     """Breakout temporal evaluator for delete columns from left to right"""
 
-    def __init__(self, input_space, bricks_cols=3, bricks_rows=3):
+    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, gamma=0.99, on_the_fly=False):
         self.line_symbols = [Symbol("l%s" % i) for i in range(bricks_rows)]
         lines = self.line_symbols
 
         parser = LDLfParser()
-        f = parser("<(!l0 & !l1 & !l2)*;(l0 & !l1 & !l2)*;(l0 & l1 & !l2)*; l0 & l1 & l2>tt")
-        reward = 10000
+        f = parser("<(!l0 & !l1 & !l2)*;(l0 & !l1 & !l2);(l0 & !l1 & !l2)*;(l0 & l1 & !l2); (l0 & l1 & !l2)*; l0 & l1 & l2>tt")
+        reward = 1000
 
         super().__init__(BreakoutGoalFeatureExtractor(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows),
                          set(lines),
                          f,
-                         reward)
+                         reward,
+                         gamma=gamma,
+                         on_the_fly=on_the_fly)
 
     @abstractmethod
     def fromFeaturesToPropositional(self, features, **kwargs):
@@ -105,8 +107,8 @@ class BreakoutCompleteLinesTemporalEvaluator(TemporalEvaluator):
 class BreakoutCompleteRowsTemporalEvaluator(BreakoutCompleteLinesTemporalEvaluator):
     """Temporal evaluator for complete rows in order"""
 
-    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, bottom_up=True):
-        super().__init__(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows)
+    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, bottom_up=True, gamma=0.99, on_the_fly=False):
+        super().__init__(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows, gamma=gamma, on_the_fly=on_the_fly)
         self.bottom_up = bottom_up
 
     def fromFeaturesToPropositional(self, features, **kwargs):
@@ -117,8 +119,8 @@ class BreakoutCompleteRowsTemporalEvaluator(BreakoutCompleteLinesTemporalEvaluat
 class BreakoutCompleteColumnsTemporalEvaluator(BreakoutCompleteLinesTemporalEvaluator):
     """Temporal evaluator for complete columns in order"""
 
-    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, left_right=True):
-        super().__init__(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows)
+    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, left_right=True, gamma=0.99, on_the_fly=False):
+        super().__init__(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows, gamma=gamma, on_the_fly=on_the_fly)
         self.left_right = left_right
 
     def fromFeaturesToPropositional(self, features, **kwargs):
