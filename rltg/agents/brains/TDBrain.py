@@ -1,3 +1,4 @@
+import random
 from abc import abstractmethod
 
 import numpy as np
@@ -22,9 +23,17 @@ class TDBrain(Brain):
         self.nsteps = nsteps
         self.obs_history = []
 
-    def choose_action(self, state):
+    def choose_action(self, state, optimal=False):
         Q_values = self.Q[state] if state in self.Q else np.zeros((self.action_space.n,))
-        action = np.argmax(Q_values)
+        argmaxes = np.argwhere(Q_values == Q_values.max()).flatten()
+        if optimal:
+            # determistic behavior!
+            action = argmaxes[0]
+        else:
+            # allow randomness
+            action = random.choice(argmaxes)
+
+        # action = random.choice(argmaxes)
         return action
 
     def learn(self):

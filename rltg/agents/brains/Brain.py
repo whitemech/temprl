@@ -22,7 +22,7 @@ class Brain(ABC):
         self.obs_history = []
 
     @abstractmethod
-    def choose_action(self, state):
+    def choose_action(self, state, **kwargs):
         """From a state, return the action for the implemented approach.
         e.g. in Q-Learning, select the argmax of the Q-values relative to the 'state' parameter."""
         raise NotImplementedError

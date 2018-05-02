@@ -28,6 +28,7 @@ class TGAgent(RLAgent):
 
         # compute the feature space. It is the cartesian product between
         # the robot feature space output and the automata state space
+        # sensors.output_space is expected to be a Tuple.
         robot_feature_space = sensors.output_space
         automata_state_spaces = [temp_eval.get_state_space() for temp_eval in temporal_evaluators]
 
@@ -55,11 +56,11 @@ class TGAgent(RLAgent):
         res = world_reward + sum(automata_rewards)
         return res
 
-    def act(self, state):
+    def act(self, state, **kwargs):
         sw = state
         automata_states = [te.get_state() for te in self.temporal_evaluators]
         features = self.state_extractor(sw, automata_states)
-        return super()._act(features)
+        return super()._act(features, **kwargs)
 
     def observe(self, state, action, reward, state2):
         # get the current automata states
