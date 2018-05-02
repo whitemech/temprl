@@ -40,6 +40,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/MarcoFavorito/rltg',
-    version='0.1.0post2',
+    version='0.1.0post3',
     zip_safe=False,
 )
