@@ -57,3 +57,6 @@ class TemporalEvaluator(ABC):
 
     def is_failed(self):
         return self.simulator.is_failed()
+
+    def is_true(self):
+        return self.simulator.is_true()

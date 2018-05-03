@@ -38,9 +38,12 @@ class PartialAutomatonSimulator(RewardSimulator):
         dfa = DFA(alphabet, frozenset(self.states), self.initial_state, frozenset(self.final_states), self.transition_function)
         self._automaton = RewardAutomaton(dfa, alphabet, dfaotf.f, reward, gamma=gamma)
 
+        self.visited_states = {self.initial_state}
+
 
     def reset(self):
         self.dfaotf.reset()
+        self.visited_states = {self.initial_state}
 
         # (old state, label, new state) triple
         # for o, i, n in self.trace:
@@ -57,23 +60,27 @@ class PartialAutomatonSimulator(RewardSimulator):
         self._update_from_transition(old_state, i, new_state)
 
         if len(self._automaton.accepting_states) > 0:
+            # if the goal state has been discovered: least-fixpoint reward works!
             reward = self._automaton.get_immediate_reward(self.state2id[old_state], self.state2id[self.dfaotf.cur_state])
         else:
-            if self.is_failed():
-                reward = -self.reward
-            elif old_state!=new_state:
-                # give an optimistic reward to help exploration
-                reward = self.reward * 10e-4
-            else:
-                reward = 0
-
+            reward = self.get_partial_reward(old_state, new_state)
 
         return reward
 
+    def get_partial_reward(self, old_state, new_state):
+        if self.is_true():
+            return self.reward
+        if not self.is_failed() and old_state != new_state and new_state not in self.visited_states:
+            # give an optimistic reward to help exploration
+            reward = self.reward/10
+        else:
+            reward = 0
+        return reward
+        # if self.is_failed():
+        #     reward = -self.reward
+
+
     def get_immediate_reward(self, q, q_prime):
-        # q_id = self.id2state[q]
-        # q_prime_id = self.id2state[q_prime]
-        # return self._automaton.get_immediate_reward(q_id, q_prime_id)
         return self._automaton.get_immediate_reward(q, q_prime)
 
     def is_failed(self):
@@ -98,13 +105,6 @@ class PartialAutomatonSimulator(RewardSimulator):
         dfa = DFA(self.alphabet, frozenset(self.states), self.initial_state, frozenset(self.final_states),
                   self.transition_function)
         self._automaton = RewardAutomaton(dfa, self.alphabet, self.dfaotf.f, self.reward, gamma=self.gamma)
-        # k = len(self._automaton.failure_states)
-        # s = self._automaton.failure_states.difference(self.states.difference(self.failure_states))
-        # self._automaton.failure_states = s
-        # cc = len(self._automaton.failure_states)
-        # if k != cc:
-        #     pass
-        #     print("HAHA", k, cc)
 
     def _add_state(self, new_state):
         new_state_id = self.state2id.get(new_state, None)

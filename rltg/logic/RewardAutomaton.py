@@ -85,7 +85,7 @@ class RewardAutomaton(DFA):
             # state2level[s] = level
             failure_states.add(s)
 
-        max_level = level
+        max_level = level - 1
         return state2level, max_level, failure_states
 
 

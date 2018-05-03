@@ -45,6 +45,7 @@ from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtract
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
 from rltg.trainer import Trainer
 from rltg.utils.Renderer import PygameRenderer
+from rltg.utils.StoppingCondition import GoalPercentage, CheckAutomataInFinalState
 
 
 class BreakoutRobotFeatureExtractor(RobotFeatureExtractor):
@@ -153,11 +154,11 @@ if __name__ == '__main__':
     env = GymBreakout(brick_cols=3)
 
     '''Normal task - no temporal goal'''
-    # agent = RLAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
-    #                 RandomPolicy(env.action_space, epsilon=.1),
-    #                 QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=100))
+    agent = RLAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
+                    RandomPolicy(env.action_space, epsilon=.1),
+                    QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=100))
 
-    gamma = 1.0
+    gamma = 0.99
     on_the_fly = False
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
