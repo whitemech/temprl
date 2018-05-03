@@ -37,16 +37,16 @@ if __name__ == '__main__':
 
     '''Normal task - no temporal goal'''
     agent = RLAgent(MinecraftNRobotFeatureExtractor(env.observation_space),
-                    RandomPolicy(env.action_space, epsilon=0.01, epsilon_start=1.0, decaying_steps=1),
+                    RandomPolicy(env.action_space, epsilon=0.1, epsilon_start=1.0, decaying_steps=1),
                     QLearning(None, env.action_space, alpha=None, gamma=0.9, nsteps=200))
 
 
     t = Trainer(env, agent,
         n_episodes=100000,
-        # resume=False,
-        # eval=False,
-        resume = True,
-        eval = True,
-        renderer=PygameRenderer(delay=0.01)
+        resume=False,
+        eval=False,
+        # resume = True,
+        # eval = True,
+        # renderer=PygameRenderer(delay=0.01)
     )
     t.main()

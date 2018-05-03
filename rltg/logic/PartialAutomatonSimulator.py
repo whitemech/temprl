@@ -116,5 +116,5 @@ class PartialAutomatonSimulator(RewardSimulator):
 
         return new_state_id
 
-    def get_cur_state(self):
+    def get_current_state(self):
         return self.state2id[self.dfaotf.cur_state]

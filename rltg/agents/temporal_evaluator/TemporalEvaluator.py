@@ -37,10 +37,10 @@ class TemporalEvaluator(ABC):
         features = self.goal_feature_extractor(state)
         propositional = self.fromFeaturesToPropositional(features)
         reward = self.simulator.make_transition(propositional)
-        return self.simulator.get_cur_state(), reward
+        return self.simulator.get_current_state(), reward
 
     def get_state(self):
-        return self.simulator.get_cur_state()
+        return self.simulator.get_current_state()
 
     def get_state_space(self):
         if not self.on_the_fly:
