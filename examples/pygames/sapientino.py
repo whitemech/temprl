@@ -31,7 +31,7 @@ class SapientinoNRobotFeatureExtractor(SapientinoRobotFeatureExtractor):
                 input["y"],
                 input["theta"],
                 input["color"],
-                input["RAState"])
+                int(input["RAState"]))
 
 
 if __name__ == '__main__':

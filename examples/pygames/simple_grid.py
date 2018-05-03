@@ -34,10 +34,10 @@ if __name__ == '__main__':
 
     t = Trainer(env, agent,
         n_episodes=100000,
-        # resume=False,
-        # eval=False,
-        resume = True,
-        eval = True,
-        renderer=PygameRenderer(delay=0.1)
+        resume=False,
+        eval=False,
+        # resume = True,
+        # eval = True,
+        # renderer=PygameRenderer(delay=0.1)
     )
     t.main()
