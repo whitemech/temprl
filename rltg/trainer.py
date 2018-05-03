@@ -17,6 +17,7 @@ class Trainer(object):
     def __init__(self, env:Env, agent:RLAgent, n_episodes=1000,
                  eval=False,
                  resume=False,
+                 try_optimal_run=True,
                  renderer:Renderer=None,
                  window_size=100,
                  stopping_conditions=(GoalPercentage(10, 1.0), CheckAutomataInFinalState()),
@@ -27,6 +28,7 @@ class Trainer(object):
         self.n_episodes = n_episodes
         self.resume = resume
         self.eval = eval
+        self.try_optimal_run = try_optimal_run
         self.renderer = renderer
         self.window_size = window_size
 
@@ -55,7 +57,7 @@ class Trainer(object):
             # switch between training mode and evaluation mode
             # to check if policy reached is optimal.
             # only when in training mode
-            steps, total_reward, goal = self.train_loop(try_optimal=self.eval or last_goal)
+            steps, total_reward, goal = self.train_loop(try_optimal=self.eval or (last_goal and self.try_optimal_run))
             last_goal = goal
 
             stats.update(len(agent.brain.Q), total_reward, goal)
@@ -109,7 +111,8 @@ class Trainer(object):
 
     def check_stop_conditions(self, agent, stats):
         temporal_evaluators = agent.temporal_evaluators if isinstance(agent, TGAgent) else []
-        if not self.eval and all([s.check_condition(stats_manager=stats, temporal_evaluators=temporal_evaluators) for s in self.stopping_conditions]):
+        if not self.eval and all([s.check_condition(stats_manager=stats, temporal_evaluators=temporal_evaluators)
+                                  for s in self.stopping_conditions]):
             return True
 
         return False
