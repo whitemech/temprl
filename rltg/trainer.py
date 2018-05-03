@@ -71,9 +71,6 @@ class Trainer(object):
             if not self.eval and ep % 100 == 0:
                 agent.save(self.agent_data_dir)
 
-            # agent.temporal_evaluators[0].simulator._automaton.to_dot("temp/4/%d"%ep)
-            # agent.temporal_evaluators[1].simulator._automaton.to_dot("temp/3/%d" % ep)
-
         agent.save(self.agent_data_dir)
         stats.plot()
 
