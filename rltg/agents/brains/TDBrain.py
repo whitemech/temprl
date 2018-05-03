@@ -1,3 +1,4 @@
+import random
 from abc import abstractmethod
 
 import numpy as np
@@ -22,21 +23,30 @@ class TDBrain(Brain):
         self.nsteps = nsteps
         self.obs_history = []
 
-    def choose_action(self, state):
+    def choose_action(self, state, optimal=False):
         Q_values = self.Q[state] if state in self.Q else np.zeros((self.action_space.n,))
-        action = np.argmax(Q_values)
+        argmaxes = np.argwhere(Q_values == Q_values.max()).flatten()
+        if optimal:
+            # determistic behavior!
+            action = argmaxes[0]
+        else:
+            # allow randomness
+            action = random.choice(argmaxes)
+
+        # action = random.choice(argmaxes)
         return action
 
     def learn(self):
-        if self.episode_iteration < self.nsteps:
-            # no enough observations
+        if self.episode_iteration + 1 < self.nsteps:
+            # no enough observations. + 1 for manage the case when nsteps=1 and iteration=0
             return
 
-        tau = self.episode_iteration - self.nsteps
+        tau = self.episode_iteration + 1 - self.nsteps
         self._nsteps_update(self.obs_history[tau: tau + self.nsteps])
 
     def observe(self, state, action, reward, state2):
-        self.obs_history.append((state, action, reward, state2))
+        super().observe(state, action, reward, state2)
+        # self.obs_history.append((state, action, reward, state2))
         # if len(self.obs_history)==self.nsteps:
             # delete oldest element
             # self.obs_history.pop(0)

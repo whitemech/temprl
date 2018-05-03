@@ -32,26 +32,30 @@ class RLAgent(object):
         """Setter method for "eval" field."""
         self.eval = eval
 
-    def act(self, state):
+    def act(self, state, best_action=False):
         """Extract the features and call _act
-        :param state: the state from which the agent makes a move.
+        :param state:       the state from which the agent makes a move.
         :raises ValueError: if It the state is not contained into sensors.input_space
         :returns the chosen action
         """
         features = self.sensors(state)
-        return self._act(features)
+        return self._act(features, best_action=best_action)
 
 
-    def _act(self, features):
+    def _act(self, features, best_action=False):
         """From features, choose an action.
         :param features: the state from which the agent makes a move.
         :returns the chosen action
         """
         action = None
-        if not self.eval:
+        if not self.eval and not best_action:
+            # if in evaluation mode, do not explore.
             action = self.exploration_policy.explore()
         if action is None:
-            action = self.brain.choose_action(features)
+            # if the exploration policy does not specify any action
+            # or if we are either in evaluation mode or we need the optimal action,
+            # then ask the action to the policy
+            action = self.brain.choose_action(features, optimal=best_action)
         return action
 
     def observe(self, state, action, reward, state2):
@@ -68,16 +72,18 @@ class RLAgent(object):
             self.brain.learn()
 
     def update(self):
-        """Called at the end of each iteration"""
+        """Called at the end of each iteration.
+        It MUST be called only once."""
         if not self.eval:
             self.brain.update()
-        self.exploration_policy.update()
+            self.exploration_policy.update()
 
     def reset(self):
-        """Called at the end of each episode"""
+        """Called at the end of each episode.
+        It MUST be called only once."""
         if not self.eval:
             self.brain.reset()
-        self.exploration_policy.reset()
+            self.exploration_policy.reset()
 
     def save(self, filepath):
         with open(filepath + "/exploration_policy.dump", "wb") as fout:

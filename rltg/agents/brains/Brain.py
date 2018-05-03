@@ -4,9 +4,7 @@ from gym.core import Space
 
 
 class Brain(ABC):
-    """The class which implements the core of the algorithms,
-    Important note: the implementations of the abstract methods
-    should provide """
+    """The class which implements the core of the algorithms"""
 
     def __init__(self, observation_space:Space, action_space:Space):
         """
@@ -21,9 +19,10 @@ class Brain(ABC):
         self.episode = 0
         self.iteration = 0
         self.episode_iteration = 0
+        self.obs_history = []
 
     @abstractmethod
-    def choose_action(self, state):
+    def choose_action(self, state, **kwargs):
         """From a state, return the action for the implemented approach.
         e.g. in Q-Learning, select the argmax of the Q-values relative to the 'state' parameter."""
         raise NotImplementedError
@@ -38,7 +37,7 @@ class Brain(ABC):
         """Called at each observation.
         E.g. in args there can be the S,A,R,S' tuple for save it in a buffer
         that will be read in the "learn" method."""
-        raise NotImplementedError
+        self.obs_history.append(args)
 
     def reset(self):
         """action performed at the end of each episode

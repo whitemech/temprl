@@ -13,11 +13,13 @@ if __name__ == '__main__':
     observation_space = env.observation_space
     action_space = env.action_space
     print(observation_space, action_space)
-    agent = RLAgent(IdentityFeatureExtractor(observation_space),
-                    RandomPolicy(action_space),
-                    QLearning(observation_space, action_space, alpha=0.1, nsteps=1)
-            )
+    agent = RLAgent(
+        IdentityFeatureExtractor(observation_space),
+        RandomPolicy(action_space, epsilon=0.1, epsilon_start=1.0, decaying_steps=5000),
+        QLearning(observation_space, action_space, alpha=0.8, nsteps=1, gamma=1.0)
+    )
 
-    tr = Trainer(env, agent, n_episodes=10000, resume=False)
+    tr = Trainer(env, agent, n_episodes=10000, resume=False, eval=False, window_size=1000)
+    # tr = Trainer(env, agent, n_episodes=10000, resume=True,  eval=True, window_size=1000)
     tr.main()
 

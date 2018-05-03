@@ -1,4 +1,4 @@
-# Atari Breakout
+# Atari Breakout (DEPRECATED)
 
 ## Requirements
 You need to install `breakout-env`:

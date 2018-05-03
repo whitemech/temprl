@@ -1,14 +1,25 @@
+from abc import abstractmethod
 from typing import Set
 
 from flloat.semantics.pl import PLInterpretation
-from pythomata.base.Simulator import DFASimulator
+from pythomata.base.Simulator import DFASimulator, Simulator
 from pythomata.base.Symbol import Symbol
 from pythomata.base.utils import Sink
 
 from rltg.logic.RewardAutomaton import RewardAutomaton
 
+class RewardSimulator(Simulator):
 
-class RewardAutomatonSimulator(DFASimulator):
+    @abstractmethod
+    def get_immediate_reward(self, q, q_prime):
+        raise NotImplementedError
+
+    @abstractmethod
+    def is_failed(self) -> bool:
+        raise NotImplementedError
+
+
+class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
     def __init__(self, dfa:RewardAutomaton):
         super().__init__(dfa)
         self.visited_states = {self.cur_state}
@@ -19,25 +30,20 @@ class RewardAutomatonSimulator(DFASimulator):
 
     def make_transition(self, s:Set[Symbol]):
         i = PLInterpretation(s)
+        old_state = self.cur_state
         super().make_transition(i)
-        reward = 0
-
-        # get the reward only if it is the first time we visit the state
-        if self.cur_state not in self.visited_states:
-            # get the total reward if we are in the final state
-            if self.is_true():
-                reward = self.dfa.get_reward()
-            else:
-                # get a fraction of the total reward to facilitate exploration
-                # if we are in the Sink state, fail (highly negative reward).
-                # TODO: backpropagation of the reward
-                if isinstance(self.id2state[self.cur_state], Sink):
-                    reward = -10000
-                else:
-                    reward = self.dfa.get_reward()/10
-
-            self.visited_states.add(self.cur_state)
+        reward = self.get_immediate_reward(old_state, self.cur_state)
+        self.visited_states.add(self.cur_state)
 
         return reward
 
+    def get_immediate_reward(self, q, q_prime):
+        q_id = self.id2state[q]
+        q_prime_id = self.id2state[q_prime]
+        return self.dfa.get_immediate_reward(q_id, q_prime_id)
 
+    def is_failed(self):
+        return self.id2state[self.cur_state] in self.dfa.failure_states
+
+    def get_cur_state(self):
+        return self.cur_state
