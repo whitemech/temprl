@@ -1,9 +1,15 @@
+from abc import abstractmethod
 from time import sleep
 
 import cv2
 
 
-class PixelRenderer(object):
+class Renderer(object):
+    @abstractmethod
+    def update(self, *args, **kwargs):
+        raise NotImplementedError
+
+class PixelRenderer(Renderer):
 
     def __init__(self, width=600, height=600, window_name='obs', delay=1, skip_frame=1, video=False):
         self.window_name = window_name
@@ -32,7 +38,7 @@ class PixelRenderer(object):
         if self.video:
             self.vid.release()
 
-class PygameRenderer():
+class PygameRenderer(Renderer):
     def __init__(self, delay=0.1, skip_frame=1):
         self.counter = 0
         self.skip_frame = skip_frame

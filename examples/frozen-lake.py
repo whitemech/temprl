@@ -6,6 +6,7 @@ from rltg.agents.exploration_policies.RandomPolicy import RandomPolicy
 from rltg.agents.feature_extraction import IdentityFeatureExtractor
 from rltg.trainer import Trainer
 from rltg.utils.GoalEnvWrapper import GoalEnvWrapper
+from rltg.utils.StoppingCondition import AvgRewardPercentage
 
 if __name__ == '__main__':
     env = gym.make("FrozenLake-v0")
@@ -15,10 +16,12 @@ if __name__ == '__main__':
     print(observation_space, action_space)
     agent = RLAgent(
         IdentityFeatureExtractor(observation_space),
-        RandomPolicy(action_space, epsilon_end=0.1, decaying_steps=5000),
-        Sarsa(observation_space, action_space, alpha=0.1, nsteps=1)
+        RandomPolicy(action_space, epsilon=0.1),
+        QLearning(observation_space, action_space, gamma=0.99, alpha=0.05, nsteps=1)
     )
 
-    tr = Trainer(env, agent, n_episodes=20000)
+    tr = Trainer(env, agent, n_episodes=100000, resume=False,
+                 stopping_conditions=(AvgRewardPercentage(window_size=100, target_mean=0.8),))
     tr.main()
+
 

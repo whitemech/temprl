@@ -18,7 +18,9 @@ RLTG
      :target: https://pyup.io/repos/github/MarcoFavorito/rltg/
      :alt: Updates
 
-
+.. image:: https://badges.gitter.im/rltg_flloat/Lobby.svg
+     :alt: Join the chat at https://gitter.im/rltg_flloat/Lobby
+     :target: https://gitter.im/rltg_flloat/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 Framework for Reinforcement Learning with Temporal Goals defined by LDLf formulas.
 
