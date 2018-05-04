@@ -55,13 +55,24 @@ class IdentityFeatureExtractor(FeatureExtractor):
 class TupleFeatureExtractor(FeatureExtractor):
     """Collapse a tuple state to an integer, according to the ranges of each dimensions.
     For example:
-    consider the scenario with this observation space: Tuple((Discrete(10), Discrete(5), Discrete(20))
+    consider the scenario with this observation space:
+    >>> tuple_space = Tuple((Discrete(10), Discrete(5), Discrete(20)))
+    >>> extractor = TupleFeatureExtractor(tuple_space)
+
     The state (9, 3, 11) which is contained in the observation space, is converted in the following way:
-    >>>extracted_feature = (11*10 + 9)*5+3
+    >>> extracted_feature = (11*10 + 9)*5+3
+    >>> extracted_feature
     598
-    The maximum state (19, 9, 4) is represented in this transformed space as:
-    >>>extracted_feature = (19*10 + 9)*5+4
+    >>> extractor((9, 3, 11))
+    598
+
+    The maximum state (9, 4, 19) is represented in this transformed space as:
+    >>> extracted_feature = (19*10 + 9)*5+4
+    >>> extracted_feature
     999
+    >>> extractor((9, 4, 19))
+    999
+
     which is equal to 20*10*5 - 1
 
     we sort the space components in descending order of their dimensions, otherwise this method wouldn't work.

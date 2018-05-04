@@ -73,7 +73,6 @@ class BreakoutNRobotFeatureExtractor(BreakoutRobotFeatureExtractor):
 class BreakoutSRobotFeatureExtractor(BreakoutRobotFeatureExtractor):
 
     def __init__(self, obs_space):
-        # features considered by the robot in this learning task: (ball_x, ball_y, ball_dir, paddle_x)
         robot_feature_space = Tuple((
             obs_space.spaces["diff_paddle_ball"],
         ))

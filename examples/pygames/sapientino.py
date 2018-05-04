@@ -1,22 +1,26 @@
+from abc import abstractmethod
+
+from RLGames.Sapientino import COLORS
 from RLGames.gym_wrappers.GymSapientino import GymSapientino
+from flloat.base.Symbol import Symbol
+from flloat.parser.ltlf import LTLfParser
 from gym.spaces import Tuple
 
 from rltg.agents.RLAgent import RLAgent
-from rltg.agents.brains.TDBrain import Sarsa, QLearning
+from rltg.agents.brains.TDBrain import QLearning
 from rltg.agents.exploration_policies.RandomPolicy import RandomPolicy
 from rltg.agents.feature_extraction import RobotFeatureExtractor
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
 from rltg.trainer import Trainer
-from rltg.utils.Renderer import PygameRenderer
 
 
 class SapientinoRobotFeatureExtractor(RobotFeatureExtractor):
     pass
 
+
 class SapientinoNRobotFeatureExtractor(SapientinoRobotFeatureExtractor):
 
     def __init__(self, obs_space):
-        # features considered by the robot in this learning task: (ball_x, ball_y, ball_dir, paddle_x)
         robot_feature_space = Tuple((
             obs_space.spaces["x"],
             obs_space.spaces["y"],
@@ -34,8 +38,30 @@ class SapientinoNRobotFeatureExtractor(SapientinoRobotFeatureExtractor):
                 input["color"],
                 int(input["RAState"]))
 
-class SapientinoTemporalEvaluator(TemporalEvaluator):
-    pass
+
+# class SapientinoTemporalEvaluator(TemporalEvaluator):
+#     """Breakout temporal evaluator for delete columns from left to right"""
+#
+#     def __init__(self, input_space, bricks_cols=3, bricks_rows=3, lines_num=3, gamma=0.99, on_the_fly=False):
+#         symbols = {Symbol(c) for c in COLORS}
+#         symbols.add(Symbol("bip"))
+#
+#         parser = LTLfParser()
+#         # the formula
+#         f = parser(
+#             "<(!l0 & !l1 & !l2)*;(l0 & !l1 & !l2);(l0 & !l1 & !l2)*;(l0 & l1 & !l2); (l0 & l1 & !l2)*; l0 & l1 & l2>tt")
+#         reward = 10000
+#
+#         # super().__init__(SapientinoNRobotFeatureExtractor(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows),
+#         #                  set(lines),
+#         #                  f,
+#         #                  reward,
+#         #                  gamma=gamma,
+#         #                  on_the_fly=on_the_fly)
+#
+#     @abstractmethod
+#     def fromFeaturesToPropositional(self, features, action, *args, **kwargs):
+#         pass
 
 
 
@@ -56,4 +82,5 @@ if __name__ == '__main__':
         # eval = True,
         # renderer=PygameRenderer(delay=0.05)
     )
+
     t.main()
