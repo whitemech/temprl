@@ -1,11 +1,10 @@
 import shutil
 
-import numpy as np
 from gym import Env
 
 from rltg.agents.RLAgent import RLAgent
 from rltg.agents.TGAgent import TGAgent
-from rltg.utils.Renderer import PixelRenderer, Renderer
+from rltg.utils.Renderer import Renderer
 from rltg.utils.StatsManager import StatsManager
 
 import os

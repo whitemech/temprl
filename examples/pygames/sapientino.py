@@ -5,6 +5,7 @@ from rltg.agents.RLAgent import RLAgent
 from rltg.agents.brains.TDBrain import Sarsa, QLearning
 from rltg.agents.exploration_policies.RandomPolicy import RandomPolicy
 from rltg.agents.feature_extraction import RobotFeatureExtractor
+from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
 from rltg.trainer import Trainer
 from rltg.utils.Renderer import PygameRenderer
 
@@ -32,6 +33,10 @@ class SapientinoNRobotFeatureExtractor(SapientinoRobotFeatureExtractor):
                 input["theta"],
                 input["color"],
                 int(input["RAState"]))
+
+class SapientinoTemporalEvaluator(TemporalEvaluator):
+    pass
+
 
 
 if __name__ == '__main__':
