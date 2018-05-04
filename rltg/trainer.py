@@ -1,38 +1,25 @@
 import shutil
 
-import numpy as np
 from gym import Env
 
 from rltg.agents.RLAgent import RLAgent
 from rltg.agents.TGAgent import TGAgent
-from rltg.utils.Renderer import PixelRenderer, Renderer
+from rltg.utils.Renderer import Renderer
 from rltg.utils.StatsManager import StatsManager
 
 import os
 
-def goal_perc_threshold(*args, **kwargs)->bool:
-    goal_history = kwargs["goal_history"]
-    window_size = kwargs["window_size"]
-    if len(goal_history)<window_size:
-        return False
-    goal_percentage = np.mean(goal_history[-window_size:])*100
-    return goal_percentage >= 97.00
-
-def check_automata_in_final_state(*args, **kwargs)->bool:
-    temporal_evaluators = kwargs["temporal_evaluators"]
-    # all the automata has to be in their final state
-    return all(t.simulator.is_true() for t in temporal_evaluators)
+from rltg.utils.StoppingCondition import CheckAutomataInFinalState, GoalPercentage
 
 
-
-ID2ACTION = {0: 2, 1: 3}
 class Trainer(object):
     def __init__(self, env:Env, agent:RLAgent, n_episodes=1000,
                  eval=False,
                  resume=False,
+                 try_optimal_run=True,
                  renderer:Renderer=None,
                  window_size=100,
-                 stopping_conditions=(goal_perc_threshold, check_automata_in_final_state),
+                 stopping_conditions=(GoalPercentage(10, 1.0), CheckAutomataInFinalState()),
                  agent_data_dir="agent_data"):
         self.env = env
         self.agent = agent
@@ -40,6 +27,7 @@ class Trainer(object):
         self.n_episodes = n_episodes
         self.resume = resume
         self.eval = eval
+        self.try_optimal_run = try_optimal_run
         self.renderer = renderer
         self.window_size = window_size
 
@@ -68,7 +56,7 @@ class Trainer(object):
             # switch between training mode and evaluation mode
             # to check if policy reached is optimal.
             # only when in training mode
-            steps, total_reward, goal = self.train_loop(try_optimal=self.eval or last_goal)
+            steps, total_reward, goal = self.train_loop(try_optimal=self.eval or (last_goal and self.try_optimal_run))
             last_goal = goal
 
             stats.update(len(agent.brain.Q), total_reward, goal)
@@ -115,12 +103,12 @@ class Trainer(object):
             if self.renderer:
                 self.renderer.update(env)
 
-        return steps, total_reward, info["goal"]
+        return steps, total_reward, info["goal"] and all(t.is_true() for t in temporal_evaluators)
 
     def check_stop_conditions(self, agent, stats):
         temporal_evaluators = agent.temporal_evaluators if isinstance(agent, TGAgent) else []
-        if not self.eval and all([s(goal_history=stats.goals, temporal_evaluators=temporal_evaluators, window_size=self.window_size)
-                    for s in self.stopping_conditions]):
+        if not self.eval and all([s.check_condition(stats_manager=stats, temporal_evaluators=temporal_evaluators)
+                                  for s in self.stopping_conditions]):
             return True
 
         return False

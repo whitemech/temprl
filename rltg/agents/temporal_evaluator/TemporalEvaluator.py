@@ -28,14 +28,16 @@ class TemporalEvaluator(ABC):
             self.simulator = PartialAutomatonSimulator(self.dfaotf, self.alphabet, reward, gamma)
 
     @abstractmethod
-    def fromFeaturesToPropositional(self, features) -> Set[Symbol]:
+    def fromFeaturesToPropositional(self, features, action, *args, **kwargs) -> Set[Symbol]:
         raise NotImplementedError
 
-    def update(self, state):
+    def update(self, action, state):
         """update the automaton.
+        :param action: the action to reach the state
+        :param state:  the new state of the MDP
         :returns (new_automaton_state, reward)"""
         features = self.goal_feature_extractor(state)
-        propositional = self.fromFeaturesToPropositional(features)
+        propositional = self.fromFeaturesToPropositional(features, action)
         reward = self.simulator.make_transition(propositional)
         return self.simulator.get_current_state(), reward
 
@@ -57,3 +59,6 @@ class TemporalEvaluator(ABC):
 
     def is_failed(self):
         return self.simulator.is_failed()
+
+    def is_true(self):
+        return self.simulator.is_true()

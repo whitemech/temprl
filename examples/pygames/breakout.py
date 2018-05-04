@@ -45,6 +45,7 @@ from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtract
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
 from rltg.trainer import Trainer
 from rltg.utils.Renderer import PygameRenderer
+from rltg.utils.StoppingCondition import GoalPercentage, CheckAutomataInFinalState
 
 
 class BreakoutRobotFeatureExtractor(RobotFeatureExtractor):
@@ -99,6 +100,7 @@ class BreakoutCompleteLinesTemporalEvaluator(TemporalEvaluator):
         lines = self.line_symbols
 
         parser = LDLfParser()
+        # the formula
         f = parser("<(!l0 & !l1 & !l2)*;(l0 & !l1 & !l2);(l0 & !l1 & !l2)*;(l0 & l1 & !l2); (l0 & l1 & !l2)*; l0 & l1 & l2>tt")
         reward = 10000
 
@@ -110,7 +112,7 @@ class BreakoutCompleteLinesTemporalEvaluator(TemporalEvaluator):
                          on_the_fly=on_the_fly)
 
     @abstractmethod
-    def fromFeaturesToPropositional(self, features, **kwargs):
+    def fromFeaturesToPropositional(self, features, action, *args, **kwargs):
         """map the matrix bricks status to a propositional formula
         first dimension: columns
         second dimension: row
@@ -133,9 +135,9 @@ class BreakoutCompleteRowsTemporalEvaluator(BreakoutCompleteLinesTemporalEvaluat
         super().__init__(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows, lines_num=bricks_rows, gamma=gamma, on_the_fly=on_the_fly)
         self.bottom_up = bottom_up
 
-    def fromFeaturesToPropositional(self, features, **kwargs):
+    def fromFeaturesToPropositional(self, features, action, *args, **kwargs):
         """complete rows from bottom-to-up or top-to-down, depending on self.bottom_up"""
-        return super().fromFeaturesToPropositional(features, axis=0, is_reversed=self.bottom_up)
+        return super().fromFeaturesToPropositional(features, action, axis=0, is_reversed=self.bottom_up)
 
 
 class BreakoutCompleteColumnsTemporalEvaluator(BreakoutCompleteLinesTemporalEvaluator):
@@ -145,19 +147,19 @@ class BreakoutCompleteColumnsTemporalEvaluator(BreakoutCompleteLinesTemporalEval
         super().__init__(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows, lines_num=bricks_cols, gamma=gamma, on_the_fly=on_the_fly)
         self.left_right = left_right
 
-    def fromFeaturesToPropositional(self, features, **kwargs):
+    def fromFeaturesToPropositional(self, features, action, *args, **kwargs):
         """complete columns from left-to-right or right-to-left, depending on self.left_right"""
-        return super().fromFeaturesToPropositional(features, axis=1, is_reversed=not self.left_right)
+        return super().fromFeaturesToPropositional(features, action, axis=1, is_reversed=not self.left_right)
 
 if __name__ == '__main__':
     env = GymBreakout(brick_cols=3)
 
     '''Normal task - no temporal goal'''
-    # agent = RLAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
-    #                 RandomPolicy(env.action_space, epsilon=.1),
-    #                 QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=100))
+    agent = RLAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
+                    RandomPolicy(env.action_space, epsilon=0.1),
+                    QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=100))
 
-    gamma = 1.0
+    gamma = 0.99
     on_the_fly = False
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
