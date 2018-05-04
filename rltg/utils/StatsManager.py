@@ -34,12 +34,13 @@ class StatsManager(object):
                   )
 
     def plot(self):
-        plt.plot(self.total_reward_history)
+        plt.figure(1)
         plt.title("Total reward history")
-        plt.show()
-        plt.plot(list(self.avg_reward_history))
+        plt.plot(self.total_reward_history)
+        plt.figure(2)
         plt.title("Average total reward history")
-        plt.show()
+        plt.plot(list(self.avg_reward_history))
+        plt.figure(3)
         plt.title("Standard deviation total reward history")
         plt.plot(list(self.std_reward_history))
         plt.show()
