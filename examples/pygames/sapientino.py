@@ -1,17 +1,21 @@
 from abc import abstractmethod
 
+import sys
 from RLGames.Sapientino import COLORS
 from RLGames.gym_wrappers.GymSapientino import GymSapientino
 from flloat.base.Symbol import Symbol
+from flloat.parser.ldlf import LDLfParser
 from flloat.parser.ltlf import LTLfParser
 from gym.spaces import Tuple
 
 from rltg.agents.RLAgent import RLAgent
-from rltg.agents.brains.TDBrain import QLearning
+from rltg.agents.TGAgent import TGAgent
+from rltg.agents.brains.TDBrain import QLearning, Sarsa
 from rltg.agents.exploration_policies.RandomPolicy import RandomPolicy
 from rltg.agents.feature_extraction import RobotFeatureExtractor
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
 from rltg.trainer import Trainer
+from rltg.utils.Renderer import PygameRenderer
 
 
 class SapientinoRobotFeatureExtractor(RobotFeatureExtractor):
@@ -24,9 +28,6 @@ class SapientinoNRobotFeatureExtractor(SapientinoRobotFeatureExtractor):
         robot_feature_space = Tuple((
             obs_space.spaces["x"],
             obs_space.spaces["y"],
-            obs_space.spaces["theta"],
-            obs_space.spaces["color"],
-            obs_space.spaces["RAState"],
         ))
 
         super().__init__(obs_space, robot_feature_space)
@@ -34,44 +35,72 @@ class SapientinoNRobotFeatureExtractor(SapientinoRobotFeatureExtractor):
     def _extract(self, input, **kwargs):
         return (input["x"],
                 input["y"],
-                input["theta"],
-                input["color"],
-                int(input["RAState"]))
+                )
+
+class SapientinoTEFeatureExtractor(SapientinoRobotFeatureExtractor):
+
+    def __init__(self, obs_space):
+        robot_feature_space = Tuple((
+            obs_space.spaces["color"],
+        ))
+
+        super().__init__(obs_space, robot_feature_space)
+
+    def _extract(self, input, **kwargs):
+        return (input["color"],)
 
 
-# class SapientinoTemporalEvaluator(TemporalEvaluator):
-#     """Breakout temporal evaluator for delete columns from left to right"""
-#
-#     def __init__(self, input_space, bricks_cols=3, bricks_rows=3, lines_num=3, gamma=0.99, on_the_fly=False):
-#         symbols = {Symbol(c) for c in COLORS}
-#         symbols.add(Symbol("bip"))
-#
-#         parser = LTLfParser()
-#         # the formula
-#         f = parser(
-#             "<(!l0 & !l1 & !l2)*;(l0 & !l1 & !l2);(l0 & !l1 & !l2)*;(l0 & l1 & !l2); (l0 & l1 & !l2)*; l0 & l1 & l2>tt")
-#         reward = 10000
-#
-#         # super().__init__(SapientinoNRobotFeatureExtractor(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows),
-#         #                  set(lines),
-#         #                  f,
-#         #                  reward,
-#         #                  gamma=gamma,
-#         #                  on_the_fly=on_the_fly)
-#
-#     @abstractmethod
-#     def fromFeaturesToPropositional(self, features, action, *args, **kwargs):
-#         pass
 
+class SapientinoTemporalEvaluator(TemporalEvaluator):
+    """Breakout temporal evaluator for delete columns from left to right"""
+
+    def __init__(self, input_space, gamma=0.99, on_the_fly=False):
+        self.color_syms = [Symbol(c) for c in COLORS] + [Symbol("no_color")]
+        self.bip = Symbol("bip")
+
+        parser = LDLfParser()
+
+        # the formula
+        sb = str(self.bip)
+        not_bip = ";(!%s)*;"%sb
+        and_bip = lambda x: str(x) + " & " + sb
+        # every color in sequence, no bip between colors.
+        formula_string = "<(!%s)*;"%sb + not_bip.join(map(and_bip, self.color_syms[:-1])) + ">tt"
+        print(formula_string)
+        f = parser(formula_string)
+
+        reward = 1000
+
+        super().__init__(SapientinoTEFeatureExtractor(input_space),
+                         set(self.color_syms).union({self.bip}),
+                         f,
+                         reward,
+                         gamma=gamma,
+                         on_the_fly=on_the_fly)
+
+
+    def fromFeaturesToPropositional(self, features, action, *args, **kwargs):
+        res = set()
+        # bip action
+        if action == 4:
+            res.add(self.bip)
+
+        c = features[0]
+        color_sym = self.color_syms[c]
+        res.add(color_sym)
+
+        return res
 
 
 if __name__ == '__main__':
     env = GymSapientino()
 
+    gamma=0.99
     '''Normal task - no temporal goal'''
-    agent = RLAgent(SapientinoNRobotFeatureExtractor(env.observation_space),
-                    RandomPolicy(env.action_space, epsilon=0.1),
-                    QLearning(None, env.action_space, alpha=0.1, gamma=0.9, nsteps=100))
+    agent = TGAgent(SapientinoNRobotFeatureExtractor(env.observation_space),
+                    RandomPolicy(env.action_space, epsilon=0.1, epsilon_start=1.0, decaying_steps=10000),
+                    QLearning(None, env.action_space, alpha=0.1, gamma=gamma, nsteps=20),
+                    [SapientinoTemporalEvaluator(env.observation_space, gamma=gamma)])
 
 
     t = Trainer(env, agent,
@@ -80,7 +109,7 @@ if __name__ == '__main__':
         eval=False,
         # resume = True,
         # eval = True,
-        # renderer=PygameRenderer(delay=0.05)
+        # renderer=PygameRenderer(delay=0.01)
     )
 
     t.main()

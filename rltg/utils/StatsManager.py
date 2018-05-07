@@ -26,7 +26,7 @@ class StatsManager(object):
     def print_summary(self, episode_number, step, n_states, total_reward, epsilon, goal):
         w = self.window_size
         if episode_number % 1 ==0:
-            print('Episode: {}, Step: {:5d}, Explored States: {:7d}, Total Reward: {:8.2f}, AvgReward: {:05.2f}, StdReward: {:05.2f}, Epsilon: {:05.4f}, Goal: {:5}, GoalPerc: {:05.2f}'
+            print('Episode: {:6d}, Step: {:5d}, Explored States: {:7d}, Total Reward: {:8.2f}, AvgReward: {:8.2f}, StdReward: {:8.2f}, Epsilon: {:05.4f}, Goal: {:5}, GoalPerc: {:05.2f}'
               .format(episode_number, step, n_states, total_reward,
                       np.mean(self.total_reward_history[-w:]),
                       np.std(self.total_reward_history[-w:]),

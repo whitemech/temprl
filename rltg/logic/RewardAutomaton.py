@@ -37,8 +37,8 @@ class RewardAutomaton(DFA):
     def get_immediate_reward(self, q, q_prime):
         phi = self.potential_function
         if q_prime in self.failure_states:
-            # return -self.reward
-            return 0
+            return -self.reward/self.max_level
+            # return 0
 
         r = self.gamma * phi(q_prime) - phi(q)
         if r > 0.0:

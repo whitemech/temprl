@@ -81,13 +81,16 @@ class Trainer(object):
         steps = 0
 
         state = env.reset()
+        if self.renderer:
+            self.renderer.update(env)
+
         temporal_evaluators = agent.temporal_evaluators if isinstance(agent, TGAgent) else []
 
-        done = False
+        done, all_te_not_failed, all_te_true = False, True, False
         info = {"goal": False}
 
-        # until the game is not ended and every temporal task is not failed
-        while not done and all(not t.is_failed() for t in temporal_evaluators):
+        # until the game is not ended and every temporal task is not failed or every temporal task is true
+        while not done and all_te_not_failed and not all_te_true:
             action = agent.act(state, best_action=try_optimal)
             state2, reward, done, info = env.step(action)
             agent.observe(state, action, reward, state2)
@@ -102,6 +105,9 @@ class Trainer(object):
 
             if self.renderer:
                 self.renderer.update(env)
+
+            all_te_not_failed = all(not t.is_failed() for t in temporal_evaluators)
+            all_te_true   = all(t.is_true() for t in temporal_evaluators)
 
         return steps, total_reward, info["goal"] and all(t.is_true() for t in temporal_evaluators)
 
