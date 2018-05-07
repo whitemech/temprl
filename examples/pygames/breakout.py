@@ -91,16 +91,36 @@ class BreakoutGoalFeatureExtractor(FeatureExtractor):
         return input["bricks_matrix"]
 
 
+def get_breakout_lines_formula(lines_symbols):
+    # Generate the formula string
+    # E.g. for 3 line symbols:
+    # # "<(!l0 & !l1 & !l2)*;(l0 & !l1 & !l2);(l0 & !l1 & !l2)*;(l0 & l1 & !l2); (l0 & l1 & !l2)*; l0 & l1 & l2>tt"
+    pos = list(map(str, lines_symbols))
+    neg = list(map(lambda x: "!" + str(x), lines_symbols))
+
+    s = "(%s)*" % " & ".join(neg)
+    for idx in range(len(lines_symbols)-1):
+        step = " & ".join(pos[:idx + 1]) + " & " + " & ".join(neg[idx + 1:])
+        s += ";({0});({0})*".format(step)
+    s += ";(%s)" % " & ".join(pos)
+    s = "<%s>tt" % s
+
+    return s
+
+
 class BreakoutCompleteLinesTemporalEvaluator(TemporalEvaluator):
     """Breakout temporal evaluator for delete columns from left to right"""
 
     def __init__(self, input_space, bricks_cols=3, bricks_rows=3, lines_num=3, gamma=0.99, on_the_fly=False):
+        assert lines_num == bricks_cols or lines_num == bricks_rows
         self.line_symbols = [Symbol("l%s" % i) for i in range(lines_num)]
         lines = self.line_symbols
 
         parser = LDLfParser()
-        # the formula
-        f = parser("<(!l0 & !l1 & !l2)*;(l0 & !l1 & !l2);(l0 & !l1 & !l2)*;(l0 & l1 & !l2); (l0 & l1 & !l2)*; l0 & l1 & l2>tt")
+
+
+        string_formula = get_breakout_lines_formula(lines)
+        f = parser(string_formula)
         reward = 10000
 
         super().__init__(BreakoutGoalFeatureExtractor(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows),
@@ -151,19 +171,19 @@ class BreakoutCompleteColumnsTemporalEvaluator(BreakoutCompleteLinesTemporalEval
         return super().fromFeaturesToPropositional(features, action, axis=1, is_reversed=not self.left_right)
 
 if __name__ == '__main__':
-    env = GymBreakout(brick_cols=3)
+    env = GymBreakout(brick_cols=5, brick_rows=5)
 
     '''Normal task - no temporal goal'''
-    agent = RLAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
-                    RandomPolicy(env.action_space, epsilon=0.1),
-                    QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=100))
+    # agent = RLAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
+    #                 RandomPolicy(env.action_space, epsilon=0.1),
+    #                 QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=100))
 
     gamma = 0.99
     on_the_fly = False
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
-                    RandomPolicy(env.action_space, epsilon=0.1),
-                    QLearning(None, env.action_space, alpha=None, gamma=gamma, nsteps=100),
+                    RandomPolicy(env.action_space, epsilon=0.1, epsilon_start=1.0, decaying_steps=100000),
+                    Sarsa(None, env.action_space, alpha=None, gamma=gamma, nsteps=200),
 
                     # Leave one of the following three option to see the differences:
                     # 1) rows
@@ -171,14 +191,14 @@ if __name__ == '__main__':
                     # 3) rows and columns
 
                     # 1
-                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_cols=env.brick_cols, bottom_up=True, gamma=gamma, on_the_fly=on_the_fly)]
+                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, gamma=gamma, on_the_fly=on_the_fly)]
 
                     # 2
-                    [BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_cols=env.brick_cols, left_right=True, gamma=gamma, on_the_fly=on_the_fly)]
+                    [BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, gamma=gamma, on_the_fly=on_the_fly)]
 
                     # 3
-                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_cols=env.brick_cols, bottom_up=True, on_the_fly=on_the_fly),
-                    # BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_cols=env.brick_cols, left_right=True, on_the_fly=on_the_fly)]
+                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, on_the_fly=on_the_fly),
+                    # BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, on_the_fly=on_the_fly)]
                     )
 
 
