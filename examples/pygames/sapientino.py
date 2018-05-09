@@ -34,8 +34,24 @@ class SapientinoNRobotFeatureExtractor(SapientinoRobotFeatureExtractor):
 
     def _extract(self, input, **kwargs):
         return (input["x"],
+                input["y"],)
+
+class SapientinoDRobotFeatureExtractor(SapientinoRobotFeatureExtractor):
+
+    def __init__(self, obs_space):
+        robot_feature_space = Tuple((
+            obs_space.spaces["x"],
+            obs_space.spaces["y"],
+            obs_space.spaces["theta"],
+        ))
+
+        super().__init__(obs_space, robot_feature_space)
+
+    def _extract(self, input, **kwargs):
+        return (input["x"],
                 input["y"],
-                )
+                input["theta"])
+
 
 class SapientinoTEFeatureExtractor(SapientinoRobotFeatureExtractor):
 
@@ -64,7 +80,7 @@ class SapientinoTemporalEvaluator(TemporalEvaluator):
         sb = str(self.bip)
         not_bip = ";(!%s)*;"%sb
         and_bip = lambda x: str(x) + " & " + sb
-        # every color in sequence, no bip between colors.
+        # every color-bip in sequence, no bip between colors.
         formula_string = "<(!%s)*;"%sb + not_bip.join(map(and_bip, self.color_syms[:-1])) + ">tt"
         print(formula_string)
         f = parser(formula_string)
@@ -93,14 +109,22 @@ class SapientinoTemporalEvaluator(TemporalEvaluator):
 
 
 if __name__ == '__main__':
-    env = GymSapientino()
+    gamma = 0.99
+    on_the_fly = False
+    differential = True
 
-    gamma=0.99
-    '''Normal task - no temporal goal'''
-    agent = TGAgent(SapientinoNRobotFeatureExtractor(env.observation_space),
+    env = GymSapientino(differential=differential)
+    if differential:
+        feat_ext = SapientinoDRobotFeatureExtractor(env.observation_space)
+    else:
+        feat_ext = SapientinoNRobotFeatureExtractor(env.observation_space)
+
+
+    '''Temporal goal - visit all the colors in a given order'''
+    agent = TGAgent(feat_ext,
                     RandomPolicy(env.action_space, epsilon=0.1, epsilon_start=1.0, decaying_steps=10000),
                     QLearning(None, env.action_space, alpha=0.1, gamma=gamma, nsteps=20),
-                    [SapientinoTemporalEvaluator(env.observation_space, gamma=gamma)])
+                    [SapientinoTemporalEvaluator(env.observation_space, gamma=gamma, on_the_fly=on_the_fly)])
 
 
     t = Trainer(env, agent,
