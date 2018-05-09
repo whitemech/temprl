@@ -21,11 +21,11 @@ class TemporalEvaluator(ABC):
         self.formula = formula
         self.on_the_fly = on_the_fly
         if not on_the_fly:
-            self._automaton = RewardAutomaton._fromFormula(alphabet, formula, reward, gamma)
+            self._automaton = RewardAutomaton._fromFormula(alphabet, formula, reward, gamma=gamma)
             self.simulator = RewardAutomatonSimulator(self._automaton)
         else:
             self.dfaotf = self.formula.to_automaton(alphabet, on_the_fly=True)
-            self.simulator = PartialAutomatonSimulator(self.dfaotf, self.alphabet, reward, gamma)
+            self.simulator = PartialAutomatonSimulator(self.dfaotf, self.alphabet, reward, gamma=gamma)
 
     @abstractmethod
     def fromFeaturesToPropositional(self, features, action, *args, **kwargs) -> Set[Symbol]:

@@ -94,7 +94,7 @@ class BreakoutGoalFeatureExtractor(FeatureExtractor):
 def get_breakout_lines_formula(lines_symbols):
     # Generate the formula string
     # E.g. for 3 line symbols:
-    # # "<(!l0 & !l1 & !l2)*;(l0 & !l1 & !l2);(l0 & !l1 & !l2)*;(l0 & l1 & !l2); (l0 & l1 & !l2)*; l0 & l1 & l2>tt"
+    # "<(!l0 & !l1 & !l2)*;(l0 & !l1 & !l2);(l0 & !l1 & !l2)*;(l0 & l1 & !l2); (l0 & l1 & !l2)*; l0 & l1 & l2>tt"
     pos = list(map(str, lines_symbols))
     neg = list(map(lambda x: "!" + str(x), lines_symbols))
 
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     #                 QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=100))
 
     gamma = 1.0
-    on_the_fly = False
+    on_the_fly = True
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
                     RandomPolicy(env.action_space, epsilon=0.1),#,epsilon_start=1.0, decaying_steps=50000),
@@ -197,8 +197,8 @@ if __name__ == '__main__':
                     [BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, gamma=gamma, on_the_fly=on_the_fly)]
 
                     # 3
-                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=False, on_the_fly=on_the_fly),
-                    # BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=False, on_the_fly=on_the_fly)]
+                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, on_the_fly=on_the_fly),
+                    # BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, on_the_fly=on_the_fly)]
                     )
 
 
