@@ -94,8 +94,6 @@ class PartialAutomatonSimulator(RewardSimulator):
             # implementation trick: do not scale reward if we are in the same state
             r /= self._automaton_prime.max_level
             r *= self.reward
-        if r>11000:
-            print(q, q_prime, phi(q), phi_prime(q_prime), r)
 
         return r
 
@@ -115,26 +113,31 @@ class PartialAutomatonSimulator(RewardSimulator):
 
         changed = old_state_changed or new_state_changed
 
-        if changed: print("%s: changed new states"%self.episode, new_state not in self.state2id, old_state not in self.state2id, new_state_id,
-              old_state_id)
-
+        # TODO REMOVE DEBUG PRINT...
+        # if changed: print("%s: changed new states"%self.episode, new_state not in self.state2id, old_state not in self.state2id, new_state_id,
+        #       old_state_id)
 
         if old_state_id not in self.transition_function or label not in self.transition_function[old_state_id]:
             changed = True
             self.transition_function.setdefault(old_state_id, {})[label] = new_state_id
-            print("%s: changed transition"%self.episode, old_state_id not in self.transition_function, label not in self.transition_function[old_state_id], old_state_id, label, new_state_id)
+
+            # TODO REMOVE DEBUG PRINT...
+            # print("%s: changed transition"%self.episode, old_state_id not in self.transition_function, label not in self.transition_function[old_state_id], old_state_id, label, new_state_id)
 
         if self.is_failed() and new_state_id not in self.failure_states:
             self.failure_states.add(new_state_id)
             changed = True
-            print("%s: changed failed"%self.episode, new_state_id)
+
+            # TODO REMOVE DEBUG PRINT...
+            # print("%s: changed failed"%self.episode, new_state_id)
         elif self.is_true() and new_state_id not in self.final_states:
             self.final_states.add(new_state_id)
             changed = True
-            print("%s: changed true "%self.episode, new_state_id)
+
+            # TODO REMOVE DEBUG PRINT...
+            # print("%s: changed true "%self.episode, new_state_id)
 
         if changed:
-            print("why")
             dfa = DFA(self.alphabet, frozenset(self.states), self.initial_state, frozenset(self.final_states),
                   self.transition_function)
 
