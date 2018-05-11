@@ -20,6 +20,8 @@ class StatsStoppingCondition(StoppingCondition):
     def check_condition(self, *args, stats_manager: StatsManager = None, **kwargs):
         if stats_manager is None:
             raise Exception
+        if len(stats_manager.total_reward_history)<self.window_size:
+            return False
 
 class GoalPercentage(StatsStoppingCondition):
     def __init__(self, window_size=100, min_perc=0.97):

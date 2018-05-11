@@ -121,7 +121,7 @@ class BreakoutCompleteLinesTemporalEvaluator(TemporalEvaluator):
 
         string_formula = get_breakout_lines_formula(lines)
         f = parser(string_formula)
-        reward = 10000
+        reward = 1000
 
         super().__init__(BreakoutGoalFeatureExtractor(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows),
                          set(lines),
@@ -179,11 +179,11 @@ if __name__ == '__main__':
     #                 QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=100))
 
     gamma = 1.0
-    on_the_fly = True
+    on_the_fly = False
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
                     RandomPolicy(env.action_space, epsilon=0.1),#,epsilon_start=1.0, decaying_steps=50000),
-                    QLearning(None, env.action_space, alpha=None, gamma=gamma, nsteps=300),
+                    QLearning(None, env.action_space, alpha=None, gamma=gamma, nsteps=100),
 
                     # Leave one of the following three option to see the differences:
                     # 1) rows

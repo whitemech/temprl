@@ -85,7 +85,7 @@ class SapientinoTemporalEvaluator(TemporalEvaluator):
         print(formula_string)
         f = parser(formula_string)
 
-        reward = 1000
+        reward = 1
 
         super().__init__(SapientinoTEFeatureExtractor(input_space),
                          set(self.color_syms).union({self.bip}),
@@ -111,7 +111,7 @@ class SapientinoTemporalEvaluator(TemporalEvaluator):
 if __name__ == '__main__':
     gamma = 0.99
     on_the_fly = False
-    differential = True
+    differential = False
 
     env = GymSapientino(differential=differential)
     if differential:
@@ -122,8 +122,8 @@ if __name__ == '__main__':
 
     '''Temporal goal - visit all the colors in a given order'''
     agent = TGAgent(feat_ext,
-                    RandomPolicy(env.action_space, epsilon=0.1, epsilon_start=1.0, decaying_steps=10000),
-                    QLearning(None, env.action_space, alpha=0.1, gamma=gamma, nsteps=20),
+                    RandomPolicy(env.action_space, epsilon=0.1),#, epsilon_start=1.0, decaying_steps=10000),
+                    QLearning(None, env.action_space, alpha=0.1, gamma=gamma, nsteps=1),
                     [SapientinoTemporalEvaluator(env.observation_space, gamma=gamma, on_the_fly=on_the_fly)])
 
 

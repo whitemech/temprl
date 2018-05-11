@@ -62,12 +62,13 @@ class TGAgent(RLAgent):
         features = self.state_extractor(sw, automata_states)
         return super()._act(features, **kwargs)
 
-    def observe(self, state, action, reward, state2):
+    def observe(self, state, action, reward, state2, is_terminal_state=False):
         # get the current automata states
         old_states_automata = [te.get_state() for te in self.temporal_evaluators]
 
         # update the automata states given the new observed state and collect the reward
-        states_automata, rewards_automata = zip(*[te.update(action, state2) for te in self.temporal_evaluators])
+        states_automata, rewards_automata = zip(*[te.update(action, state2, is_terminal_state=is_terminal_state)
+                                                  for te in self.temporal_evaluators])
 
         old_state  = self.state_extractor(state,  old_states_automata)
         new_state2 = self.state_extractor(state2, states_automata)

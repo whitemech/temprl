@@ -31,14 +31,16 @@ class TemporalEvaluator(ABC):
     def fromFeaturesToPropositional(self, features, action, *args, **kwargs) -> Set[Symbol]:
         raise NotImplementedError
 
-    def update(self, action, state):
+    def update(self, action, state, is_terminal_state=False):
         """update the automaton.
         :param action: the action to reach the state
         :param state:  the new state of the MDP
         :returns (new_automaton_state, reward)"""
         features = self.goal_feature_extractor(state)
         propositional = self.fromFeaturesToPropositional(features, action)
-        reward = self.simulator.make_transition(propositional)
+        old_state = self.simulator.get_current_state()
+        new_state = self.simulator.make_transition(propositional)
+        reward = self.simulator.get_immediate_reward(old_state, new_state, is_terminal_state=is_terminal_state or self.is_terminal())
         return self.simulator.get_current_state(), reward
 
     def get_state(self):
@@ -62,3 +64,6 @@ class TemporalEvaluator(ABC):
 
     def is_true(self):
         return self.simulator.is_true()
+
+    def is_terminal(self):
+        return self.is_true() or self.is_failed()

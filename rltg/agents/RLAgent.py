@@ -58,7 +58,7 @@ class RLAgent(object):
             action = self.brain.choose_action(features, optimal=best_action)
         return action
 
-    def observe(self, state, action, reward, state2):
+    def observe(self, state, action, reward, state2, is_terminal_state=False):
         """Called at each observation. """
         features_1 = self.sensors(state)
         features_2 = self.sensors(state2)

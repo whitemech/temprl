@@ -86,19 +86,22 @@ class Trainer(object):
 
         temporal_evaluators = agent.temporal_evaluators if isinstance(agent, TGAgent) else []
 
-        done, all_te_not_failed, all_te_true = False, True, False
+        stop_condition = False
         info = {"goal": False}
 
         # until the game is not ended and every temporal task is not failed or every temporal task is true
-        while not done and all_te_not_failed and not all_te_true:
+        while not stop_condition:
             action = agent.act(state, best_action=try_optimal)
             state2, reward, done, info = env.step(action)
-            agent.observe(state, action, reward, state2)
+            agent.observe(state, action, reward, state2, is_terminal_state=stop_condition)
             agent.replay()
 
             # add the observed reward (including the automaton reward)
             total_reward += agent.brain.obs_history[-1][2]
             steps += 1
+
+            stop_condition = self.check_episode_stop_conditions(done, temporal_evaluators)
+
 
             agent.update()
             state = state2
@@ -106,10 +109,12 @@ class Trainer(object):
             if self.renderer:
                 self.renderer.update(env)
 
-            all_te_not_failed = all(not t.is_failed() for t in temporal_evaluators)
-            all_te_true   = all(t.is_true() for t in temporal_evaluators)
-
         return steps, total_reward, info["goal"] and all(t.is_true() for t in temporal_evaluators)
+
+    def check_episode_stop_conditions(self, done, temporal_evaluators):
+        any_te_failed = any(t.is_failed() for t in temporal_evaluators)
+        all_te_true = all(t.is_true() for t in temporal_evaluators)
+        return done or any_te_failed or all_te_true
 
     def check_stop_conditions(self, agent, stats):
         temporal_evaluators = agent.temporal_evaluators if isinstance(agent, TGAgent) else []

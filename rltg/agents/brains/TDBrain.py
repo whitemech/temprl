@@ -11,7 +11,7 @@ from rltg.agents.brains.Brain import Brain
 
 
 class TDBrain(Brain):
-    def __init__(self, observation_space:Discrete, action_space:Space, gamma=0.99, alpha=None, nsteps=300):
+    def __init__(self, observation_space:Discrete, action_space:Space, gamma=0.99, alpha=None, nsteps=1):
         super().__init__(observation_space, action_space)
 
         self.Visits = {}
@@ -122,7 +122,7 @@ class TDBrain(Brain):
 
 
 class QLearning(TDBrain):
-    def __init__(self, observation_space:Discrete, action_space, gamma=0.99, alpha=None, nsteps=200):
+    def __init__(self, observation_space:Discrete, action_space, gamma=0.99, alpha=None, nsteps=1):
         super().__init__(observation_space, action_space, gamma, alpha, nsteps)
 
     def getQa(self, s):
@@ -131,7 +131,7 @@ class QLearning(TDBrain):
 
 
 class Sarsa(TDBrain):
-    def __init__(self, observation_space:Discrete, action_space, gamma=0.99, alpha=None, nsteps=200):
+    def __init__(self, observation_space:Discrete, action_space, gamma=0.99, alpha=None, nsteps=1):
         super().__init__(observation_space, action_space, gamma, alpha, nsteps)
 
     def getQa(self, s):

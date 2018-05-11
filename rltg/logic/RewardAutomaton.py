@@ -34,18 +34,22 @@ class RewardAutomaton(DFA):
     def get_formula_reward(self):
         return self.reward
 
-    def get_immediate_reward(self, q, q_prime):
+    def get_immediate_reward(self, q, q_prime, is_terminal_state=False):
         phi = self.potential_function
         if q_prime in self.failure_states:
-            return -self.reward/self.max_level
-            # return 0
-
+            assert is_terminal_state
+            return - phi(q)
+        elif q_prime in self.accepting_states:
+            assert is_terminal_state
+            return self.reward - phi(q)
+        elif is_terminal_state:
+            return - phi(q)
 
         r = self.gamma * phi(q_prime) - phi(q)
-        if q != q_prime:
-            # implementation trick: do not scale reward if we are in the same state
-            r /= self.max_level
-            r *= self.reward
+        # if q != q_prime:
+        #     # implementation trick: do not scale reward if we are in the same state
+        #     r /= self.max_level
+        #     r *= self.reward
 
         return r
 
@@ -59,7 +63,10 @@ class RewardAutomaton(DFA):
         return RewardAutomaton(self._dfa.trim(), self.alphabet, self.f, self.reward,gamma=self.gamma)
 
     def potential_function(self, q):
-        return self.max_level - self.reachability_levels[q]
+        p = self.max_level - self.reachability_levels[q]
+        p /= self.max_level
+        p *= self.reward
+        return p
 
     def _compute_levels(self):
         level = 0
@@ -91,22 +98,3 @@ class RewardAutomaton(DFA):
         max_level = level - 1
         if max_level==0: max_level = 1
         return state2level, max_level, failure_states
-
-
-
-
-"""
-        The potential function works as the following:
-        - Compute the level of reachability for the final state (precomputed):
-        >>> level = self.reachability_levels[q]
-        The lower, the nearer to any final state (zero means that q is a final state)
-        - Make it "the higher, the nearer":
-        >>> true_level = self.max_level - level
-        - Normalize over the maximum level possible so that
-        the nearer to any final state, the higher the ratio (from 0.0 to 1.0)
-        >>> level_ratio = true_level / self.max_level
-        - Give the partial reward simply by using the ratio just computed;
-        >>> state_reward = level_ratio * self.reward
-        :param q: the state of the automaton
-        :return: the value of the potential function
-        """

@@ -60,40 +60,59 @@ class PartialAutomatonSimulator(RewardSimulator):
         i = PLInterpretation(s)
         old_state = self.dfaotf.cur_state
         self.dfaotf.make_transition(i)
-
         new_state = self.dfaotf.cur_state
         self._update_from_transition(old_state, i, new_state)
-
-        if len(self.final_states) > 0:
-            # if the goal state has been discovered: least-fixpoint reward works!
-            # this is to manage cases when
-            if self.state2id[new_state] in self._automaton_prime.failure_states and not self.is_failed():
-                return self.reward/10
-            else:
-                return self.get_immediate_reward(self.state2id[old_state], self.state2id[new_state])
-        else:
-            return self.get_partial_reward(old_state, new_state)
+        return self.state2id[new_state]
 
 
-    def get_partial_reward(self, old_state, new_state):
+
+    def get_partial_reward(self, old_state, new_state, is_terminal_state=False):
         if self.is_true():
             return self.reward
         if self.is_failed():
-            return -self.reward/10
+            return -self.reward
         if not self.is_failed() and old_state != new_state and new_state not in self.visited_states:
             # give an optimistic reward to help exploration
-            return self.reward/10
+            # return self.reward/10
+            return 0
         return 0
 
-    def get_immediate_reward(self, q, q_prime):
+    def get_immediate_reward(self, q, q_prime, is_terminal_state=False):
+        q_id = q
+        q_prime_id = q_prime
+
+        if len(self.final_states) > 0:
+            # if the goal state has been discovered: least-fixpoint reward works!
+            return self.get_dynamic_reward(q_id, q_prime_id, is_terminal_state=is_terminal_state)
+        else:
+            return self.get_partial_reward(q_id, q_prime_id, is_terminal_state=is_terminal_state)
+
+    def get_dynamic_reward(self, q, q_prime, is_terminal_state=False):
+        # if q_prime in self._automaton_prime.failure_states and not self.is_failed():
+        #     return 0
+
         phi = self._automaton.potential_function
         phi_prime = self._automaton_prime.potential_function
 
+        if q_prime in self.failure_states:
+            assert is_terminal_state
+            print("failed " , q_prime)
+            return - phi(q)
+        elif q_prime in self._automaton_prime.accepting_states:
+            assert is_terminal_state
+            return self.reward - phi(q)
+        elif is_terminal_state:
+            return - phi(q)
         r = self.gamma * phi_prime(q_prime) - phi(q)
+
         if q != q_prime:
             # implementation trick: do not scale reward if we are in the same state
             r /= self._automaton_prime.max_level
             r *= self.reward
+        # if q != q_prime:
+        #     # implementation trick: do not scale reward if we are in the same state
+        #     r /= self._automaton_prime.max_level
+        #     r *= self.reward
 
         return r
 
@@ -138,18 +157,15 @@ class PartialAutomatonSimulator(RewardSimulator):
             # print("%s: changed true "%self.episode, new_state_id)
 
         if changed:
+            print("changed")
             dfa = DFA(self.alphabet, frozenset(self.states), self.initial_state, frozenset(self.final_states),
                   self.transition_function)
 
             self._automaton = self._automaton_prime
             self._automaton_prime = RewardAutomaton(dfa, self.alphabet, self.dfaotf.f, self.reward, gamma=self.gamma)
-            self._automaton_prime.to_dot("automata/%s-%s" % (self.episode, self.it))
+            self._automaton_prime.to_dot("automata/%s-%s-%s" % (str(self.dfaotf.f),self.episode, self.it))
         else:
             self._automaton = self._automaton_prime
-
-
-
-
 
     def _add_state(self, new_state):
         changed = False
