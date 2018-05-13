@@ -127,26 +127,26 @@ class MinecraftTaskTemporalEvaluator(MinecraftTemporalEvaluator):
 
         return res
 
-def temporal_evaluators_from_task(tasks, on_the_fly=False):
-    res = [MinecraftTaskTemporalEvaluator(env.observation_space, t, on_the_fly=on_the_fly) for k, t in tasks.items() if "make" in k]
-    res.append((MinecraftSafetyTemporalEvaluator(env.observation_space, on_the_fly=on_the_fly)))
+def temporal_evaluators_from_task(tasks, gamma=0.99, on_the_fly=False):
+    res = [MinecraftTaskTemporalEvaluator(env.observation_space, t, gamma=gamma, on_the_fly=on_the_fly) for k, t in list(tasks.items())[:] if "make" in k]
+    # res.append((MinecraftSafetyTemporalEvaluator(env.observation_space, gamma=gamma, on_the_fly=on_the_fly)))
     return res
 
 if __name__ == '__main__':
     env = GymMinecraft()
 
-    on_the_fly = False
-    gamma = 0.99
+    on_the_fly = True
+    gamma = 1.0
     '''Temporal goal - complete every task'''
     agent = TGAgent(MinecraftNRobotFeatureExtractor(env.observation_space),
-                    RandomPolicy(env.action_space, epsilon=0.1),#, epsilon_start=1.0, decaying_steps=100000),
+                    RandomPolicy(env.action_space, epsilon=0.1),#, epsilon_start=1.0, decaying_steps=5000),
                     QLearning(None, env.action_space, alpha=0.1, gamma=gamma, nsteps=1),
-                    temporal_evaluators_from_task(TASKS, on_the_fly=on_the_fly)
+                    temporal_evaluators_from_task(TASKS, gamma=gamma, on_the_fly=on_the_fly)
                     )
 
 
     t = Trainer(env, agent,
-        n_episodes=100000,
+        n_episodes=5000,
         resume=False,
         eval=False,
         # resume = True,

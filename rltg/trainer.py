@@ -102,7 +102,6 @@ class Trainer(object):
 
             stop_condition = self.check_episode_stop_conditions(done, temporal_evaluators)
 
-
             agent.update()
             state = state2
 
@@ -113,7 +112,7 @@ class Trainer(object):
 
     def check_episode_stop_conditions(self, done, temporal_evaluators):
         any_te_failed = any(t.is_failed() for t in temporal_evaluators)
-        all_te_true = all(t.is_true() for t in temporal_evaluators)
+        all_te_true = all(t.is_true() for t in temporal_evaluators) if len(temporal_evaluators)!=0 else False
         return done or any_te_failed or all_te_true
 
     def check_stop_conditions(self, agent, stats):

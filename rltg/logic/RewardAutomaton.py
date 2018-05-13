@@ -46,11 +46,6 @@ class RewardAutomaton(DFA):
             return - phi(q)
 
         r = self.gamma * phi(q_prime) - phi(q)
-        # if q != q_prime:
-        #     # implementation trick: do not scale reward if we are in the same state
-        #     r /= self.max_level
-        #     r *= self.reward
-
         return r
 
     def complete(self):
@@ -63,9 +58,14 @@ class RewardAutomaton(DFA):
         return RewardAutomaton(self._dfa.trim(), self.alphabet, self.f, self.reward,gamma=self.gamma)
 
     def potential_function(self, q):
-        p = self.max_level - self.reachability_levels[q]
-        p /= self.max_level
-        p *= self.reward
+        if self.max_level == -1:
+            return 0
+        elif self.max_level == 0:
+            return self.reward
+        else:
+            p = self.max_level - self.reachability_levels[q]
+            p /= self.max_level
+            p *= self.reward
         return p
 
     def _compute_levels(self):
@@ -89,12 +89,12 @@ class RewardAutomaton(DFA):
 
         z_current = z_next
 
+        max_level = level - 1
+
         # levels for failure state (i.e. that cannot reach a final state)
         failure_states = set()
         for s in filter(lambda x: x not in z_current, self._dfa.states):
             state2level[s] = level
             failure_states.add(s)
 
-        max_level = level - 1
-        if max_level==0: max_level = 1
         return state2level, max_level, failure_states

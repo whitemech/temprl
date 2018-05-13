@@ -110,7 +110,7 @@ class SapientinoTemporalEvaluator(TemporalEvaluator):
 
 if __name__ == '__main__':
     gamma = 0.99
-    on_the_fly = False
+    on_the_fly = True
     differential = False
 
     env = GymSapientino(differential=differential)

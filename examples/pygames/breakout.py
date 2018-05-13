@@ -179,11 +179,11 @@ if __name__ == '__main__':
     #                 QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=100))
 
     gamma = 1.0
-    on_the_fly = False
+    on_the_fly = True
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
-                    RandomPolicy(env.action_space, epsilon=0.1),#,epsilon_start=1.0, decaying_steps=50000),
-                    QLearning(None, env.action_space, alpha=None, gamma=gamma, nsteps=100),
+                    RandomPolicy(env.action_space, epsilon=0.1),# epsilon_start=1.0, decaying_steps=50000),
+                    QLearning(None, env.action_space, alpha=None, gamma=gamma, nsteps=200),
 
                     # Leave one of the following three option to see the differences:
                     # 1) rows
@@ -194,17 +194,17 @@ if __name__ == '__main__':
                     # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, gamma=gamma, on_the_fly=on_the_fly)]
 
                     # 2
-                    [BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, gamma=gamma, on_the_fly=on_the_fly)]
+                    # [BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, gamma=gamma, on_the_fly=on_the_fly)]
 
                     # 3
-                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, on_the_fly=on_the_fly),
-                    # BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, on_the_fly=on_the_fly)]
+                    [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, on_the_fly=on_the_fly, gamma=gamma),
+                    BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, on_the_fly=on_the_fly, gamma=gamma)]
                     )
 
 
     t = Trainer(env, agent,
         n_episodes=10000,
-        resume=False,
+        resume= False,
         eval=False,
         # resume = True,
         # eval = True,
