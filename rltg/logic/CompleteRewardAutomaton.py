@@ -5,8 +5,10 @@ from flloat.syntax.ldlf import LDLfFormula
 from pythomata.base.DFA import DFA
 from typing import Set
 
+from rltg.logic.RewardAutomaton import RewardAutomaton
 
-class CompleteRewardAutomaton(DFA):
+
+class CompleteRewardAutomaton(DFA, RewardAutomaton):
     def __init__(self, dfa:DFA, alphabet:Alphabet, f:LDLfFormula, reward, gamma=0.99):
         super().__init__(
             dfa.alphabet,
