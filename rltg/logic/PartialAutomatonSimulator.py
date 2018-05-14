@@ -8,7 +8,7 @@ from pythomata.base.DFA import DFA
 from pythomata.base.Symbol import Symbol
 
 from rltg.logic.PartialRewardAutomaton import PartialRewardAutomaton
-from rltg.logic.RewardAutomaton import RewardAutomaton
+from rltg.logic.CompleteRewardAutomaton import CompleteRewardAutomaton
 from rltg.logic.RewardAutomatonSimulator import RewardSimulator
 
 

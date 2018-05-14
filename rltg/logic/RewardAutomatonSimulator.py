@@ -6,7 +6,7 @@ from pythomata.base.Simulator import DFASimulator, Simulator
 from pythomata.base.Symbol import Symbol
 from pythomata.base.utils import Sink
 
-from rltg.logic.RewardAutomaton import RewardAutomaton
+from rltg.logic.CompleteRewardAutomaton import CompleteRewardAutomaton
 
 class RewardSimulator(Simulator):
 
@@ -20,7 +20,7 @@ class RewardSimulator(Simulator):
 
 
 class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
-    def __init__(self, dfa:RewardAutomaton):
+    def __init__(self, dfa:CompleteRewardAutomaton):
         super().__init__(dfa)
         self.visited_states = {self.cur_state}
 

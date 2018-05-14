@@ -93,14 +93,15 @@ class Trainer(object):
         while not stop_condition:
             action = agent.act(state, best_action=try_optimal)
             state2, reward, done, info = env.step(action)
-            agent.observe(state, action, reward, state2, is_terminal_state=stop_condition)
+            f_state, f_state2 = agent.sync(state, action, reward, state2)
+            stop_condition = self.check_episode_stop_conditions(done, temporal_evaluators)
+            agent.observe(state, action, reward, state2,
+                          automata_states=f_state, automata_states2=f_state2, is_terminal_state=stop_condition)
             agent.replay()
 
             # add the observed reward (including the automaton reward)
             total_reward += agent.brain.obs_history[-1][2]
             steps += 1
-
-            stop_condition = self.check_episode_stop_conditions(done, temporal_evaluators)
 
             agent.update()
             state = state2
@@ -112,8 +113,8 @@ class Trainer(object):
 
     def check_episode_stop_conditions(self, done, temporal_evaluators):
         any_te_failed = any(t.is_failed() for t in temporal_evaluators)
-        all_te_true = all(t.is_true() for t in temporal_evaluators) if len(temporal_evaluators)!=0 else False
-        return done or any_te_failed or all_te_true
+        all_te_true = all(t.is_true() for t in temporal_evaluators) if len(temporal_evaluators)>0 else False
+        return done or all_te_true or any_te_failed
 
     def check_stop_conditions(self, agent, stats):
         temporal_evaluators = agent.temporal_evaluators if isinstance(agent, TGAgent) else []
