@@ -135,11 +135,11 @@ def temporal_evaluators_from_task(tasks, gamma=0.99, on_the_fly=False):
 if __name__ == '__main__':
     env = GymMinecraft()
 
-    on_the_fly = False
+    on_the_fly = True
     gamma = 1.0
     '''Temporal goal - complete every task'''
     agent = TGAgent(MinecraftNRobotFeatureExtractor(env.observation_space),
-                    RandomPolicy(env.action_space, epsilon=0.1),#, epsilon_start=1.0, decaying_steps=5000),
+                    RandomPolicy(env.action_space, epsilon=0.2),#, epsilon_start=1.0, decaying_steps=5000),
                     QLearning(None, env.action_space, alpha=0.1, gamma=gamma, nsteps=1),
                     temporal_evaluators_from_task(TASKS, gamma=gamma, on_the_fly=on_the_fly)
                     )
@@ -147,10 +147,10 @@ if __name__ == '__main__':
 
     t = Trainer(env, agent,
         n_episodes=100000,
-        # resume=False,
-        # eval=False,
-        resume = True,
-        eval = True,
-        renderer=PygameRenderer(delay=0.01)
+        resume=False,
+        eval=False,
+        # resume = True,
+        # eval = True,
+        # renderer=PygameRenderer(delay=0.01)
     )
     t.main()

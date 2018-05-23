@@ -40,6 +40,7 @@ class TDBrain(Brain):
         if self.episode_iteration + 1 < self.nsteps:
             # no enough observations. + 1 for manage the case when nsteps=1 and iteration=0
             return
+        assert len(self.obs_history) >= self.nsteps
 
         tau = self.episode_iteration + 1 - self.nsteps
         self._nsteps_update(self.obs_history[tau: tau + self.nsteps])
@@ -53,9 +54,11 @@ class TDBrain(Brain):
         self.incVisits(state, action)
 
     def reset(self):
-        t = self.episode_iteration - self.nsteps
+        t = self.episode_iteration + 1 - self.nsteps
+
         for i in range(t, self.episode_iteration):
-            self._nsteps_update(self.obs_history[i:], last=True)
+            partial_history = self.obs_history[i:]
+            self._nsteps_update(partial_history, last=True)
 
         self.obs_history = []
         super().reset()
@@ -67,7 +70,7 @@ class TDBrain(Brain):
 
         n_reward_return = 0
         N = len(partial_history)
-        # gamma^0*r0 + gamma^1*r1 + ... + gamma^N-1*r_n-1
+        # nstep_return = r1 + gamma^1*r2 + ... + gamma^N-1*r_n+1
         for i in range(N):
             n_reward_return += partial_history[i][2] * math.pow(self.gamma, i)
 

@@ -4,7 +4,7 @@ from abc import abstractmethod
 class RewardAutomaton():
 
     @abstractmethod
-    def get_immediate_reward(self, q, q_prime, is_terminal_state=False):
+    def get_immediate_reward(self, q, q_prime, is_terminal_state=False, reward_shaping=True):
         pass
 
     @abstractmethod

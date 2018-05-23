@@ -34,10 +34,10 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
         self.visited_states.add(self.cur_state)
         return self.cur_state
 
-    def get_immediate_reward(self, q, q_prime, is_terminal_state=False):
+    def get_immediate_reward(self, q, q_prime, is_terminal_state=False, reward_shaping=True):
         q_id = self.id2state[q]
         q_prime_id = self.id2state[q_prime]
-        return self.dfa.get_immediate_reward(q_id, q_prime_id, is_terminal_state=is_terminal_state)
+        return self.dfa.get_immediate_reward(q_id, q_prime_id, is_terminal_state=is_terminal_state, reward_shaping=reward_shaping)
 
     def is_failed(self):
         return self.id2state[self.cur_state] in self.dfa.failure_states

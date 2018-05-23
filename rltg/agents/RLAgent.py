@@ -98,10 +98,14 @@ class RLAgent(object):
         with open(filepath + "/sensors.dump", "wb") as fout:
             pickle.dump(self.sensors, fout)
 
-    def load(self, filepath):
+    @staticmethod
+    def load(filepath):
         with open(filepath + "/exploration_policy.dump", "rb") as fin:
-            self.exploration_policy = pickle.load(fin)
+            exploration_policy = pickle.load(fin)
         with open(filepath + "/brain.dump", "rb") as fin:
-            self.brain = pickle.load(fin)
+            brain = pickle.load(fin)
         with open(filepath + "/sensors.dump", "rb") as fin:
-            self.sensors = pickle.load(fin)
+            sensors = pickle.load(fin)
+
+        assert exploration_policy and brain and sensors
+        return RLAgent(sensors, exploration_policy, brain)
