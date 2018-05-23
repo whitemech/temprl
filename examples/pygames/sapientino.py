@@ -109,7 +109,8 @@ class SapientinoTemporalEvaluator(TemporalEvaluator):
 
 
 if __name__ == '__main__':
-    gamma = 0.99
+    gamma = 1.0
+
     on_the_fly = False
     differential = False
 

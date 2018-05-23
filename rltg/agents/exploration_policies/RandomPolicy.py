@@ -19,7 +19,7 @@ class RandomPolicy(ExplorationPolicy):
             self.epsilon_start = epsilon_start
             self.epsilon_end = epsilon
             self.epsilon = self.epsilon_start
-            self.epsilon_decay_step = (epsilon_start - epsilon) / self.exploration_steps
+            self.iterationepsilon_decay_step = (epsilon_start - epsilon) / self.exploration_steps
 
     def update(self, *args):
         if self.epsilon_start is not None:

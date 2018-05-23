@@ -111,7 +111,7 @@ def get_breakout_lines_formula(lines_symbols):
 class BreakoutCompleteLinesTemporalEvaluator(TemporalEvaluator):
     """Breakout temporal evaluator for delete columns from left to right"""
 
-    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, lines_num=3, gamma=0.99, on_the_fly=False):
+    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, lines_num=3, gamma=0.99, on_the_fly=False, reward_shaping=True):
         assert lines_num == bricks_cols or lines_num == bricks_rows
         self.line_symbols = [Symbol("l%s" % i) for i in range(lines_num)]
         lines = self.line_symbols
@@ -128,7 +128,8 @@ class BreakoutCompleteLinesTemporalEvaluator(TemporalEvaluator):
                          f,
                          reward,
                          gamma=gamma,
-                         on_the_fly=on_the_fly)
+                         on_the_fly=on_the_fly,
+                         reward_shaping=reward_shaping)
 
     @abstractmethod
     def fromFeaturesToPropositional(self, features, action, *args, **kwargs):
@@ -150,8 +151,8 @@ class BreakoutCompleteLinesTemporalEvaluator(TemporalEvaluator):
 class BreakoutCompleteRowsTemporalEvaluator(BreakoutCompleteLinesTemporalEvaluator):
     """Temporal evaluator for complete rows in order"""
 
-    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, bottom_up=True, gamma=0.99, on_the_fly=False):
-        super().__init__(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows, lines_num=bricks_rows, gamma=gamma, on_the_fly=on_the_fly)
+    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, bottom_up=True, gamma=0.99, on_the_fly=False, reward_shaping=True):
+        super().__init__(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows, lines_num=bricks_rows, gamma=gamma, on_the_fly=on_the_fly, reward_shaping=reward_shaping)
         self.bottom_up = bottom_up
 
     def fromFeaturesToPropositional(self, features, action, *args, **kwargs):
@@ -162,8 +163,8 @@ class BreakoutCompleteRowsTemporalEvaluator(BreakoutCompleteLinesTemporalEvaluat
 class BreakoutCompleteColumnsTemporalEvaluator(BreakoutCompleteLinesTemporalEvaluator):
     """Temporal evaluator for complete columns in order"""
 
-    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, left_right=True, gamma=0.99, on_the_fly=False):
-        super().__init__(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows, lines_num=bricks_cols, gamma=gamma, on_the_fly=on_the_fly)
+    def __init__(self, input_space, bricks_cols=3, bricks_rows=3, left_right=True, gamma=0.99, on_the_fly=False, reward_shaping=True):
+        super().__init__(input_space, bricks_cols=bricks_cols, bricks_rows=bricks_rows, lines_num=bricks_cols, gamma=gamma, on_the_fly=on_the_fly, reward_shaping=reward_shaping)
         self.left_right = left_right
 
     def fromFeaturesToPropositional(self, features, action, *args, **kwargs):
@@ -180,10 +181,11 @@ if __name__ == '__main__':
 
     gamma = 1.0
     on_the_fly = False
+    reward_shaping = True
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
-                    RandomPolicy(env.action_space, epsilon=0.1),#,epsilon_start=1.0, decaying_steps=50000),
-                    QLearning(None, env.action_space, alpha=None, gamma=gamma, nsteps=100),
+                    RandomPolicy(env.action_space, epsilon=0.1),# epsilon_start=1.0, decaying_steps=50000),
+                    Sarsa(None, env.action_space, alpha=None, gamma=gamma, nsteps=200),
 
                     # Leave one of the following three option to see the differences:
                     # 1) rows
@@ -194,18 +196,19 @@ if __name__ == '__main__':
                     # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, gamma=gamma, on_the_fly=on_the_fly)]
 
                     # 2
-                    [BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, gamma=gamma, on_the_fly=on_the_fly)]
+                    [BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, gamma=gamma, on_the_fly=on_the_fly, reward_shaping=reward_shaping)]
 
                     # 3
-                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, on_the_fly=on_the_fly),
-                    # BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, on_the_fly=on_the_fly)]
+                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, on_the_fly=on_the_fly, gamma=gamma),
+                    # BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, on_the_fly=on_the_fly, gamma=gamma)]
                     )
 
 
     t = Trainer(env, agent,
         n_episodes=10000,
-        resume=False,
+        resume= False,
         eval=False,
+        optimal_stats=1
         # resume = True,
         # eval = True,
         # renderer=PygameRenderer(delay=0.01)

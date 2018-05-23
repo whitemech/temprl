@@ -25,15 +25,15 @@ class SimpleGridRFE(RobotFeatureExtractor):
 
 
 if __name__ == '__main__':
-    env = GymSimpleGrid(rows=5, cols=5)
+    env = GymSimpleGrid(rows=3, cols=3)
 
     '''Normal task - no temporal goal'''
     agent = RLAgent(SimpleGridRFE(env.observation_space),
                     RandomPolicy(env.action_space, epsilon=0.1),
-                    QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=1))
+                    QLearning(None, env.action_space, alpha=0.1, gamma=1.0, nsteps=1))
 
     t = Trainer(env, agent,
-        n_episodes=100000,
+        n_episodes=1000,
         resume=False,
         eval=False,
         # resume = True,

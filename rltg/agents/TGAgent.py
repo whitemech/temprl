@@ -44,14 +44,12 @@ class TGAgent(RLAgent):
         # map every state from the space (N0, N1, ..., Nn) to a discrete space of dimension N0*N1*...*Nn-1
         self._from_tuple_to_int = TupleFeatureExtractor(feature_space)
 
-    # TODO: allow customization of this component by modularization
     def state_extractor(self, world_state, automata_states: List):
         # the state is a tuple: (features, A1 state, ..., An state)
         state = self.sensors(world_state) + tuple(automata_states)
         collapsed_state = self._from_tuple_to_int(state)
         return collapsed_state
 
-    # TODO: allow customization of this component by modularization
     def reward_extractor(self, world_reward, automata_rewards: List):
         res = world_reward + sum(automata_rewards)
         return res
@@ -62,16 +60,24 @@ class TGAgent(RLAgent):
         features = self.state_extractor(sw, automata_states)
         return super()._act(features, **kwargs)
 
-    def observe(self, state, action, reward, state2, is_terminal_state=False):
+    def sync(self, state, action, reward, state2):
         # get the current automata states
-        old_states_automata = [te.get_state() for te in self.temporal_evaluators]
+        old_automata_states = [te.get_state() for te in self.temporal_evaluators]
 
-        # update the automata states given the new observed state and collect the reward
-        states_automata, rewards_automata = zip(*[te.update(action, state2, is_terminal_state=is_terminal_state)
-                                                  for te in self.temporal_evaluators])
+        # update the automata states given the new observed state
+        new_automata_states = [te.update(action, state2) for te in self.temporal_evaluators]
+        return old_automata_states, new_automata_states
 
-        old_state  = self.state_extractor(state,  old_states_automata)
-        new_state2 = self.state_extractor(state2, states_automata)
+    def observe(self, state, action, reward, state2, automata_states=None, automata_states2=None, is_terminal_state=False):
+        if automata_states is None or automata_states2 is None:
+            raise Exception
+
+        # collect the reward
+        rewards_automata = [te.get_immediate_reward(automata_states[idx], automata_states2[idx], is_terminal_state=is_terminal_state)
+                                                  for idx, te in enumerate(self.temporal_evaluators)]
+
+        old_state  = self.state_extractor(state,  automata_states)
+        new_state2 = self.state_extractor(state2, automata_states2)
         new_reward = self.reward_extractor(reward, rewards_automata)
         super()._observe(old_state, action, new_reward, new_state2)
 
@@ -87,12 +93,20 @@ class TGAgent(RLAgent):
                 te.reset()
                 pickle.dump(te, fout)
 
-    def load(self, filepath):
-        super().load(filepath)
+    @staticmethod
+    def load(filepath):
+        rl_agent = RLAgent.load(filepath)
         temporal_evaluators_files = sorted([f for f in os.listdir(filepath) if re.match(r'te.*\.dump', f)])
         temporal_evaluators = []
         for idx, te_name in enumerate(temporal_evaluators_files):
             with open(filepath + "/%s" % te_name, "rb") as fin:
                 te = pickle.load(fin)
                 temporal_evaluators.append(te)
-        self.temporal_evaluators = temporal_evaluators
+        temporal_evaluators = temporal_evaluators
+
+        sensors = rl_agent.sensors
+        brain = rl_agent.brain
+        exploration_policy = rl_agent.exploration_policy
+
+        assert exploration_policy and brain and sensors and temporal_evaluators is not None
+        return TGAgent(sensors, exploration_policy, brain, temporal_evaluators)

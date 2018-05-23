@@ -58,7 +58,10 @@ class RLAgent(object):
             action = self.brain.choose_action(features, optimal=best_action)
         return action
 
-    def observe(self, state, action, reward, state2, is_terminal_state=False):
+    def sync(self, state, action, reward, state2):
+        return [], []
+
+    def observe(self, state, action, reward, state2, automata_states=[], automata_states2=[], is_terminal_state=False):
         """Called at each observation. """
         features_1 = self.sensors(state)
         features_2 = self.sensors(state2)
@@ -95,10 +98,14 @@ class RLAgent(object):
         with open(filepath + "/sensors.dump", "wb") as fout:
             pickle.dump(self.sensors, fout)
 
-    def load(self, filepath):
+    @staticmethod
+    def load(filepath):
         with open(filepath + "/exploration_policy.dump", "rb") as fin:
-            self.exploration_policy = pickle.load(fin)
+            exploration_policy = pickle.load(fin)
         with open(filepath + "/brain.dump", "rb") as fin:
-            self.brain = pickle.load(fin)
+            brain = pickle.load(fin)
         with open(filepath + "/sensors.dump", "rb") as fin:
-            self.sensors = pickle.load(fin)
+            sensors = pickle.load(fin)
+
+        assert exploration_policy and brain and sensors
+        return RLAgent(sensors, exploration_policy, brain)
