@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+import time
 from abc import ABC
 
 from gym import Env
@@ -17,9 +18,9 @@ class GenericTrainer(ABC):
     def __init__(self, env:Env, agent:Agent=None, n_episodes=1000,
                  resume=False,
                  eval=False,
-                 agent_data_dir="agent_data",
+                 data_dir="data",
                  stop_conditions=(GoalPercentage(10, 1.0), ),
-                 renderer: Renderer = None,):
+                 renderer: Renderer = None, ):
         self.env = env
         self.n_episodes = n_episodes
         self.stop_conditions = list(stop_conditions)
@@ -27,11 +28,13 @@ class GenericTrainer(ABC):
 
         self.eval = eval
         self.resume = resume
-        self.agent_data_dir = agent_data_dir
+        self.data_dir = data_dir
+        self.agent_data_dir = data_dir + "/agent_data"
 
         self.agent = agent if not resume else self.load_agent()
         if not self.resume:
-            shutil.rmtree(self.agent_data_dir, ignore_errors=True)
+            shutil.rmtree(self.data_dir, ignore_errors=True)
+            os.mkdir(self.data_dir)
             os.mkdir(self.agent_data_dir)
 
         self.agent.set_eval(self.eval)
@@ -42,22 +45,35 @@ class GenericTrainer(ABC):
 
         agent = self.agent
         num_episodes = self.n_episodes
-        stats = StatsManager()
+        stats = StatsManager(name="train_stats")
+        optimal_stats = StatsManager(name="eval_stats")
 
         for ep in range(num_episodes):
 
             steps, total_reward, goal = self.train_loop()
             stats.update(steps, len(agent.brain.Q), total_reward, goal)
             stats.print_summary(agent.brain.episode, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
-            if self.check_stop_conditions(stats):
+
+            # try optimal run
+            agent.set_eval(True)
+            steps, total_reward, goal = self.train_loop()
+            optimal_stats.update(steps, len(agent.brain.Q), total_reward, goal)
+            optimal_stats.print_summary(agent.brain.episode, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
+            agent.set_eval(False)
+
+
+            if self.check_stop_conditions(optimal_stats):
                 break
 
             if ep%100==0:
                 agent.save(self.agent_data_dir)
 
-        agent.save(self.agent_data_dir)
 
-        return stats
+        agent.save(self.agent_data_dir)
+        stats.to_csv(self.data_dir + "/" + stats.name + "_" + str(time.time()))
+        optimal_stats.to_csv(self.data_dir + "/" + optimal_stats.name + "_" + str(time.time()))
+
+        return stats, optimal_stats
 
     def train_loop(self):
         env = self.env
@@ -100,3 +116,4 @@ class GenericTrainer(ABC):
 
     def load_agent(self):
         return RLAgent.load(self.agent_data_dir)
+

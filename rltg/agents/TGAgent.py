@@ -77,13 +77,11 @@ class TGAgent(Agent):
     def observe(self, state, action, reward, state2,
                 old_automata_state=(), new_automata_state=(), is_terminal_state=False):
 
-        plus = 0.0
         automata_rewards = [te.reward if is_terminal_state and te.is_true() else 0 for te in self.temporal_evaluators]
 
         # apply reward shaping to the observed automata rewards
         for i in range(len(self.reward_shapers)):
-            plus = self.reward_shapers[i](old_automata_state[i], new_automata_state[i],
-                                                          is_terminal_state=is_terminal_state)
+            plus = self.reward_shapers[i](old_automata_state[i], new_automata_state[i], is_terminal_state=is_terminal_state)
             automata_rewards[i] += plus
 
         old_state  = self.state_extractor(state,  old_automata_state)

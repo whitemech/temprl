@@ -53,7 +53,8 @@ class Brain(ABC):
         self.policy.update()
 
     def start(self, state):
-        self.episode += 1
+        if not self.eval:
+            self.episode += 1
         self.episode_iteration = 0
         self.total_reward = 0
         self.policy.reset()

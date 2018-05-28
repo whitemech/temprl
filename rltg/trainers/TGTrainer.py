@@ -1,21 +1,11 @@
 import logging
 
-import numpy as np
-import os
-import shutil
-
 from gym import Env
-from rltg.utils.Renderer import PygameRenderer
 
 from rltg.agents.TGAgent import TGAgent
-
-from rltg.agents.RLAgent import RLAgent
 from rltg.trainers.GenericTrainer import GenericTrainer
-from rltg.utils.StoppingCondition import GoalPercentage, CheckAutomataInFinalState
-
 from rltg.utils.StatsManager import StatsManager
-
-from rltg.agents.Agent import Agent
+from rltg.utils.StoppingCondition import GoalPercentage, CheckAutomataInFinalState
 
 
 class TGTrainer(GenericTrainer):
@@ -24,11 +14,11 @@ class TGTrainer(GenericTrainer):
     def __init__(self, env:Env, agent:TGAgent=None, n_episodes=1000,
                  resume=False,
                  eval=False,
-                 agent_data_dir="agent_data",
+                 data_dir="data",
                  stop_conditions=(GoalPercentage(10, 1.0), ),
                  renderer=None
                  ):
-        super().__init__(env, agent, n_episodes, resume, eval, agent_data_dir, stop_conditions, renderer=renderer)
+        super().__init__(env, agent, n_episodes, resume, eval, data_dir, stop_conditions, renderer=renderer)
         self.stop_conditions.append(CheckAutomataInFinalState())
 
     def train_loop(self):
@@ -44,7 +34,6 @@ class TGTrainer(GenericTrainer):
         if self.renderer: self.renderer.update(env)
 
         while not stop_condition:
-
             state2, reward, done, info = env.step(action)
             if self.renderer: self.renderer.update(env)
 
@@ -89,7 +78,4 @@ class TGTrainer(GenericTrainer):
 
     def load_agent(self):
         return TGAgent.load(self.agent_data_dir)
-
-
-
 

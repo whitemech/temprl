@@ -174,10 +174,11 @@ class BreakoutCompleteColumnsTemporalEvaluator(BreakoutCompleteLinesTemporalEval
         return super().fromFeaturesToPropositional(features, action, axis=1, is_reversed=not self.left_right)
 
 if __name__ == '__main__':
-    env = GymBreakout(brick_cols=5, brick_rows=4)
+    env = GymBreakout(brick_cols=4, brick_rows=3)
 
     gamma = 0.999
-    on_the_fly = False
+    on_the_fly = True
+    reward_shaping = True
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
                     Sarsa(None, env.action_space, policy=EGreedy(0.1), alpha=0.1, gamma=gamma, lambda_=0.99),
@@ -197,7 +198,7 @@ if __name__ == '__main__':
                     # BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, on_the_fly=on_the_fly, gamma=gamma)],
 
 
-                    reward_shaping=True)
+                    reward_shaping=reward_shaping)
 
     tr = TGTrainer(env, agent, n_episodes=2000,
                         resume=False, eval=False,
@@ -216,5 +217,5 @@ if __name__ == '__main__':
     #                # resume=True, eval=True,
     #                )
 
-    stats = tr.main()
-    stats.plot()
+    stats, optimal_stats = tr.main()
+

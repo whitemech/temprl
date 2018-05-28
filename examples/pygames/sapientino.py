@@ -1,21 +1,15 @@
-from abc import abstractmethod
-
-import sys
 from RLGames.Sapientino import COLORS
 from RLGames.gym_wrappers.GymSapientino import GymSapientino
 from flloat.base.Symbol import Symbol
 from flloat.parser.ldlf import LDLfParser
-from flloat.parser.ltlf import LTLfParser
 from gym.spaces import Tuple
+from rltg.utils.Renderer import PygameRenderer
 
-from rltg.agents.RLAgent import RLAgent
 from rltg.agents.TGAgent import TGAgent
-from rltg.agents.brains.TDBrain import QLearning, Sarsa
-from rltg.agents.exploration_policies.RandomPolicy import RandomPolicy
+from rltg.agents.brains.TDBrain import Sarsa
 from rltg.agents.feature_extraction import RobotFeatureExtractor
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
-from rltg.trainer import Trainer
-from rltg.utils.Renderer import PygameRenderer
+from rltg.trainers.TGTrainer import TGTrainer
 
 
 class SapientinoRobotFeatureExtractor(RobotFeatureExtractor):
@@ -109,10 +103,11 @@ class SapientinoTemporalEvaluator(TemporalEvaluator):
 
 
 if __name__ == '__main__':
-    gamma = 1.0
+    gamma = 0.99
 
     on_the_fly = False
     differential = False
+    reward_shaping = True
 
     env = GymSapientino(differential=differential)
     if differential:
@@ -123,12 +118,12 @@ if __name__ == '__main__':
 
     '''Temporal goal - visit all the colors in a given order'''
     agent = TGAgent(feat_ext,
-                    RandomPolicy(env.action_space, epsilon=0.1),#, epsilon_start=1.0, decaying_steps=10000),
-                    QLearning(None, env.action_space, alpha=0.1, gamma=gamma, nsteps=1),
-                    [SapientinoTemporalEvaluator(env.observation_space, gamma=gamma, on_the_fly=on_the_fly)])
+                    Sarsa(None, env.action_space, alpha=0.1, gamma=gamma, lambda_=0.1),
+                    [SapientinoTemporalEvaluator(env.observation_space, gamma=gamma, on_the_fly=on_the_fly)],
+                    reward_shaping=reward_shaping)
 
 
-    t = Trainer(env, agent,
+    t = TGTrainer(env, agent,
         n_episodes=100000,
         resume=False,
         eval=False,

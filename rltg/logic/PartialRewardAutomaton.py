@@ -48,6 +48,8 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
         leaves = []
         visited.add(state)
         exists_next = False
+        if state in self.accepting_states:
+            return leaves
         for a in dfa.transition_function.get(state, {}):
             next_state = dfa.transition_function[state][a]
             if next_state not in visited and not self._is_failed_state(self.id2state[next_state]):

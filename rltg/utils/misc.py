@@ -63,6 +63,8 @@ def _potential_function(q, initial_state, reachability_levels, reward, is_termin
         return 0
     else:
         # p = 1/(self.reachability_levels[q]) * self.reward
+        # if q == initial_state and reachability_levels[initial_state]==0:
+        #     return reward
         initial_state_level = reachability_levels[initial_state]
         p = initial_state_level - reachability_levels[q]
         p = p/initial_state_level if initial_state_level!=0 else p

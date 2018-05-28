@@ -71,4 +71,3 @@ class Agent(ABC):
         with open(filepath + "/obj.dump", "rb") as fin:
             agent = pickle.load(fin)
         return agent
-
