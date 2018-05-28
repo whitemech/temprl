@@ -45,7 +45,6 @@ class AvgRewardPercentage(StatsStoppingCondition):
         super_check = super().check_condition(*args, stats_manager=stats_manager, **kwargs)
 
         avg_reward = np.mean(stats_manager.total_reward_history[-self.window_size:])
-        print(avg_reward)
         return super_check and avg_reward >= self.target_mean
 
 

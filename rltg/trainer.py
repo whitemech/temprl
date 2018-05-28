@@ -78,11 +78,11 @@ class Trainer(object):
                 if self.check_stop_conditions(agent, stats_optimal):
                     break
 
-            ids, table = list(zip(*sorted(agent.brain.Q.items(), key=lambda x: x[0])))
+            # ids, table = list(zip(*sorted(agent.brain.Q.items(), key=lambda x: x[0])))
             # table = np.array(table)
             # print(ep)
             # print(table)
-                # pprint(agent.brain.Q)
+            #     pprint(agent.brain.Q)
             # stopping conditions
 
 
@@ -128,7 +128,7 @@ class Trainer(object):
                 self.renderer.update(env)
         agent.reset()
 
-        return steps, total_reward, info["goal"] and all(t.is_true() for t in temporal_evaluators)
+        return steps, total_reward, info.get("goal", False) and all(t.is_true() for t in temporal_evaluators)
 
     def check_episode_stop_conditions(self, done, temporal_evaluators):
         any_te_failed = any(t.is_failed() for t in temporal_evaluators)

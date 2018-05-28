@@ -4,14 +4,14 @@ from breakout_env.wrappers.observation_wrappers import BreakoutFullObservableSta
 from flloat.base.Symbol import Symbol
 from flloat.parser.ldlf import LDLfParser
 from gym.spaces import Dict, Discrete, Box, Tuple
+from rltg.utils.Renderer import Renderer, PixelRenderer
 
 from rltg.agents.RLAgent import RLAgent
 from rltg.agents.TGAgent import TGAgent
 from rltg.agents.brains.TDBrain import Sarsa
-from rltg.agents.exploration_policies.RandomPolicy import RandomPolicy
 from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtractor
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
-from rltg.trainer import Trainer
+from rltg.trainers.GenericTrainer import GenericTrainer
 
 conf = {
     "observation": "number_discretized",
@@ -117,8 +117,7 @@ def normal_goal():
     # print(observation_space, action_space, feature_space)
 
     agent = RLAgent(BreakoutRobotFeatureExtractor(),
-                    RandomPolicy(env.action_space, epsilon_start=1.0, epsilon_end=0.01, decaying_steps=1000000),
-                    Sarsa(None, env.action_space, alpha=None, gamma=0.99, nsteps=100))
+                    Sarsa(None, env.action_space, alpha=0.1, gamma=0.99, lambda_=0.99))
 
     return env, agent
 
@@ -134,8 +133,7 @@ def temporal_goal():
     # print(observation_space, action_space, feature_space)
 
     agent = TGAgent(BreakoutRobotFeatureExtractor(),
-                    RandomPolicy(env.action_space, epsilon_start=1.0, epsilon_end=0.01, decaying_steps=7500000),
-                    Sarsa(None, env.action_space, alpha=None, gamma=0.99, nsteps=200),
+                    Sarsa(None, env.action_space, alpha=0.1, gamma=0.99, lambda_=0.1),
                     [BreakoutRowBottomUpTemporalEvaluator()])
 
     return env, agent
@@ -144,12 +142,12 @@ def temporal_goal():
 def main():
     env, agent = normal_goal()
     # env, agent = temporal_goal()
-    tr = Trainer(
+    tr = GenericTrainer(
         env, agent,
-        n_episodes=20001,
-        resume=False,
-        eval=False,
-        # renderer=Renderer(skip_frame=5),
+        n_episodes=50000,
+        resume=True,
+        eval=True,
+        renderer=PixelRenderer(skip_frame=5),
     )
     tr.main()
 

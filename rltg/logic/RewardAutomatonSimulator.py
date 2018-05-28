@@ -10,8 +10,7 @@ from rltg.logic.CompleteRewardAutomaton import CompleteRewardAutomaton
 
 class RewardSimulator(Simulator):
 
-    @abstractmethod
-    def get_immediate_reward(self, q, q_prime, is_terminal_state=False):
+    def potential_function(self, q, is_terminal_state=False):
         raise NotImplementedError
 
     @abstractmethod
@@ -34,10 +33,8 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
         self.visited_states.add(self.cur_state)
         return self.cur_state
 
-    def get_immediate_reward(self, q, q_prime, is_terminal_state=False, reward_shaping=True):
-        q_id = self.id2state[q]
-        q_prime_id = self.id2state[q_prime]
-        return self.dfa.get_immediate_reward(q_id, q_prime_id, is_terminal_state=is_terminal_state, reward_shaping=reward_shaping)
+    def potential_function(self, q, is_terminal_state=False):
+        return self.dfa.potential_function(q, is_terminal_state=is_terminal_state)
 
     def is_failed(self):
         return self.id2state[self.cur_state] in self.dfa.failure_states

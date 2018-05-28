@@ -1,14 +1,12 @@
 from abc import ABC, abstractmethod
+from typing import Set
 
 from flloat.base.Alphabet import Alphabet
 from flloat.syntax.ldlf import LDLfFormula
 from gym.spaces import Discrete
-
 from pythomata.base.Symbol import Symbol
-from typing import Set
 
 from rltg.agents.feature_extraction import FeatureExtractor
-from rltg.logic.PartialAutomatonSimulator import PartialAutomatonSimulator
 from rltg.logic.CompleteRewardAutomaton import CompleteRewardAutomaton
 from rltg.logic.PartialRewardAutomaton import PartialRewardAutomaton
 from rltg.logic.RewardAutomatonSimulator import RewardAutomatonSimulator
@@ -16,11 +14,11 @@ from rltg.logic.RewardAutomatonSimulator import RewardAutomatonSimulator
 
 class TemporalEvaluator(ABC):
     def __init__(self, goal_feature_extractor:FeatureExtractor, alphabet:Set[Symbol], formula:LDLfFormula, reward,
-                 gamma=0.99, on_the_fly=False, reward_shaping=True):
+                 gamma=0.99, on_the_fly=False):
         self.goal_feature_extractor = goal_feature_extractor
         self.alphabet = Alphabet(alphabet)
         self.formula = formula
-        self.reward_shaping = reward_shaping
+        self.reward = reward
         self.on_the_fly = on_the_fly
         if not on_the_fly:
             self._automaton = CompleteRewardAutomaton._fromFormula(alphabet, formula, reward, gamma=gamma)
@@ -53,12 +51,8 @@ class TemporalEvaluator(ABC):
         else:
             # estimate the state space size.
             # the estimate MUST overestimate the true size.
-            # TODO: do you really return a magic number?
-            return Discrete(100)
-
-    def get_immediate_reward(self, q, q_prime, is_terminal_state=False):
-        reward = self.simulator.get_immediate_reward(q, q_prime, is_terminal_state=is_terminal_state, reward_shaping=self.reward_shaping)
-        return reward
+            # return Discrete(100)
+            return None
 
     def reset(self):
         self.simulator.reset()

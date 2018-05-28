@@ -1,4 +1,6 @@
+import logging
 from copy import copy
+from itertools import chain
 from typing import Any, Set, List
 
 from flloat.base.Alphabet import Alphabet
@@ -11,10 +13,11 @@ from pythomata.base.DFA import DFA
 from rltg.logic.RewardAutomatonSimulator import RewardSimulator
 
 from rltg.logic.RewardAutomaton import RewardAutomaton
+from rltg.utils.misc import compute_levels, _potential_function, mydefaultdict
 
 
 class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
-    def __init__(self, alphabet:Alphabet, f:LDLfFormula, reward, bonuses={}, gamma=0.99):
+    def __init__(self, alphabet:Alphabet, f:LDLfFormula, reward, gamma=0.99):
 
         self.dfaotf = DFAOTF(f)
         self.alphabet = alphabet
@@ -27,195 +30,139 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
         self.states = {0}
         self.initial_state = 0
         self.accepting_states = {0} if self.dfaotf.is_true() else set()
+
         self.transition_function = {}
+        self.inverse_transition_function = {}
+        self.links = mydefaultdict(set())
 
         self.failure_states = set() if self._is_failed_state(self.dfaotf.cur_state) else {0}
-
-        self.bonuses = bonuses
-        self.potentials =       {0: self.reward if self.dfaotf._is_true_state(self.dfaotf.cur_state) else 0}
-        self.potentials_prime = copy(self.potentials)
-
-        self.reachability_levels, \
-        self.max_level, \
-        self.potentials = self._compute_levels()
 
         self.gamma = gamma
         self.episode = 0
         self.it = 0
 
-    def get_immediate_reward(self, q, q_prime, is_terminal_state=False, reward_shaping=True):
-        phi = lambda x: self.potentials[x]
-        phi_prime = lambda x: self.potentials_prime[x] if not is_terminal_state else 0
-        r = self.gamma * phi_prime(q_prime) - phi(q)
-        if q_prime in self.accepting_states and is_terminal_state:
-            r += self.reward
-        if r!=0.0:
-            print(r, phi_prime(q_prime), phi(q))
-
-        return r
+        self.potentials_prime = mydefaultdict(0)
 
 
-    def potential_function(self, q, is_terminal_state=False):
-        pass
-        # if q in self.exploring_state2min_potential_state:
-        #     # print(str(self.f)[:7], "min potential ", q, self.exploring_state2min_potential_state[q])
-        #     return super().potential_function(self.exploring_state2min_potential_state[q])
-        # else:
-        #     return super().potential_function(q)
+    def dfs(self, dfa, state, visited, border_states):
+        leaves = []
+        visited.add(state)
+        exists_next = False
+        for a in dfa.transition_function.get(state, {}):
+            next_state = dfa.transition_function[state][a]
+            if next_state not in visited and not self._is_failed_state(self.id2state[next_state]):
+                exists_next = True
+                leaves += self.dfs(dfa, next_state, visited, border_states)
+        if not exists_next and not self._is_failed_state(self.id2state[state]) and state in border_states:
+            leaves.append(state)
+        return leaves
+
 
     def _compute_levels(self):
-        level = 0
-        state2level = {final_state: level for final_state in self.accepting_states}
-        potentials = {}
+        temp_dfa = DFA(self.alphabet, self.states, self.initial_state, self.accepting_states, self.transition_function)
+        state2level, max_level, failure_states = compute_levels(temp_dfa, temp_dfa.accepting_states)
 
-        z_current = set()
-        z_next = set(self.accepting_states)
-        while z_current != z_next:
-            level += 1
-            z_current = z_next
-            z_next = copy(z_current)
-            for s in self.states:
-                if s in z_current:
-                    continue
-                for a in self.transition_function.get(s, []):
-                    next_state = self.transition_function[s][a]
-                    if next_state in z_current:
-                        z_next.add(s)
-                        state2level[s] = level
-                        # overwritten after the whole computation
-                        # potentials[s] = level
+        border_states = set(filter(lambda x: not self._is_failed_state(self.id2state[x]), failure_states))
+        true_failure_state = set(filter(lambda x: self._is_failed_state(self.id2state[x]), failure_states))
+        true_states = set(filter(lambda x: not self._is_failed_state(self.id2state[x]) and x not in border_states, temp_dfa.states))
+        potentials = {s: _potential_function(s, self.initial_state, state2level, self.reward) for s in chain(true_failure_state, true_states)}
 
-        z_current = z_next
+        # compute levels from initial state
+        # level = 0
+        # visited = set()
+        # to_visit = set()
+        # to_visit_next = {self.initial_state}
+        # reachability_levels = {self.initial_state:0}
+        #
+        # changed = True
+        # while changed:
+        #     changed = False
+        #     level += 1
+        #     to_visit = to_visit_next
+        #     to_visit_next = set()
+        #
+        #     for s in to_visit:
+        #         if s in visited:
+        #             continue
+        #         else:
+        #             visited.add(s)
+        #         s_potential = potentials[s]
+        #         for a in temp_dfa.transition_function.get(s, []):
+        #             s_prime = temp_dfa.transition_function[s][a]
+        #
+        #             if s_prime not in reachability_levels:
+        #                 reachability_levels[s_prime] = level
+        #             elif level < reachability_levels[s_prime]:
+        #                 reachability_levels[s_prime] = level
+        #
+        #             old_potential = potentials.get(s_prime, self.reward)
+        #             # if potential is computed correctly
+        #             if s_prime not in failure_states:
+        #                 potentials[s_prime] = _potential_function(s, self.initial_state, state2level, self.reward)
+        #             elif s_potential < old_potential:
+        #                 potentials[s_prime] = s_potential
+        #
+        #             to_visit_next.add(s_prime)
+        #             changed = True
 
-        max_level = level - 1
-        for s in state2level:
-            if max_level == 0:
-                potentials[s] = self.reward if s in self.accepting_states else 0
-            else:
-                potentials[s] = (max_level - state2level[s])/max_level * self.reward
-                print("compute levels ", s, state2level[s], max_level, (max_level - state2level[s])/max_level)
 
-        visited = set()
-        to_be_visited = set()
-        to_be_visited_next = {self.initial_state}
-        change = True
-        on_the_fly_potentials = {self.initial_state: potentials[self.initial_state] if self.initial_state in potentials
-                                 else self.reward if self.dfaotf._is_true_state(self.id2state[self.initial_state]) else 0}
+        # least fixpoint with the new state just discovered
+        leaves = self.dfs(temp_dfa, self.initial_state, set(), border_states)
+        border_state2level, border_max_level, _ = compute_levels(temp_dfa, set(leaves))
+        for b in border_states:
+            potentials[b] = _potential_function(b, self.initial_state, border_state2level, self.reward)
+
+        logging.debug("border states: {:15}, leaves: {:10}".format(str(border_states), str(leaves)))
+
+        return potentials
 
 
-        while change:
-            change = False
-            to_be_visited = to_be_visited_next
-            to_be_visited_next = set()
-            for s in to_be_visited:
-                if s in visited: continue
-                visited.add(s)
-                if s not in self.transition_function: continue
-                cur_t = self.transition_function[s]
-                for a in cur_t:
-                    s_prime = cur_t[a]
-                    to_be_visited_next.add(s_prime)
-                    change = True
 
-                    if s_prime not in self.failure_states and \
-                        self._is_failed_state(self.id2state[s_prime]): self.failure_states.add(s_prime)
+    def potential_function(self, q, is_terminal_state=False, is_prime=False):
+        if is_terminal_state:
+            return 0
+        elif is_prime:
+            return self.potentials_prime[q]
+        else:
+            return self.potentials[q]
 
-                    if s_prime in potentials:
-                        # when a final state is found, every state that reaches it makes true this condition
-                        # correct potential computed
-                        on_the_fly_potentials[s_prime] = potentials[s_prime]
-                    elif s_prime not in on_the_fly_potentials:
-                        # first time we see this state. Set the potential to the potential of the previous state
-                        if s in self.accepting_states:
-                            on_the_fly_potentials[s_prime] = 0
-                        else:
-                            on_the_fly_potentials[s_prime] = on_the_fly_potentials[s] + self.bonuses.get(s_prime, 0) \
-                                if not s_prime in self.failure_states else 0
-                    elif s_prime not in self.failure_states and s not in self.accepting_states:
-                        # we already seen this state
-                        # set if the potential of the previous state is less than the current potential
-                        # previous potential
-                        p = on_the_fly_potentials[s_prime]
-                        # current potential (can be also a "true potential" state)
-                        cur_pot = on_the_fly_potentials[s] + self.bonuses.get(s_prime, 0)
-                        on_the_fly_potentials[s_prime] = cur_pot if cur_pot < p else p
-                        print(str(self.f)[:9 ], "on_the_fly_potentials ", on_the_fly_potentials)
-
-                    if on_the_fly_potentials[s_prime] > self.reward:
-                        on_the_fly_potentials[s_prime] = self.reward
-
-        # levels for failure state (i.e. that cannot reach a final state)
-
-        # failure_states = set()
-        # for s in filter(lambda x: x not in on_the_fly_potentials, self.states):
-        #     print("failure state: ",s)
-        #     state2level[s] = level
-        #     failure_states.add(s)
-        #     # potentials[s] = 0
-        #     on_the_fly_potentials[s] = 0
-
-        # print("Update failure state potential")
-        # for k in self.failure_states:
-        #     on_the_fly_potentials[k] = 0
-
-        return state2level, max_level, on_the_fly_potentials
 
     def _update_from_transition(self, old_state, label, new_state):
 
-        # for b in self.bonuses:
-        #     if self.bonuses[b]>0.0:
-        #         # self.bonuses[b]*=0.9999
-        #         self.bonuses[b]*=0
-        #     if self.bonuses[b]<self.reward*1e-4:
-        #         self.bonuses[b] = 0.0
-
-
         old_state_id, old_state_changed = self._add_state(old_state)
         new_state_id, new_state_changed = self._add_state(new_state)
-
-        changed = old_state_changed or new_state_changed
-
-        # TODO REMOVE DEBUG PRINT...
-        if changed: print("%s: changed new states"%self.episode, new_state not in self.state2id, old_state not in self.state2id, new_state_id,
-              old_state_id)
+        transition_already_exists = False
+        is_failure_state = False
+        is_final_state = False
 
         if old_state_id not in self.transition_function or label not in self.transition_function[old_state_id]:
-            changed = True
+            transition_already_exists = new_state_id in self.links[old_state_id]
+            self.links[old_state_id].add(new_state_id)
             self.transition_function.setdefault(old_state_id, {})[label] = new_state_id
-
-            # TODO REMOVE DEBUG PRINT...
-            print("%s: changed transition"%self.episode, old_state_id not in self.transition_function, label not in self.transition_function[old_state_id], old_state_id, label, new_state_id)
 
         if self._is_failed_state(new_state) and new_state_id not in self.failure_states:
             self.failure_states.add(new_state_id)
-            changed = True
-
-            # TODO REMOVE DEBUG PRINT...
-            print("%s: changed failed"%self.episode, new_state_id)
+            is_failure_state = True
 
         elif self.dfaotf._is_true_state(new_state) and new_state_id not in self.accepting_states:
             self.accepting_states.add(new_state_id)
-            changed = True
+            is_final_state = True
 
-            # TODO REMOVE DEBUG PRINT...
-            print("%s: changed true "%self.episode, new_state_id)
-
-        if new_state_changed:
-            # self.bonuses[new_state_id] = self.reward if new_state_id not in self.failure_states else 0
-            self.bonuses[new_state_id] = 0
+        changed = old_state_changed or (new_state_changed and not is_failure_state and not transition_already_exists)
 
         if changed:
-            print("changed")
-            self.potentials = copy(self.potentials_prime)
-            self.reachability_levels, \
-            self.max_level, \
+
+            self.potentials = self.potentials_prime
             self.potentials_prime = self._compute_levels()
 
-            print(str(self.f)[:9], " potentials: ",       self.potentials)
-            print(str(self.f)[:9], " potentials prime: ", self.potentials_prime)
-            print(str(self.f)[:9], " bonuses: ", self.bonuses)
             dfa = DFA(self.alphabet, frozenset(self.states), self.initial_state, frozenset(self.accepting_states), self.transition_function)
             dfa.to_dot("automata/%s/%s-%s" % (str(self.dfaotf.f)[:9],self.episode, self.it))
+
+            logging.debug(
+                "episode: {:6d}, step: {:5d}, update automaton on-the-fly, prev_state: {:3}, next_state_id: {:3}, label: {:10}, is fail: {:5}, is final: {:5}".format(
+                    self.episode, self.it, old_state_id, new_state_id, str(label), str(new_state_id in self.failure_states), str(new_state_id in self.accepting_states)
+                ))
+            logging.debug("new potentials: %s", self.potentials_prime)
         else:
             self.potentials = copy(self.potentials_prime)
 
@@ -254,13 +201,6 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
         self.dfaotf.reset()
         self.episode += 1
         self.it = 0
-
-        for b in self.bonuses:
-            if self.bonuses[b]>0.0:
-                self.bonuses[b]*=0.99
-                # self.bonuses[b]*=0
-            if self.bonuses[b]<self.reward*1e-4:
-                self.bonuses[b] = 0.0
 
     def get_current_state(self):
         return self.state2id[self.dfaotf.get_current_state()]

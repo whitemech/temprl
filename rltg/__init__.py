@@ -5,3 +5,10 @@
 __author__ = """Marco Favorito"""
 __email__ = 'marco.favorito@gmail.com'
 __version__ = '0.1.1post2'
+
+import logging
+logging.getLogger('rltg').addHandler(logging.NullHandler())
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
+
+
+

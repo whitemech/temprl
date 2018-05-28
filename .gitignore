@@ -106,3 +106,4 @@ ENV/
 agent_data
 data
 automata/
+*log
