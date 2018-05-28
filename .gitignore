@@ -104,5 +104,7 @@ ENV/
 
 .idea
 agent_data
-data
+data_*
+data/*
 automata/
+*log

@@ -36,16 +36,18 @@ from RLGames.gym_wrappers.GymBreakout import GymBreakout
 from flloat.base.Symbol import Symbol
 from flloat.parser.ldlf import LDLfParser
 from gym.spaces import Box, Tuple
+from rltg.utils.Renderer import PygameRenderer
+
+from rltg.utils.StoppingCondition import GoalPercentage
 
 from rltg.agents.RLAgent import RLAgent
 from rltg.agents.TGAgent import TGAgent
-from rltg.agents.brains.TDBrain import QLearning, Sarsa
-from rltg.agents.exploration_policies.RandomPolicy import RandomPolicy
+from rltg.agents.brains.TDBrain import Sarsa
 from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtractor
+from rltg.agents.policies.EGreedy import EGreedy
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
-from rltg.trainer import Trainer
-from rltg.utils.Renderer import PygameRenderer
-from rltg.utils.StoppingCondition import GoalPercentage, CheckAutomataInFinalState
+from rltg.trainers.GenericTrainer import GenericTrainer
+from rltg.trainers.TGTrainer import TGTrainer
 
 
 class BreakoutRobotFeatureExtractor(RobotFeatureExtractor):
@@ -120,6 +122,7 @@ class BreakoutCompleteLinesTemporalEvaluator(TemporalEvaluator):
 
 
         string_formula = get_breakout_lines_formula(lines)
+        print(string_formula)
         f = parser(string_formula)
         reward = 10000
 
@@ -171,43 +174,48 @@ class BreakoutCompleteColumnsTemporalEvaluator(BreakoutCompleteLinesTemporalEval
         return super().fromFeaturesToPropositional(features, action, axis=1, is_reversed=not self.left_right)
 
 if __name__ == '__main__':
-    env = GymBreakout(brick_cols=3, brick_rows=3)
+    env = GymBreakout(brick_cols=4, brick_rows=3)
 
-    '''Normal task - no temporal goal'''
-    # agent = RLAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
-    #                 RandomPolicy(env.action_space, epsilon=0.1),
-    #                 QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=100))
-
-    gamma = 1.0
+    gamma = 0.999
     on_the_fly = True
+    reward_shaping = True
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
-                    RandomPolicy(env.action_space, epsilon=0.1),#,epsilon_start=1.0, decaying_steps=50000),
-                    QLearning(None, env.action_space, alpha=None, gamma=gamma, nsteps=300),
-
+                    Sarsa(None, env.action_space, policy=EGreedy(0.1), alpha=0.1, gamma=gamma, lambda_=0.99),
                     # Leave one of the following three option to see the differences:
                     # 1) rows
                     # 2) columns
                     # 3) rows and columns
 
                     # 1
-                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, gamma=gamma, on_the_fly=on_the_fly)]
+                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, gamma=gamma, on_the_fly=on_the_fly)],
 
                     # 2
-                    [BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, gamma=gamma, on_the_fly=on_the_fly)]
+                    [BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, gamma=gamma, on_the_fly=on_the_fly)],
 
                     # 3
-                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, on_the_fly=on_the_fly),
-                    # BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, on_the_fly=on_the_fly)]
-                    )
+                    # [BreakoutCompleteRowsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, bottom_up=True, on_the_fly=on_the_fly, gamma=gamma),
+                    # BreakoutCompleteColumnsTemporalEvaluator(env.observation_space, bricks_rows=env.brick_rows, bricks_cols=env.brick_cols, left_right=True, on_the_fly=on_the_fly, gamma=gamma)],
 
 
-    t = Trainer(env, agent,
-        n_episodes=10000,
-        resume=False,
-        eval=False,
-        # resume = True,
-        # eval = True,
-        # renderer=PygameRenderer(delay=0.01)
-    )
-    t.main()
+                    reward_shaping=reward_shaping)
+
+    tr = TGTrainer(env, agent, n_episodes=2000,
+                        resume=False, eval=False,
+                        # resume=True, eval=True,
+                        stop_conditions=(GoalPercentage(100, 0.2),),
+                        # renderer=PygameRenderer(0.01)
+                   )
+
+    # agent = RLAgent(
+    #     BreakoutNRobotFeatureExtractor(env.observation_space),
+    #     Sarsa(None, env.action_space, EGreedy(0.1), alpha=0.1, gamma=0.99, lambda_=0.9)
+    # )
+    #
+    # tr = GenericTrainer(env, agent, n_episodes=2000,
+    #                resume=False, eval=False,
+    #                # resume=True, eval=True,
+    #                )
+
+    stats, optimal_stats = tr.main()
+

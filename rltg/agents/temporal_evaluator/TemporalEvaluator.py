@@ -1,15 +1,14 @@
 from abc import ABC, abstractmethod
+from typing import Set
 
 from flloat.base.Alphabet import Alphabet
 from flloat.syntax.ldlf import LDLfFormula
 from gym.spaces import Discrete
-
 from pythomata.base.Symbol import Symbol
-from typing import Set
 
 from rltg.agents.feature_extraction import FeatureExtractor
-from rltg.logic.PartialAutomatonSimulator import PartialAutomatonSimulator
-from rltg.logic.RewardAutomaton import RewardAutomaton
+from rltg.logic.CompleteRewardAutomaton import CompleteRewardAutomaton
+from rltg.logic.PartialRewardAutomaton import PartialRewardAutomaton
 from rltg.logic.RewardAutomatonSimulator import RewardAutomatonSimulator
 
 
@@ -19,13 +18,13 @@ class TemporalEvaluator(ABC):
         self.goal_feature_extractor = goal_feature_extractor
         self.alphabet = Alphabet(alphabet)
         self.formula = formula
+        self.reward = reward
         self.on_the_fly = on_the_fly
         if not on_the_fly:
-            self._automaton = RewardAutomaton._fromFormula(alphabet, formula, reward, gamma=gamma)
+            self._automaton = CompleteRewardAutomaton._fromFormula(alphabet, formula, reward, gamma=gamma)
             self.simulator = RewardAutomatonSimulator(self._automaton)
         else:
-            self.dfaotf = self.formula.to_automaton(alphabet, on_the_fly=True)
-            self.simulator = PartialAutomatonSimulator(self.dfaotf, self.alphabet, reward, gamma=gamma)
+            self.simulator = PartialRewardAutomaton(self.alphabet, self.formula, reward, gamma=gamma)
 
     @abstractmethod
     def fromFeaturesToPropositional(self, features, action, *args, **kwargs) -> Set[Symbol]:
@@ -38,8 +37,10 @@ class TemporalEvaluator(ABC):
         :returns (new_automaton_state, reward)"""
         features = self.goal_feature_extractor(state)
         propositional = self.fromFeaturesToPropositional(features, action)
-        reward = self.simulator.make_transition(propositional)
-        return self.simulator.get_current_state(), reward
+        old_state = self.simulator.get_current_state()
+        new_state = self.simulator.make_transition(propositional)
+        return self.simulator.get_current_state()
+
 
     def get_state(self):
         return self.simulator.get_current_state()
@@ -50,9 +51,8 @@ class TemporalEvaluator(ABC):
         else:
             # estimate the state space size.
             # the estimate MUST overestimate the true size.
-            # TODO: do you really return a magic number?
-            return Discrete(100)
-
+            # return Discrete(100)
+            return None
 
     def reset(self):
         self.simulator.reset()
@@ -62,3 +62,6 @@ class TemporalEvaluator(ABC):
 
     def is_true(self):
         return self.simulator.is_true()
+
+    def is_terminal(self):
+        return self.is_true() or self.is_failed()

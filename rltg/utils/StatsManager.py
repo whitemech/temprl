@@ -1,10 +1,14 @@
+import pickle
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 class StatsManager(object):
 
-    def __init__(self, window_size=100):
+    def __init__(self, name="stats", window_size=100):
+        self.name = name
         self.window_size = window_size
+        self.steps_taken= np.array([], dtype=np.int32)
         self.total_reward_history = np.array([], dtype=np.int32)
         self.avg_reward_history = np.array([], dtype=np.float32)
         self.std_reward_history = np.array([], dtype=np.float32)
@@ -12,7 +16,8 @@ class StatsManager(object):
         self.goals = np.array([], dtype=np.bool)
 
 
-    def update(self, n_states, total_reward, goal):
+    def update(self, steps, n_states, total_reward, goal):
+        self.steps_taken = np.append(self.steps_taken, steps)
         self.explored_states_history = np.append(self.explored_states_history, n_states)
         self.total_reward_history = np.append(self.total_reward_history, total_reward)
         avg_reward = np.mean(self.total_reward_history[-self.window_size:])
@@ -44,3 +49,11 @@ class StatsManager(object):
         plt.title("Standard deviation total reward history")
         plt.plot(list(self.std_reward_history))
         plt.show()
+
+    def to_csv(self, filepath):
+        with open(filepath + ".csv", "w") as f:
+            f.write("Episode;Steps;Total reward;Explored states;Goal\n")
+            for ep, (steps, total_rewards, explored_states, goals) in enumerate(zip(
+                self.steps_taken, self.total_reward_history, self.explored_states_history, self.goals
+            )):
+                f.write(";".join(map(str,[ep, steps, total_rewards, explored_states, goals])) + "\n")

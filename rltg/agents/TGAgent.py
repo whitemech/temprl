@@ -1,29 +1,34 @@
+import logging
+import os
+import pickle
+import re
 from typing import List
 
-import pickle
+from gym.spaces import Tuple
 
-import os
-
-import re
-
-from rltg.agents.RLAgent import RLAgent
-from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtractor, TupleFeatureExtractor
+from rltg.agents.Agent import Agent
 from rltg.agents.brains.Brain import Brain
-from rltg.agents.exploration_policies import ExplorationPolicy
+from rltg.agents.feature_extraction import RobotFeatureExtractor
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
-from gym.spaces import Dict, Discrete, Box, Tuple
+from rltg.utils.RewardShaping import AutomatonRewardShaping, DynamicAutomatonRewardShaping
 
 
-class TGAgent(RLAgent):
+class TGAgent(Agent):
     """Temporal Goal agent"""
 
     def __init__(self,
                  sensors: RobotFeatureExtractor,
-                 exploration_policy:ExplorationPolicy,
                  brain:Brain,
-                 temporal_evaluators:List[TemporalEvaluator]):
+                 temporal_evaluators: List[TemporalEvaluator],
+                 reward_shaping: bool = True):
         assert len(temporal_evaluators)>=1
-        super().__init__(sensors, exploration_policy, brain)
+
+        if reward_shaping:
+            reward_shapers = tuple([AutomatonRewardShaping(te.simulator) if not te.on_the_fly else
+                                    DynamicAutomatonRewardShaping(te.simulator) for te in temporal_evaluators])
+        else:
+            reward_shapers = tuple()
+        super().__init__(sensors, brain, reward_shapers=reward_shapers)
         self.temporal_evaluators = temporal_evaluators
 
         # compute the feature space. It is the cartesian product between
@@ -33,7 +38,7 @@ class TGAgent(RLAgent):
         automata_state_spaces = [temp_eval.get_state_space() for temp_eval in temporal_evaluators]
 
         # total feature space = (robot feature space, automata 1 state space, automata 2 state space, ... )
-        feature_space = Tuple(robot_feature_space.spaces + tuple(automata_state_spaces))
+        feature_space = Tuple(tuple([robot_feature_space.spaces] + automata_state_spaces))
 
         # Check if the brain has the same input space dimensions,
         # but only if the brain has specified an observation space.
@@ -42,42 +47,53 @@ class TGAgent(RLAgent):
                              .format(brain.observation_space, feature_space))
 
         # map every state from the space (N0, N1, ..., Nn) to a discrete space of dimension N0*N1*...*Nn-1
-        self._from_tuple_to_int = TupleFeatureExtractor(feature_space)
+        # self._from_tuple_to_int = TupleFeatureExtractor(feature_space)
 
-    # TODO: allow customization of this component by modularization
+    def sync(self, action, state2):
+        new_automata_state = tuple(temp_eval.update(action, state2) for temp_eval in self.temporal_evaluators)
+        return new_automata_state
+
+    def start(self, state):
+        for t in self.temporal_evaluators:
+            t.reset()
+        automata_states = [temp_eval.get_state() for temp_eval in self.temporal_evaluators]
+        transformed_state = self.state_extractor(state, automata_states)
+        # return super().start(transformed_state)
+        return self.brain.start(transformed_state)
+
     def state_extractor(self, world_state, automata_states: List):
-        # the state is a tuple: (features, A1 state, ..., An state)
-        state = self.sensors(world_state) + tuple(automata_states)
-        collapsed_state = self._from_tuple_to_int(state)
-        return collapsed_state
+        # the state is a tuple: (features, A_1 state, ..., A_n state)
+        # A_i is the i_th automaton associated to the i_th temporal goal
+        state = tuple([self.sensors(world_state)] + list(automata_states))
+        return state
 
-    # TODO: allow customization of this component by modularization
     def reward_extractor(self, world_reward, automata_rewards: List):
         res = world_reward + sum(automata_rewards)
         return res
 
-    def act(self, state, **kwargs):
-        sw = state
-        automata_states = [te.get_state() for te in self.temporal_evaluators]
-        features = self.state_extractor(sw, automata_states)
-        return super()._act(features, **kwargs)
+    def get_automata_state(self):
+        return tuple(temp_eval.get_state() for temp_eval in self.temporal_evaluators)
 
-    def observe(self, state, action, reward, state2):
-        # get the current automata states
-        old_states_automata = [te.get_state() for te in self.temporal_evaluators]
+    def observe(self, state, action, reward, state2,
+                old_automata_state=(), new_automata_state=(), is_terminal_state=False):
 
-        # update the automata states given the new observed state and collect the reward
-        states_automata, rewards_automata = zip(*[te.update(action, state2) for te in self.temporal_evaluators])
+        automata_rewards = [te.reward if is_terminal_state and te.is_true() else 0 for te in self.temporal_evaluators]
 
-        old_state  = self.state_extractor(state,  old_states_automata)
-        new_state2 = self.state_extractor(state2, states_automata)
-        new_reward = self.reward_extractor(reward, rewards_automata)
-        super()._observe(old_state, action, new_reward, new_state2)
+        # apply reward shaping to the observed automata rewards
+        for i in range(len(self.reward_shapers)):
+            plus = self.reward_shapers[i](old_automata_state[i], new_automata_state[i], is_terminal_state=is_terminal_state)
+            automata_rewards[i] += plus
 
-    def reset(self):
-        super().reset()
-        for te in self.temporal_evaluators:
-            te.reset()
+        old_state  = self.state_extractor(state,  old_automata_state)
+        new_state2 = self.state_extractor(state2, new_automata_state)
+        new_reward = self.reward_extractor(reward, automata_rewards)
+
+        if old_automata_state!=new_automata_state or is_terminal_state:
+            logging.debug("episode: {:6d}, step: {:5d}, old automata states: {:10}, new automata state: {:10}, new reward: {:8.3f}".format(
+                self.brain.episode, self.brain.episode_iteration, str(old_automata_state), str(new_automata_state), new_reward
+            ))
+
+        return super()._observe(old_state, action, new_reward, new_state2)
 
     def save(self, filepath):
         super().save(filepath)
@@ -86,12 +102,19 @@ class TGAgent(RLAgent):
                 te.reset()
                 pickle.dump(te, fout)
 
-    def load(self, filepath):
-        super().load(filepath)
+    @staticmethod
+    def load(filepath):
+        rl_agent = Agent.load(filepath)
         temporal_evaluators_files = sorted([f for f in os.listdir(filepath) if re.match(r'te.*\.dump', f)])
         temporal_evaluators = []
         for idx, te_name in enumerate(temporal_evaluators_files):
             with open(filepath + "/%s" % te_name, "rb") as fin:
                 te = pickle.load(fin)
                 temporal_evaluators.append(te)
-        self.temporal_evaluators = temporal_evaluators
+        temporal_evaluators = temporal_evaluators
+
+        sensors = rl_agent.sensors
+        brain = rl_agent.brain
+
+        assert brain and sensors and temporal_evaluators is not None
+        return TGAgent(sensors, brain, temporal_evaluators)

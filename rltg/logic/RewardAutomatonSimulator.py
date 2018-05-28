@@ -6,12 +6,11 @@ from pythomata.base.Simulator import DFASimulator, Simulator
 from pythomata.base.Symbol import Symbol
 from pythomata.base.utils import Sink
 
-from rltg.logic.RewardAutomaton import RewardAutomaton
+from rltg.logic.CompleteRewardAutomaton import CompleteRewardAutomaton
 
 class RewardSimulator(Simulator):
 
-    @abstractmethod
-    def get_immediate_reward(self, q, q_prime):
+    def potential_function(self, q, is_terminal_state=False):
         raise NotImplementedError
 
     @abstractmethod
@@ -20,7 +19,7 @@ class RewardSimulator(Simulator):
 
 
 class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
-    def __init__(self, dfa:RewardAutomaton):
+    def __init__(self, dfa:CompleteRewardAutomaton):
         super().__init__(dfa)
         self.visited_states = {self.cur_state}
 
@@ -30,20 +29,15 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
 
     def make_transition(self, s:Set[Symbol]):
         i = PLInterpretation(s)
-        old_state = self.cur_state
         super().make_transition(i)
-        reward = self.get_immediate_reward(old_state, self.cur_state)
         self.visited_states.add(self.cur_state)
+        return self.cur_state
 
-        return reward
-
-    def get_immediate_reward(self, q, q_prime):
-        q_id = self.id2state[q]
-        q_prime_id = self.id2state[q_prime]
-        return self.dfa.get_immediate_reward(q_id, q_prime_id)
+    def potential_function(self, q, is_terminal_state=False):
+        return self.dfa.potential_function(q, is_terminal_state=is_terminal_state)
 
     def is_failed(self):
         return self.id2state[self.cur_state] in self.dfa.failure_states
 
-    def get_cur_state(self):
+    def get_current_state(self):
         return self.cur_state
