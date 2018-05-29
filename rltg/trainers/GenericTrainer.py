@@ -50,15 +50,18 @@ class GenericTrainer(ABC):
 
         for ep in range(num_episodes):
 
-            steps, total_reward, goal = self.train_loop()
-            stats.update(steps, len(agent.brain.Q), total_reward, goal)
-            stats.print_summary(agent.brain.episode, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
+            if not self.eval:
+                steps, total_reward, goal = self.train_loop()
+                stats.update(steps, len(agent.brain.Q), total_reward, goal)
+                stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
 
             # try optimal run
             agent.set_eval(True)
             steps, total_reward, goal = self.train_loop()
             optimal_stats.update(steps, len(agent.brain.Q), total_reward, goal)
-            optimal_stats.print_summary(agent.brain.episode, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
+
+            print("Try optimal run:")
+            optimal_stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
             agent.set_eval(False)
 
 

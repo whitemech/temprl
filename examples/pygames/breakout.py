@@ -174,7 +174,7 @@ class BreakoutCompleteColumnsTemporalEvaluator(BreakoutCompleteLinesTemporalEval
         return super().fromFeaturesToPropositional(features, action, axis=1, is_reversed=not self.left_right)
 
 if __name__ == '__main__':
-    env = GymBreakout(brick_cols=4, brick_rows=3)
+    env = GymBreakout(brick_cols=3, brick_rows=3)
 
     gamma = 0.999
     on_the_fly = True
@@ -201,8 +201,8 @@ if __name__ == '__main__':
                     reward_shaping=reward_shaping)
 
     tr = TGTrainer(env, agent, n_episodes=2000,
-                        resume=False, eval=False,
-                        # resume=True, eval=True,
+                        # resume=False, eval=False,
+                        resume=True, eval=True,
                         stop_conditions=(GoalPercentage(100, 0.2),),
                         # renderer=PygameRenderer(0.01)
                    )

@@ -27,7 +27,7 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
         super().reset()
         self.visited_states = {self.cur_state}
 
-    def make_transition(self, s:Set[Symbol]):
+    def make_transition(self, s:Set[Symbol], **kwargs):
         i = PLInterpretation(s)
         super().make_transition(i)
         self.visited_states.add(self.cur_state)

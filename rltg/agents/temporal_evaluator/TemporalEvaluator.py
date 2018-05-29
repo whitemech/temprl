@@ -26,6 +26,8 @@ class TemporalEvaluator(ABC):
         else:
             self.simulator = PartialRewardAutomaton(self.alphabet, self.formula, reward, gamma=gamma)
 
+        self.eval = False
+
     @abstractmethod
     def fromFeaturesToPropositional(self, features, action, *args, **kwargs) -> Set[Symbol]:
         raise NotImplementedError
@@ -38,7 +40,7 @@ class TemporalEvaluator(ABC):
         features = self.goal_feature_extractor(state)
         propositional = self.fromFeaturesToPropositional(features, action)
         old_state = self.simulator.get_current_state()
-        new_state = self.simulator.make_transition(propositional)
+        new_state = self.simulator.make_transition(propositional, eval=self.eval)
         return self.simulator.get_current_state()
 
 
@@ -65,3 +67,6 @@ class TemporalEvaluator(ABC):
 
     def is_terminal(self):
         return self.is_true() or self.is_failed()
+
+    def set_eval(self, eval:bool):
+        self.eval = eval

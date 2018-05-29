@@ -118,3 +118,8 @@ class TGAgent(Agent):
 
         assert brain and sensors and temporal_evaluators is not None
         return TGAgent(sensors, brain, temporal_evaluators)
+
+    def set_eval(self, eval:bool):
+        super().set_eval(eval)
+        for te in self.temporal_evaluators:
+            te.set_eval(eval)
