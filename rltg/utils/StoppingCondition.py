@@ -20,6 +20,10 @@ class StatsStoppingCondition(StoppingCondition):
     def check_condition(self, *args, stats_manager: StatsManager = None, **kwargs):
         if stats_manager is None:
             raise Exception
+        if len(stats_manager.total_reward_history)<self.window_size:
+            return False
+        return True
+
 
 class GoalPercentage(StatsStoppingCondition):
     def __init__(self, window_size=100, min_perc=0.97):
@@ -28,10 +32,9 @@ class GoalPercentage(StatsStoppingCondition):
         self.min_perc = min_perc
 
     def check_condition(self, *args, stats_manager:StatsManager=None, **kwargs):
-        super().check_condition(*args, stats_manager=stats_manager, **kwargs)
-
+        super_check = super().check_condition(*args, stats_manager=stats_manager, **kwargs)
         goal_percentage = np.mean(stats_manager.goals[-self.window_size:])
-        return goal_percentage >= self.min_perc
+        return super_check and goal_percentage >= self.min_perc
 
 class AvgRewardPercentage(StatsStoppingCondition):
     def __init__(self, window_size=100, target_mean=1.0):
@@ -39,10 +42,10 @@ class AvgRewardPercentage(StatsStoppingCondition):
         self.target_mean = target_mean
 
     def check_condition(self, *args, stats_manager:StatsManager=None, **kwargs):
-        super().check_condition(*args, stats_manager=stats_manager, **kwargs)
+        super_check = super().check_condition(*args, stats_manager=stats_manager, **kwargs)
 
         avg_reward = np.mean(stats_manager.total_reward_history[-self.window_size:])
-        return avg_reward >= self.target_mean
+        return super_check and avg_reward >= self.target_mean
 
 
 class CheckAutomataInFinalState(StoppingCondition):

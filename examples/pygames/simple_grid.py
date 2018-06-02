@@ -2,11 +2,11 @@ from RLGames.gym_wrappers.GymSimpleGrid import GymSimpleGrid
 from gym.spaces import Tuple
 
 from rltg.agents.RLAgent import RLAgent
-from rltg.agents.brains.TDBrain import QLearning
-from rltg.agents.exploration_policies.RandomPolicy import RandomPolicy
+from rltg.agents.brains.TDBrain import QLearning, Sarsa
 from rltg.agents.feature_extraction import RobotFeatureExtractor
-from rltg.trainer import Trainer
-from rltg.utils.Renderer import PygameRenderer
+from rltg.agents.policies.EGreedy import EGreedy
+from rltg.trainers.GenericTrainer import GenericTrainer
+from rltg.utils.StoppingCondition import GoalPercentage
 
 
 class SimpleGridRFE(RobotFeatureExtractor):
@@ -25,19 +25,16 @@ class SimpleGridRFE(RobotFeatureExtractor):
 
 
 if __name__ == '__main__':
-    env = GymSimpleGrid(rows=5, cols=5)
+    env = GymSimpleGrid(rows=20, cols=20)
 
-    '''Normal task - no temporal goal'''
-    agent = RLAgent(SimpleGridRFE(env.observation_space),
-                    RandomPolicy(env.action_space, epsilon=0.1),
-                    QLearning(None, env.action_space, alpha=None, gamma=1.0, nsteps=1))
-
-    t = Trainer(env, agent,
-        n_episodes=100000,
-        resume=False,
-        eval=False,
-        # resume = True,
-        # eval = True,
-        # renderer=PygameRenderer(delay=0.1)
+    agent = RLAgent(
+        SimpleGridRFE(env.observation_space),
+        Sarsa(None, env.action_space, EGreedy(0.1), alpha=0.1, gamma=0.99, lambda_=0.9)
     )
-    t.main()
+    tr = GenericTrainer(env, agent, n_episodes=3000,
+                        resume=False, eval=False,
+                        # resume=True, eval=True,
+                        stop_conditions=(GoalPercentage(25, 1.0),)
+                        )
+
+    tr.main()

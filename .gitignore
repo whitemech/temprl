@@ -103,6 +103,5 @@ ENV/
 
 
 .idea
-agent_data
-data
-automata/
+ignore*
+*.log
