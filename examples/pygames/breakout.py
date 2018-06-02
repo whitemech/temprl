@@ -36,17 +36,14 @@ from RLGames.gym_wrappers.GymBreakout import GymBreakout
 from flloat.base.Symbol import Symbol
 from flloat.parser.ldlf import LDLfParser
 from gym.spaces import Box, Tuple
-from rltg.utils.Renderer import PygameRenderer
 
 from rltg.utils.StoppingCondition import GoalPercentage
 
-from rltg.agents.RLAgent import RLAgent
 from rltg.agents.TGAgent import TGAgent
 from rltg.agents.brains.TDBrain import Sarsa
 from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtractor
 from rltg.agents.policies.EGreedy import EGreedy
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
-from rltg.trainers.GenericTrainer import GenericTrainer
 from rltg.trainers.TGTrainer import TGTrainer
 
 
@@ -174,10 +171,10 @@ class BreakoutCompleteColumnsTemporalEvaluator(BreakoutCompleteLinesTemporalEval
         return super().fromFeaturesToPropositional(features, action, axis=1, is_reversed=not self.left_right)
 
 if __name__ == '__main__':
-    env = GymBreakout(brick_cols=4, brick_rows=3)
+    env = GymBreakout(brick_cols=3, brick_rows=3)
 
     gamma = 0.999
-    on_the_fly = True
+    on_the_fly = False
     reward_shaping = True
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
@@ -201,9 +198,7 @@ if __name__ == '__main__':
                     reward_shaping=reward_shaping)
 
     tr = TGTrainer(env, agent, n_episodes=2000,
-                        resume=False, eval=False,
-                        # resume=True, eval=True,
-                        stop_conditions=(GoalPercentage(100, 0.2),),
+                        stop_conditions=(GoalPercentage(20, 0.2),),
                         # renderer=PygameRenderer(0.01)
                    )
 
@@ -217,5 +212,7 @@ if __name__ == '__main__':
     #                # resume=True, eval=True,
     #                )
 
-    stats, optimal_stats = tr.main()
+    # tr = TGTrainer.resume(render=True)
+    # tr = TGTrainer.eval(renderer=PygameRenderer(0.01))
+    stats, optimal_stats = tr.main(render=False)
 

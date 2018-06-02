@@ -26,6 +26,8 @@ class Brain(ABC):
         self.obs_history = []
         self.total_reward = 0
 
+        self.eval = False
+
     def set_eval(self, eval:bool):
         self.eval = eval
         self.policy.set_eval(eval)
@@ -71,4 +73,6 @@ class Brain(ABC):
         """
         self.episode_iteration += 1
 
-
+    @abstractmethod
+    def reset(self):
+        raise NotImplementedError

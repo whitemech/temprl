@@ -4,7 +4,7 @@ from breakout_env.wrappers.observation_wrappers import BreakoutFullObservableSta
 from flloat.base.Symbol import Symbol
 from flloat.parser.ldlf import LDLfParser
 from gym.spaces import Dict, Discrete, Box, Tuple
-from rltg.utils.Renderer import Renderer, PixelRenderer
+from ignore.Renderer import PixelRenderer
 
 from rltg.agents.RLAgent import RLAgent
 from rltg.agents.TGAgent import TGAgent

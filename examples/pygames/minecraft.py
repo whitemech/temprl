@@ -3,13 +3,11 @@ from RLGames.gym_wrappers.GymMinecraft import GymMinecraft
 from flloat.base.Symbol import Symbol
 from flloat.parser.ldlf import LDLfParser
 from gym.spaces import Tuple
-from rltg.utils.Renderer import PygameRenderer
 
 from rltg.agents.TGAgent import TGAgent
 from rltg.agents.brains.TDBrain import Sarsa
 from rltg.agents.feature_extraction import RobotFeatureExtractor
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
-from rltg.trainer import Trainer
 from rltg.trainers.TGTrainer import TGTrainer
 
 

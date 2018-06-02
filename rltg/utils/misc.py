@@ -1,3 +1,4 @@
+import logging
 from copy import copy
 
 
@@ -13,6 +14,9 @@ class mydefaultdict(dict):
             self[key] = copy(self._default)
             return self[key]
 
+def logger_from_verbosity(verbosity):
+    verbosity = 0 if verbosity < 0 else 2 if verbosity > 2 else verbosity
+    logging.getLogger().setLevel(logging.WARNING if verbosity==0 else logging.INFO if verbosity==1 else logging.DEBUG)
 
 class AgentObservation(object):
     def __init__(self, state, action, reward, state2):

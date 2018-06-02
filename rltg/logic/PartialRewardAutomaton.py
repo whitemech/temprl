@@ -4,15 +4,14 @@ from itertools import chain
 from typing import Any, Set, List
 
 from flloat.base.Alphabet import Alphabet
+from flloat.base.Symbol import Symbol
 from flloat.flloat import DFAOTF
 from flloat.semantics.pl import PLInterpretation
 from flloat.syntax.ldlf import LDLfFormula
-from flloat.base.Symbol import Symbol
 from pythomata.base.DFA import DFA
 
-from rltg.logic.RewardAutomatonSimulator import RewardSimulator
-
 from rltg.logic.RewardAutomaton import RewardAutomaton
+from rltg.logic.RewardAutomatonSimulator import RewardSimulator
 from rltg.utils.misc import compute_levels, _potential_function, mydefaultdict
 
 
@@ -41,6 +40,7 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
         self.episode = 0
         self.it = 0
 
+        self.potentials = mydefaultdict(0)
         self.potentials_prime = mydefaultdict(0)
 
 
@@ -146,7 +146,7 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
             self.failure_states.add(new_state_id)
             is_failure_state = True
 
-        elif self.dfaotf._is_true_state(new_state) and new_state_id not in self.accepting_states:
+        elif self.dfaotf._is_true(new_state) and new_state_id not in self.accepting_states:
             self.accepting_states.add(new_state_id)
             is_final_state = True
 
@@ -187,7 +187,7 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
     def is_failed(self):
         return self._is_failed_state(self.dfaotf.cur_state)
 
-    def make_transition(self, s:Set[Symbol]) -> Any:
+    def make_transition(self, s:Set[Symbol], **kwargs) -> Any:
         old_state = self.dfaotf.get_current_state()
         i = PLInterpretation(s)
         self.dfaotf.make_transition(i)
@@ -209,3 +209,4 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
 
     def word_acceptance(self, word: List[Symbol]):
         raise NotImplementedError
+

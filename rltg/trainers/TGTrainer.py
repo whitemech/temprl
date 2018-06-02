@@ -1,9 +1,8 @@
 import logging
 
-from gym import Env
-
 from rltg.agents.TGAgent import TGAgent
 from rltg.trainers.GenericTrainer import GenericTrainer
+from rltg.utils.GoalEnvWrapper import GoalEnvWrapper
 from rltg.utils.StatsManager import StatsManager
 from rltg.utils.StoppingCondition import GoalPercentage, CheckAutomataInFinalState
 
@@ -11,17 +10,14 @@ from rltg.utils.StoppingCondition import GoalPercentage, CheckAutomataInFinalSta
 class TGTrainer(GenericTrainer):
     """Temporal Goal Trainer"""
 
-    def __init__(self, env:Env, agent:TGAgent=None, n_episodes=1000,
-                 resume=False,
-                 eval=False,
+    def __init__(self, env:GoalEnvWrapper, agent:TGAgent=None, n_episodes=1000,
                  data_dir="data",
                  stop_conditions=(GoalPercentage(10, 1.0), ),
-                 renderer=None
                  ):
-        super().__init__(env, agent, n_episodes, resume, eval, data_dir, stop_conditions, renderer=renderer)
+        super().__init__(env, agent, n_episodes, data_dir, stop_conditions)
         self.stop_conditions.append(CheckAutomataInFinalState())
 
-    def train_loop(self):
+    def train_loop(self, render:bool=False):
         env = self.env
         agent = self.agent
 
@@ -31,11 +27,11 @@ class TGTrainer(GenericTrainer):
         state = env.reset()
         action = agent.start(state)
         obs = None
-        if self.renderer: self.renderer.update(env)
+        if render: env.render()
 
         while not stop_condition:
             state2, reward, done, info = env.step(action)
-            if self.renderer: self.renderer.update(env)
+            if render: env.render()
 
             old_automata_state = agent.get_automata_state()
             new_automata_state = agent.sync(action, state2)
@@ -58,9 +54,8 @@ class TGTrainer(GenericTrainer):
         return steps, tot_reward, self.is_goal(info)
 
 
-    def check_stop_conditions(self, stats:StatsManager, *args, **kwargs):
-        return not self.eval and \
-               all([s.check_condition(stats_manager=stats, temporal_evaluators=self.agent.temporal_evaluators)
+    def check_stop_conditions(self, stats:StatsManager, eval=False, *args, **kwargs):
+        return not eval and all([s.check_condition(stats_manager=stats, temporal_evaluators=self.agent.temporal_evaluators)
                     for s in self.stop_conditions])
 
     def check_episode_stop_conditions(self, done, goal, *args, **kwargs):
@@ -75,7 +70,3 @@ class TGTrainer(GenericTrainer):
 
     def is_goal(self, info, *args, **kwargs):
         return super().is_goal(info) and all(t.is_true() for t in self.agent.temporal_evaluators)
-
-    def load_agent(self):
-        return TGAgent.load(self.agent_data_dir)
-
