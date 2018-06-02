@@ -36,17 +36,14 @@ from RLGames.gym_wrappers.GymBreakout import GymBreakout
 from flloat.base.Symbol import Symbol
 from flloat.parser.ldlf import LDLfParser
 from gym.spaces import Box, Tuple
-from rltg.utils.Renderer import PygameRenderer
 
 from rltg.utils.StoppingCondition import GoalPercentage
 
-from rltg.agents.RLAgent import RLAgent
 from rltg.agents.TGAgent import TGAgent
 from rltg.agents.brains.TDBrain import Sarsa
 from rltg.agents.feature_extraction import FeatureExtractor, RobotFeatureExtractor
 from rltg.agents.policies.EGreedy import EGreedy
 from rltg.agents.temporal_evaluator.TemporalEvaluator import TemporalEvaluator
-from rltg.trainers.GenericTrainer import GenericTrainer
 from rltg.trainers.TGTrainer import TGTrainer
 
 
@@ -200,10 +197,10 @@ if __name__ == '__main__':
 
                     reward_shaping=reward_shaping)
 
-    # tr = TGTrainer(env, agent, n_episodes=2000,
-    #                     stop_conditions=(GoalPercentage(20, 0.2),),
-    #                     # renderer=PygameRenderer(0.01)
-    #                )
+    tr = TGTrainer(env, agent, n_episodes=2000,
+                        stop_conditions=(GoalPercentage(20, 0.2),),
+                        # renderer=PygameRenderer(0.01)
+                   )
 
     # agent = RLAgent(
     #     BreakoutNRobotFeatureExtractor(env.observation_space),
@@ -215,8 +212,7 @@ if __name__ == '__main__':
     #                # resume=True, eval=True,
     #                )
 
-    tr = TGTrainer.resume()
+    # tr = TGTrainer.resume(render=True)
     # tr = TGTrainer.eval(renderer=PygameRenderer(0.01))
-    stats, optimal_stats = tr.main()
-
+    stats, optimal_stats = tr.main(render=False)
 

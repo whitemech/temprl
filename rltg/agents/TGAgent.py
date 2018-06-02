@@ -123,3 +123,8 @@ class TGAgent(Agent):
         super().set_eval(eval)
         for te in self.temporal_evaluators:
             te.set_eval(eval)
+
+    def reset(self):
+        super().reset()
+        for te in self.temporal_evaluators:
+            te.reset()

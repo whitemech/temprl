@@ -8,13 +8,15 @@ class StatsManager(object):
     def __init__(self, name="stats", window_size=100):
         self.name = name
         self.window_size = window_size
-        self.steps_taken= np.array([], dtype=np.int32)
+        self._init_arrays()
+
+    def _init_arrays(self):
+        self.steps_taken = np.array([], dtype=np.int32)
         self.total_reward_history = np.array([], dtype=np.int32)
         self.avg_reward_history = np.array([], dtype=np.float32)
         self.std_reward_history = np.array([], dtype=np.float32)
         self.explored_states_history = np.array([], dtype=np.int32)
         self.goals = np.array([], dtype=np.bool)
-
 
     def update(self, steps, n_states, total_reward, goal):
         self.steps_taken = np.append(self.steps_taken, steps)
@@ -30,12 +32,11 @@ class StatsManager(object):
 
     def print_summary(self, episode_number, step, n_states, total_reward, epsilon, goal):
         w = self.window_size
-        print('Episode: {:6d}, Step: {:5d}, Explored States: {:7d}, Total Reward: {:8.2f}, AvgReward: {:8.2f}, StdReward: {:8.2f}, Epsilon: {:05.4f}, Goal: {:5}, GoalPerc: {:05.2f}'
+        return "Episode: {:6d}, Step: {:5d}, Explored States: {:7d}, Total Reward: {:8.2f}, AvgReward: {:8.2f}, StdReward: {:8.2f}, Epsilon: {:05.4f}, Goal: {:5}, GoalPerc: {:5.2f}"\
               .format(episode_number, step, n_states, total_reward,
                       np.mean(self.total_reward_history[-w:]),
                       np.std(self.total_reward_history[-w:]),
                       epsilon, str(goal), np.mean(self.goals[-w:])*100)
-                  )
 
     def plot(self):
         plt.figure(1)
@@ -56,3 +57,6 @@ class StatsManager(object):
                 self.steps_taken, self.total_reward_history, self.explored_states_history, self.goals
             )):
                 f.write(";".join(map(str,[ep, steps, total_rewards, explored_states, goals])) + "\n")
+
+    def reset(self):
+        self._init_arrays()

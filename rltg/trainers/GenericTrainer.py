@@ -2,25 +2,23 @@ import logging
 import os
 import shutil
 import time
-from abc import ABC
 
 from rltg.agents.Agent import Agent
-from rltg.agents.RLAgent import RLAgent
+from rltg.trainers.Trainer import DEFAULT_DATA_DIR, Trainer
 from rltg.utils.GoalEnvWrapper import GoalEnvWrapper
-from rltg.utils.Renderer import Renderer
 from rltg.utils.StatsManager import StatsManager
 from rltg.utils.StoppingCondition import GoalPercentage
 
 import pickle
 
-DEFAULT_DATA_DIR = "data"
-DEFAULT_TRAINER_FILEPATH = DEFAULT_DATA_DIR + "/" + "trainer.pkl"
+from rltg.utils.misc import logger_from_verbosity
 
-class GenericTrainer(ABC):
+
+class GenericTrainer(Trainer):
 
     def __init__(self, env:GoalEnvWrapper, agent:Agent, n_episodes=1000,
                  data_dir=DEFAULT_DATA_DIR,
-                 stop_conditions=(GoalPercentage(10, 1.0), )):
+                 stop_conditions=(GoalPercentage(10, 1.0), ),):
         self.env = env
         self.n_episodes = n_episodes
         self.stop_conditions = list(stop_conditions)
@@ -39,7 +37,9 @@ class GenericTrainer(ABC):
         self.optimal_stats = StatsManager(name="eval_stats")
 
 
-    def main(self, eval:bool=False, renderer:Renderer=None):
+    def main(self, eval:bool=False, render:bool=False, verbosity:int=1):
+        logger_from_verbosity(verbosity)
+
         agent = self.agent
         num_episodes = self.n_episodes
         stats = self.stats
@@ -48,17 +48,17 @@ class GenericTrainer(ABC):
         for ep in range(self.cur_episode, num_episodes):
 
             if not eval:
-                steps, total_reward, goal = self.train_loop(renderer=renderer)
+                steps, total_reward, goal = self.train_loop(render=render)
                 stats.update(steps, len(agent.brain.Q), total_reward, goal)
-                stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
+                summary = stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
+                logging.info(summary)
 
             # try optimal run
             agent.set_eval(True)
-            steps, total_reward, goal = self.train_loop(renderer=renderer)
+            steps, total_reward, goal = self.train_loop(render=render)
             optimal_stats.update(steps, len(agent.brain.Q), total_reward, goal)
-
-            print("Try optimal run:")
-            optimal_stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
+            optimal_summary = optimal_stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
+            logging.info(optimal_summary + " * optimal * ")
             agent.set_eval(False)
 
 
@@ -71,15 +71,16 @@ class GenericTrainer(ABC):
 
             self.cur_episode = ep
 
+        if not eval:
+            self.save()
+            agent.save(self.agent_data_dir)
 
-        self.save()
-        agent.save(self.agent_data_dir)
         stats.to_csv(self.data_dir + "/" + stats.name + "_" + str(time.time()))
         optimal_stats.to_csv(self.data_dir + "/" + optimal_stats.name + "_" + str(time.time()))
 
         return stats, optimal_stats
 
-    def train_loop(self, renderer=None):
+    def train_loop(self, render:bool=False):
         env = self.env
         agent = self.agent
 
@@ -89,11 +90,11 @@ class GenericTrainer(ABC):
         state = env.reset()
         action = agent.start(state)
         obs = None
-        if renderer is not None: renderer.update(env)
+        if render: env.render()
 
         while not stop_condition:
             state2, reward, done, info = env.step(action)
-            if renderer is not None: renderer.update(env)
+            if render: env.render()
 
             stop_condition = self.check_episode_stop_conditions(done, info.get("goal", False))
             obs = agent.observe(state, action, reward, state2, is_terminal_state=stop_condition)
@@ -124,19 +125,5 @@ class GenericTrainer(ABC):
 
     def reset(self):
         self.cur_episode = 0
-
-
-    @staticmethod
-    def load(filepath=DEFAULT_TRAINER_FILEPATH):
-        with open(filepath, "rb") as fin:
-            return pickle.load(fin)
-
-    @staticmethod
-    def resume(filepath=DEFAULT_TRAINER_FILEPATH):
-        trainer = GenericTrainer.load(filepath)
-        trainer.main()
-
-    @staticmethod
-    def eval(filepath=DEFAULT_TRAINER_FILEPATH):
-        trainer = GenericTrainer.load(filepath)
-        trainer.main(eval=True)
+        self.stats.reset()
+        self.optimal_stats.reset()

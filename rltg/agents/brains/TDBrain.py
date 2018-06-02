@@ -16,11 +16,13 @@ class TDBrain(Brain):
                  gamma=0.99, alpha=None, lambda_=0):
         super().__init__(observation_space, action_space, policy)
 
-        self.Visits = {}
         self.gamma = gamma
         self.alpha = Constant(alpha) if alpha is not None else AlphaVisitDecay(action_space)
         self.lambda_ = lambda_
 
+        self._init()
+
+    def _init(self):
         # sparse representation
         self.Q = mydefaultdict(np.zeros((self.action_space.n,)))
         self.eligibility = Eligibility(self.lambda_, self.gamma)
@@ -60,6 +62,9 @@ class TDBrain(Brain):
         super().observe(obs)
         self.eligibility.to_one(obs.state, obs.action)
         self.alpha.update(obs.state, obs.action)
+
+    def reset(self):
+        self._init()
 
 
 class QLearning(TDBrain):

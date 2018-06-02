@@ -71,3 +71,6 @@ class Agent(ABC):
         with open(filepath + "/agent.pkl", "rb") as fin:
             agent = pickle.load(fin)
         return agent
+
+    def reset(self):
+        self.brain.reset()

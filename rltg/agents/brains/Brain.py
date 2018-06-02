@@ -73,4 +73,6 @@ class Brain(ABC):
         """
         self.episode_iteration += 1
 
-
+    @abstractmethod
+    def reset(self):
+        raise NotImplementedError

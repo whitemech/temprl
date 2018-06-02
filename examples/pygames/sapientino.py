@@ -3,7 +3,6 @@ from RLGames.gym_wrappers.GymSapientino import GymSapientino
 from flloat.base.Symbol import Symbol
 from flloat.parser.ldlf import LDLfParser
 from gym.spaces import Tuple
-from rltg.utils.Renderer import PygameRenderer
 
 from rltg.agents.TGAgent import TGAgent
 from rltg.agents.brains.TDBrain import Sarsa
