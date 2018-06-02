@@ -26,6 +26,8 @@ class Brain(ABC):
         self.obs_history = []
         self.total_reward = 0
 
+        self.eval = False
+
     def set_eval(self, eval:bool):
         self.eval = eval
         self.policy.set_eval(eval)

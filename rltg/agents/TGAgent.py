@@ -105,7 +105,7 @@ class TGAgent(Agent):
     @staticmethod
     def load(filepath):
         rl_agent = Agent.load(filepath)
-        temporal_evaluators_files = sorted([f for f in os.listdir(filepath) if re.match(r'te.*\.dump', f)])
+        temporal_evaluators_files = sorted([f for f in os.listdir(filepath) if re.match(r'te.*\.pkl', f)])
         temporal_evaluators = []
         for idx, te_name in enumerate(temporal_evaluators_files):
             with open(filepath + "/%s" % te_name, "rb") as fin:

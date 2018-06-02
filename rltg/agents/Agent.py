@@ -63,11 +63,11 @@ class Agent(ABC):
         self.brain.end(obs)
 
     def save(self, filepath):
-        with open(filepath + "/obj.dump", "wb") as fout:
+        with open(filepath + "/agent.pkl", "wb") as fout:
             pickle.dump(self, fout)
 
     @staticmethod
     def load(filepath):
-        with open(filepath + "/obj.dump", "rb") as fin:
+        with open(filepath + "/agent.pkl", "rb") as fin:
             agent = pickle.load(fin)
         return agent

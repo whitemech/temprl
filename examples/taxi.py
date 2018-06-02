@@ -8,9 +8,14 @@ from rltg.trainers.GenericTrainer import GenericTrainer
 from rltg.utils.GoalEnvWrapper import GoalEnvWrapper
 from rltg.utils.StoppingCondition import AvgRewardPercentage
 
+def taxi_goal(*args):
+    reward =args[1]
+    done =args[2]
+    return done and reward == 20
+
 if __name__ == '__main__':
     env = gym.make("Taxi-v2")
-    env = GoalEnvWrapper(env, lambda _, reward, done, __: done and reward==20)
+    env = GoalEnvWrapper(env, taxi_goal)
 
     observation_space = env.observation_space
     action_space = env.action_space
@@ -21,7 +26,6 @@ if __name__ == '__main__':
     )
 
     tr = GenericTrainer(env, agent, n_episodes=10000,
-                        resume=False, eval=False,
                         # resume=True, eval=True,
                         stop_conditions=(AvgRewardPercentage(window_size=100, target_mean=9.0),))
     # tr = Trainer(env, agent, n_episodes=10000, resume=True,  eval=True, window_size=1000)

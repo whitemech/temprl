@@ -177,7 +177,7 @@ if __name__ == '__main__':
     env = GymBreakout(brick_cols=3, brick_rows=3)
 
     gamma = 0.999
-    on_the_fly = True
+    on_the_fly = False
     reward_shaping = True
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
@@ -200,12 +200,10 @@ if __name__ == '__main__':
 
                     reward_shaping=reward_shaping)
 
-    tr = TGTrainer(env, agent, n_episodes=2000,
-                        # resume=False, eval=False,
-                        resume=True, eval=True,
-                        stop_conditions=(GoalPercentage(100, 0.2),),
-                        # renderer=PygameRenderer(0.01)
-                   )
+    # tr = TGTrainer(env, agent, n_episodes=2000,
+    #                     stop_conditions=(GoalPercentage(20, 0.2),),
+    #                     # renderer=PygameRenderer(0.01)
+    #                )
 
     # agent = RLAgent(
     #     BreakoutNRobotFeatureExtractor(env.observation_space),
@@ -217,5 +215,8 @@ if __name__ == '__main__':
     #                # resume=True, eval=True,
     #                )
 
+    tr = TGTrainer.resume()
+    # tr = TGTrainer.eval(renderer=PygameRenderer(0.01))
     stats, optimal_stats = tr.main()
+
 
