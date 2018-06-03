@@ -28,9 +28,9 @@ class GenericTrainer(Trainer):
 
         self.agent = agent
 
-        shutil.rmtree(self.data_dir, ignore_errors=True)
-        os.mkdir(self.data_dir)
-        os.mkdir(self.agent_data_dir)
+        if not os.path.isdir(self.data_dir):
+            os.makedirs(self.data_dir)
+            os.mkdir(self.agent_data_dir)
 
         self.cur_episode = 0
         self.stats = StatsManager(name="train_stats")
@@ -65,7 +65,7 @@ class GenericTrainer(Trainer):
             if self.check_stop_conditions(optimal_stats, eval=eval):
                 break
 
-            if self.cur_episode%100==0:
+            if self.cur_episode%100==0 and not eval:
                 agent.save(self.agent_data_dir)
                 self.save()
 
