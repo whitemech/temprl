@@ -28,9 +28,8 @@ class GenericTrainer(Trainer):
 
         self.agent = agent
 
-        if not os.path.isdir(self.data_dir):
-            os.makedirs(self.data_dir)
-            os.mkdir(self.agent_data_dir)
+        if not os.path.isdir(self.agent_data_dir):
+            os.makedirs(self.agent_data_dir, exist_ok=True)
 
         self.cur_episode = 0
         self.stats = StatsManager(name="train_stats")
