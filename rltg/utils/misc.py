@@ -16,7 +16,10 @@ class mydefaultdict(dict):
 
 def logger_from_verbosity(verbosity):
     verbosity = 0 if verbosity < 0 else 2 if verbosity > 2 else verbosity
-    logging.getLogger().setLevel(logging.WARNING if verbosity==0 else logging.INFO if verbosity==1 else logging.DEBUG)
+    logger = logging.getLogger()
+    logger.setLevel(logging.WARNING if verbosity==0 else logging.INFO if verbosity==1 else logging.DEBUG)
+    logging.getLogger("matplotlib").setLevel(logging.WARNING)
+    return logger
 
 class AgentObservation(object):
     def __init__(self, state, action, reward, state2):

@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 import shutil
 import time
 
@@ -37,7 +38,7 @@ class GenericTrainer(Trainer):
 
 
     def main(self, eval:bool=False, render:bool=False, verbosity:int=1):
-        logger_from_verbosity(verbosity)
+        logger = logger_from_verbosity(verbosity)
 
         agent = self.agent
         num_episodes = self.n_episodes
@@ -50,14 +51,14 @@ class GenericTrainer(Trainer):
                 steps, total_reward, goal = self.train_loop(render=render)
                 stats.update(steps, len(agent.brain.Q), total_reward, goal)
                 summary = stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
-                logging.info(summary)
+                logger.info(summary)
 
             # try optimal run
             agent.set_eval(True)
             steps, total_reward, goal = self.train_loop(render=render)
             optimal_stats.update(steps, len(agent.brain.Q), total_reward, goal)
             optimal_summary = optimal_stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
-            logging.info(optimal_summary + " * optimal * ")
+            logger.info(optimal_summary + " * optimal * ")
             agent.set_eval(False)
 
 
@@ -74,8 +75,8 @@ class GenericTrainer(Trainer):
             self.save()
             agent.save(self.agent_data_dir)
 
-        stats.to_csv(self.data_dir + "/" + stats.name + "_" + str(time.time()))
-        optimal_stats.to_csv(self.data_dir + "/" + optimal_stats.name + "_" + str(time.time()))
+        stats.to_csv(self.data_dir + "/" + stats.name + "_" + str(time.time()) + "_" + str(random.random())[2:7])
+        optimal_stats.to_csv(self.data_dir + "/" + optimal_stats.name + "_" + str(time.time()) + "_" + str(random.random())[2:7])
 
         return stats, optimal_stats
 
