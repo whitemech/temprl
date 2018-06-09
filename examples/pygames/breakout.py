@@ -33,9 +33,11 @@ from abc import abstractmethod
 
 import numpy as np
 from RLGames.gym_wrappers.GymBreakout import GymBreakout
+from RLGames.gym_wrappers.GymPygameWrapper import PygameVideoRecorder
 from flloat.base.Symbol import Symbol
 from flloat.parser.ldlf import LDLfParser
 from gym.spaces import Box, Tuple
+from gym.wrappers import Monitor
 
 from rltg.utils.StoppingCondition import GoalPercentage
 
@@ -175,7 +177,7 @@ if __name__ == '__main__':
 
     gamma = 0.999
     on_the_fly = True
-    reward_shaping = True
+    reward_shaping = False
     '''Temoral goal - specify how and what to complete (columns, rows or both)'''
     agent = TGAgent(BreakoutNRobotFeatureExtractor(env.observation_space),
                     Sarsa(None, env.action_space, policy=EGreedy(0.1), alpha=0.1, gamma=gamma, lambda_=0.99),
@@ -197,6 +199,7 @@ if __name__ == '__main__':
 
                     reward_shaping=reward_shaping)
 
+    env = PygameVideoRecorder(env, "ciao")
     tr = TGTrainer(env, agent, n_episodes=2000,
                         stop_conditions=(GoalPercentage(100, 0.2),),
                         # renderer=PygameRenderer(0.01)
@@ -214,5 +217,6 @@ if __name__ == '__main__':
 
     # tr = TGTrainer.resume(render=True)
     # tr = TGTrainer.eval(render=True, verbosity=2)
-    stats, optimal_stats = tr.main(render=False, verbosity=2)
+
+    stats, optimal_stats = tr.main(render=True, verbosity=2)
 

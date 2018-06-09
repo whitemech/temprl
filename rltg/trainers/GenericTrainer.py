@@ -45,6 +45,11 @@ class GenericTrainer(Trainer):
         stats = self.stats
         optimal_stats = self.optimal_stats
 
+        if eval:
+            stats.reset()
+            optimal_stats.reset()
+            self.cur_episode = 0
+
         for ep in range(self.cur_episode, num_episodes):
 
             if not eval:
@@ -75,8 +80,8 @@ class GenericTrainer(Trainer):
             self.save()
             agent.save(self.agent_data_dir)
 
-        stats.to_csv(self.data_dir + "/" + stats.name + "_" + str(time.time()) + "_" + str(random.random())[2:7])
-        optimal_stats.to_csv(self.data_dir + "/" + optimal_stats.name + "_" + str(time.time()) + "_" + str(random.random())[2:7])
+            stats.to_csv(self.data_dir + "/" + stats.name + "_" + str(time.time()) + "_" + str(random.random())[2:7])
+            optimal_stats.to_csv(self.data_dir + "/" + optimal_stats.name + "_" + str(time.time()) + "_" + str(random.random())[2:7])
 
         return stats, optimal_stats
 
