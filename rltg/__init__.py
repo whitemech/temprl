@@ -4,7 +4,7 @@
 
 __author__ = """Marco Favorito"""
 __email__ = 'marco.favorito@gmail.com'
-__version__ = '0.1.1post4'
+__version__ = '0.1.2'
 
 import logging
 logging.getLogger('rltg').addHandler(logging.NullHandler())
