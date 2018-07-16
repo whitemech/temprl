@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 import shutil
 import time
 
@@ -28,9 +29,8 @@ class GenericTrainer(Trainer):
 
         self.agent = agent
 
-        shutil.rmtree(self.data_dir, ignore_errors=True)
-        os.mkdir(self.data_dir)
-        os.mkdir(self.agent_data_dir)
+        if not os.path.isdir(self.agent_data_dir):
+            os.makedirs(self.agent_data_dir, exist_ok=True)
 
         self.cur_episode = 0
         self.stats = StatsManager(name="train_stats")
@@ -38,12 +38,17 @@ class GenericTrainer(Trainer):
 
 
     def main(self, eval:bool=False, render:bool=False, verbosity:int=1):
-        logger_from_verbosity(verbosity)
+        logger = logger_from_verbosity(verbosity)
 
         agent = self.agent
         num_episodes = self.n_episodes
         stats = self.stats
         optimal_stats = self.optimal_stats
+
+        if eval:
+            stats.reset()
+            optimal_stats.reset()
+            self.cur_episode = 0
 
         for ep in range(self.cur_episode, num_episodes):
 
@@ -51,21 +56,21 @@ class GenericTrainer(Trainer):
                 steps, total_reward, goal = self.train_loop(render=render)
                 stats.update(steps, len(agent.brain.Q), total_reward, goal)
                 summary = stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
-                logging.info(summary)
+                logger.info(summary)
 
             # try optimal run
             agent.set_eval(True)
             steps, total_reward, goal = self.train_loop(render=render)
             optimal_stats.update(steps, len(agent.brain.Q), total_reward, goal)
             optimal_summary = optimal_stats.print_summary(ep, steps, len(agent.brain.Q), total_reward, agent.brain.policy.epsilon.get(), goal)
-            logging.info(optimal_summary + " * optimal * ")
+            logger.info(optimal_summary + " * optimal * ")
             agent.set_eval(False)
 
 
             if self.check_stop_conditions(optimal_stats, eval=eval):
                 break
 
-            if self.cur_episode%100==0:
+            if self.cur_episode%100==0 and not eval:
                 agent.save(self.agent_data_dir)
                 self.save()
 
@@ -75,8 +80,8 @@ class GenericTrainer(Trainer):
             self.save()
             agent.save(self.agent_data_dir)
 
-        stats.to_csv(self.data_dir + "/" + stats.name + "_" + str(time.time()))
-        optimal_stats.to_csv(self.data_dir + "/" + optimal_stats.name + "_" + str(time.time()))
+            stats.to_csv(self.data_dir + "/" + stats.name + "_" + str(time.time()) + "_" + str(random.random())[2:7])
+            optimal_stats.to_csv(self.data_dir + "/" + optimal_stats.name + "_" + str(time.time()) + "_" + str(random.random())[2:7])
 
         return stats, optimal_stats
 

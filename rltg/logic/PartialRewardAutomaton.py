@@ -158,7 +158,7 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
             self.potentials_prime = self._compute_levels()
 
             dfa = DFA(self.alphabet, frozenset(self.states), self.initial_state, frozenset(self.accepting_states), self.transition_function)
-            dfa.to_dot("automata/%s/%s-%s" % (str(self.dfaotf.f)[:9],self.episode, self.it))
+            # dfa.to_dot("automata/%s/%s-%s" % (str(self.dfaotf.f)[:9],self.episode, self.it))
 
             logging.debug(
                 "episode: {:6d}, step: {:5d}, update automaton on-the-fly, prev_state: {:3}, next_state_id: {:3}, label: {:10}, is fail: {:5}, is final: {:5}".format(
