@@ -38,6 +38,10 @@ Features
 * Exploration policy supported: random policy;
 * Support for temporal goal defined by LDLf formulas.
 
+Examples
+--------
+To see some example, please refer to `rltg-examples <https://github.com/MarcoFavorito/rltg-examples>`_.
+
 Credits
 -------
 
