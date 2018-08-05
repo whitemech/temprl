@@ -60,8 +60,38 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
         return leaves
 
 
+    def bfs(self, dfa):
+        border_states = set()
+        visited= set()
+
+        queue = []
+        queue.append(dfa.initial_state)
+
+        while queue:
+            state = queue.pop(0)
+            visited.add(state)
+            # True if a state has a next state in a higher stratum
+            has_proper_next = False
+
+            if state in self.accepting_states:
+                border_states.add(state)
+
+            next_states = dfa.transition_function.get(state, {})
+            for a in next_states:
+                next_state = next_states[a]
+                if next_state not in visited and not self._is_failed_state(self.id2state[next_state]):
+                    # if not already visited (so also if the next_state is not itself)
+                    queue.append(next_state)
+                    has_proper_next=True
+
+            if not has_proper_next and not self._is_failed_state(self.id2state[state]):
+                border_states.add(state)
+
+        return border_states
+
+
     def _compute_levels(self):
-        temp_dfa = DFA(self.alphabet, self.states, self.initial_state, self.accepting_states, self.transition_function)
+        temp_dfa = self.dfa()
         state2level, max_level, failure_states = compute_levels(temp_dfa, temp_dfa.accepting_states)
 
         border_states = set(filter(lambda x: not self._is_failed_state(self.id2state[x]), failure_states))
@@ -109,12 +139,13 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
 
 
         # least fixpoint with the new state just discovered
-        leaves = self.dfs(temp_dfa, self.initial_state, set(), border_states)
+        # leaves = self.dfs(temp_dfa, self.initial_state, set(), border_states)
+        leaves = self.bfs(temp_dfa)
         border_state2level, border_max_level, _ = compute_levels(temp_dfa, set(leaves))
         for b in border_states:
             potentials[b] = _potential_function(b, self.initial_state, border_state2level, self.reward)
 
-        logging.debug("border states: {:15}, leaves: {:10}".format(str(border_states), str(leaves)))
+        logging.debug("states: {:20}, border states: {:15}, leaves: {:10}".format(str(self.states), str(border_states), str(leaves)))
 
         return potentials
 
@@ -133,11 +164,11 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
 
         old_state_id, old_state_changed = self._add_state(old_state)
         new_state_id, new_state_changed = self._add_state(new_state)
-        transition_already_exists = False
+        transition_already_exists = True
         is_failure_state = False
         is_final_state = False
 
-        if old_state_id not in self.transition_function or label not in self.transition_function[old_state_id]:
+        if (old_state_id not in self.transition_function or label not in self.transition_function[old_state_id]):
             transition_already_exists = new_state_id in self.links[old_state_id]
             self.links[old_state_id].add(new_state_id)
             self.transition_function.setdefault(old_state_id, {})[label] = new_state_id
@@ -150,7 +181,7 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
             self.accepting_states.add(new_state_id)
             is_final_state = True
 
-        changed = old_state_changed or (new_state_changed and not is_failure_state and not transition_already_exists)
+        changed = old_state_id!=new_state_id and (new_state_changed or (not transition_already_exists and not is_failure_state))
 
         if changed:
 
@@ -165,6 +196,7 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
                     self.episode, self.it, old_state_id, new_state_id, str(label), str(new_state_id in self.failure_states), str(new_state_id in self.accepting_states)
                 ))
             logging.debug("new potentials: %s", self.potentials_prime)
+            logging.debug("-"*30)
         else:
             self.potentials = copy(self.potentials_prime)
 
@@ -210,3 +242,6 @@ class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
     def word_acceptance(self, word: List[Symbol]):
         raise NotImplementedError
 
+
+    def dfa(self):
+        return DFA(self.alphabet, self.states, self.initial_state, self.accepting_states, self.transition_function)
