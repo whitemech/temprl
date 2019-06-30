@@ -1,8 +1,8 @@
 from copy import copy
-from flloat.base.Alphabet import Alphabet
-from flloat.base.Symbol import Symbol
-from flloat.syntax.ldlf import LDLfFormula
-from pythomata.base.DFA import DFA
+from flloat.base.symbols import Alphabet
+from flloat.base.symbols import Symbol
+from flloat.ldlf import LDLfFormula
+from pythomata.dfa import DFA
 from typing import Set
 
 from rltg.logic.RewardAutomaton import RewardAutomaton

@@ -2,11 +2,11 @@ from abc import abstractmethod
 from typing import Set
 
 from flloat.semantics.pl import PLInterpretation
-from pythomata.base.Simulator import DFASimulator, Simulator
-from pythomata.base.Symbol import Symbol
-from pythomata.base.utils import Sink
+from pythomata.base import Symbol
+from pythomata.simulator import DFASimulator, Simulator
 
 from rltg.logic.CompleteRewardAutomaton import CompleteRewardAutomaton
+
 
 class RewardSimulator(Simulator):
 

@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Set
 
-from flloat.base.Alphabet import Alphabet
-from flloat.syntax.ldlf import LDLfFormula
+from flloat.base.symbols import Alphabet
+from flloat.ldlf import LDLfFormula
 from gym.spaces import Discrete
-from pythomata.base.Symbol import Symbol
+from pythomata.base import Symbol
 
 from rltg.agents.feature_extraction import FeatureExtractor
 from rltg.logic.CompleteRewardAutomaton import CompleteRewardAutomaton

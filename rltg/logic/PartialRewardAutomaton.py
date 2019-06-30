@@ -3,12 +3,12 @@ from copy import copy
 from itertools import chain
 from typing import Any, Set, List
 
-from flloat.base.Alphabet import Alphabet
-from flloat.base.Symbol import Symbol
+from flloat.base.symbols import Alphabet
+from flloat.base.symbols import Symbol
 from flloat.flloat import DFAOTF
 from flloat.semantics.pl import PLInterpretation
-from flloat.syntax.ldlf import LDLfFormula
-from pythomata.base.DFA import DFA
+from flloat.ldlf import LDLfFormula
+from pythomata.dfa import DFA
 
 from rltg.logic.RewardAutomaton import RewardAutomaton
 from rltg.logic.RewardAutomatonSimulator import RewardSimulator
@@ -16,6 +16,7 @@ from rltg.utils.misc import compute_levels, _potential_function, mydefaultdict
 
 
 class PartialRewardAutomaton(RewardAutomaton, RewardSimulator):
+
     def __init__(self, alphabet:Alphabet, f:LDLfFormula, reward, gamma=0.99):
 
         self.dfaotf = DFAOTF(f)

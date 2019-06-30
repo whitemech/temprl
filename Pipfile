@@ -7,6 +7,7 @@ verify_ssl = true
 tox = "*"
 pytest = "*"
 pytest-cov = "*"
+ipython = "*"
 
 [packages]
 flloat = {git = "https://github.com/marcofavorito/flloat.git",ref = "develop"}
