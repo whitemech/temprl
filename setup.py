@@ -17,7 +17,7 @@ about = {}
 with open(os.path.join(here, 'rltg', '__version__.py'), 'r') as f:
     exec(f.read(), about)
 
-requirements = ["gym", "flloat", "opencv-python", "matplotlib"]
+requirements = ["gym", "flloat"]
 
 setup(
     name=about["__title__"],
@@ -37,7 +37,7 @@ setup(
     license=about["__version__"],
     long_description=readme + '\n\n' + history,
     include_package_data=True,
-    keywords='rltg',
+    keywords='rltg, reinforcement-learning, temporal-logic',
     packages=find_packages(include=['rltg*']),
     test_suite='tests',
     tests_require=["tox"],

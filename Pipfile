@@ -4,9 +4,13 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+tox = "*"
+pytest = "*"
+pytest-cov = "*"
 
 [packages]
 flloat = {git = "https://github.com/marcofavorito/flloat.git",ref = "develop"}
+gym = "*"
 
 [requires]
 python_version = "3.7"
