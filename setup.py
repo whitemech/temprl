@@ -14,7 +14,7 @@ with open('HISTORY.rst') as history_file:
 
 here = os.path.abspath(os.path.dirname(__file__))
 about = {}
-with open(os.path.join(here, 'rltg', '__version__.py'), 'r') as f:
+with open(os.path.join(here, 'temprl', '__version__.py'), 'r') as f:
     exec(f.read(), about)
 
 requirements = ["gym", "flloat"]
@@ -37,8 +37,8 @@ setup(
     license=about["__version__"],
     long_description=readme + '\n\n' + history,
     include_package_data=True,
-    keywords='rltg, reinforcement-learning, temporal-logic',
-    packages=find_packages(include=['rltg*']),
+    keywords='temprl, reinforcement-learning, temporal-logic',
+    packages=find_packages(include=['temprl*']),
     test_suite='tests',
     tests_require=["tox"],
     url=about["__url__"],

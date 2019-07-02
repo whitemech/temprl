@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Top-level package for RLTG."""
+"""Top-level package for TempRL."""
 
 
 import logging

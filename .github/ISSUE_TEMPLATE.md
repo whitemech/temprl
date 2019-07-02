@@ -1,4 +1,4 @@
-* RLTG version:
+* TempRL version:
 * Python version:
 * Operating System:
 

@@ -9,7 +9,7 @@ import numpy as np
 from flloat.semantics import PLInterpretation
 from pythomata.base import Symbol
 
-from rltg.automata import TemporalLogicFormula, RewardDFA, RewardAutomatonSimulator
+from temprl.automata import TemporalLogicFormula, RewardDFA, RewardAutomatonSimulator
 
 
 class TemporalGoal(ABC):
