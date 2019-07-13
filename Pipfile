@@ -10,12 +10,12 @@ pytest-cov = "*"
 ipython = "*"
 
 [packages]
-flloat = {git = "https://github.com/marcofavorito/flloat.git",ref = "develop"}
 gym = "*"
-pythomata = {git = "https://github.com/marcofavorito/pythomata.git",ref = "develop"}
+pythomata = {editable = true,git = "https://github.com/marcofavorito/pythomata.git",ref = "develop"}
+flloat = {editable = true,git = "https://github.com/marcofavorito/flloat.git",ref = "develop"}
 
 [requires]
-python_version = ">=3.6"
+python_version = "3"
 
 [pipenv]
 allow_prereleases = true
