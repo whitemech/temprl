@@ -28,11 +28,14 @@ Framework for Reinforcement Learning with Temporal Goals defined by LTLf/LDLf fo
 Install
 -------
 
-TODO
+Install from ``develop`` branch:
+
+    pip3 install git+https://github.com/sapienza-rl/temprl.git@develop
 
 Examples
 --------
 
+TODO
 
 Tests
 -----
