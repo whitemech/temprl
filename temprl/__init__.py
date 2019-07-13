@@ -7,8 +7,3 @@ import logging
 logging.getLogger('temprl').addHandler(logging.NullHandler())
 logging.basicConfig(format='[%(asctime)s][%(name)s][%(funcName)s][%(levelname)s]: %(message)s', level=logging.DEBUG)
 
-logger = logging.getLogger('matplotlib')
-# set WARNING for Matplotlib
-logger.setLevel(logging.WARNING)
-
-
