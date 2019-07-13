@@ -1,51 +1,50 @@
-====
-RLTG
-====
+======
+TempRL
+======
 
 
-.. image:: https://img.shields.io/pypi/v/rltg.svg
-        :target: https://pypi.python.org/pypi/rltg
+.. image:: https://img.shields.io/pypi/v/temprl.svg
+        :target: https://pypi.python.org/pypi/temprl
 
-.. image:: https://img.shields.io/travis/MarcoFavorito/rltg.svg
-        :target: https://travis-ci.org/MarcoFavorito/rltg
+.. image:: https://img.shields.io/travis/marcofavorito/temprl.svg
+        :target: https://travis-ci.org/marcofavorito/temprl
 
-.. image:: https://readthedocs.org/projects/rltg/badge/?version=latest
-        :target: https://rltg.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/temprl/badge/?version=latest
+        :target: https://temprl.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 
-.. image:: https://pyup.io/repos/github/MarcoFavorito/rltg/shield.svg
-     :target: https://pyup.io/repos/github/MarcoFavorito/rltg/
+.. image:: https://pyup.io/repos/github/marcofavorito/temprl/shield.svg
+     :target: https://pyup.io/repos/github/marcofavorito/temprl/
      :alt: Updates
 
 .. image:: https://badges.gitter.im/rltg_flloat/Lobby.svg
      :alt: Join the chat at https://gitter.im/rltg_flloat/Lobby
      :target: https://gitter.im/rltg_flloat/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-Framework for Reinforcement Learning with Temporal Goals defined by LDLf formulas.
+Framework for Reinforcement Learning with Temporal Goals defined by LTLf/LDLf formulas.
 
 
-* Free software: MIT license
-* Documentation: https://rltg.readthedocs.io.
+Install
+-------
 
+Install from ``develop`` branch:
 
-Features
---------
+::
 
-* Effective Modularization of a Reinforcement Learning system;
-* Easy setup of the "training loop";
-* RL algorithms (here "Brain") supported: Sarsa and QLearning multi-step
-* Exploration policy supported: random policy;
-* Support for temporal goal defined by LDLf formulas.
+    pip3 install git+https://github.com/sapienza-rl/temprl.git@develop
 
 Examples
 --------
-To see some example, please refer to `rltg-examples <https://github.com/MarcoFavorito/rltg-examples>`_.
 
-Credits
+TODO
+
+Tests
+-----
+
+TODO
+
+License
 -------
 
-This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
+MIT license

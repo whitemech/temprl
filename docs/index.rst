@@ -1,4 +1,4 @@
-Welcome to RLTG's documentation!
+Welcome to TempRL's documentation!
 ======================================
 
 .. toctree::
