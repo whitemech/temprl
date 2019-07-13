@@ -1,10 +1,11 @@
 from abc import abstractmethod
 from copy import copy
-from typing import Union, Set, List
+from typing import Union, List, Optional
 
 from flloat.ldlf import LDLfFormula
 from flloat.ltlf import LTLfFormula
-from pythomata.base import Symbol
+from flloat.semantics import PLInterpretation
+from pythomata.base import Symbol, State
 from pythomata.dfa import DFA
 from pythomata.simulator import DFASimulator, Simulator
 
@@ -20,19 +21,27 @@ class RewardAutomaton:
 
 class RewardSimulator(Simulator):
 
-    def potential_function(self, q, is_terminal_state=False):
-        raise NotImplementedError
-
     @abstractmethod
     def is_failed(self) -> bool:
-        raise NotImplementedError
+        """
+        :return: True if the simulation is in a failure state, False otherwise.
+        """
+
+    @abstractmethod
+    def observe_reward(self, is_terminal_state: bool = False) -> float:
+        """
+        Observe the reward according to the last transition.
+
+        :param is_terminal_state: whether we are at the end of the RL episode.
+        :return: the reward
+        """
 
 
 class RewardDFA(DFA, RewardAutomaton):
 
     def __init__(self, dfa: DFA, reward):
-        # TODO fix pythomata.DFA private attributes
-        dfa = dfa.complete()
+
+        dfa = dfa.complete().renumbering()
         super().__init__(
             set(dfa._states),
             set(dfa._alphabet),
@@ -52,41 +61,63 @@ class RewardDFA(DFA, RewardAutomaton):
         dfa = f.to_automaton(alphabet)
         return RewardDFA(dfa, reward)
 
-    def potential_function(self, q, is_terminal_state=False):
-        return _potential_function(q, self._initial_state, self.reachability_levels, self.reward,
-                                   is_terminal_state=is_terminal_state)
+    def potential_function(self, q: Optional[State], is_terminal_state=False):
+        if is_terminal_state:
+            return 0
+        else:
+            # p = 1/(self.reachability_levels[q]) * self.reward
+            # if q == initial_state and reachability_levels[initial_state]==0:
+            #     return reward
+            initial_state_level = self.reachability_levels[self._initial_state]
+            p = initial_state_level - self.reachability_levels[q]
+            p = p / initial_state_level if initial_state_level != 0 else p
+            p *= self.reward
+        return p
 
     def _compute_levels(self):
         return _compute_levels(self, self._accepting_states)
 
 
 class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
-    def __init__(self, dfa: RewardDFA):
+
+    def __init__(self, dfa: RewardDFA, reward_shaping: bool):
         super().__init__(dfa)
-        self.visited_states = {self.cur_state}
+        self.dfa = dfa
+        self.visited_states = {self._cur_state}
+        self.reward_shaping = reward_shaping
+        self._previous_state = None  # type: Optional[State]
 
     def reset(self):
         super().reset()
-        self.visited_states = {self.cur_state}
+        self.visited_states = {self._cur_state}
+        self._previous_state = None
 
-    def step(self, s: Set[Symbol], **kwargs):
+    def step(self, s: PLInterpretation, **kwargs):
+        self._previous_state = self._cur_state
         super().step(s)
-        self.visited_states.add(self.cur_state)
-        return self.cur_state
+        self.visited_states.add(self._cur_state)
+        if self._previous_state != self._cur_state:
+            print("transition idxs: ", self._previous_state, self._cur_state)
 
-    def potential_function(self, q, is_terminal_state=False):
-        return self.dfa.potential_function(q, is_terminal_state=is_terminal_state)
+    def observe_reward(self, is_terminal_state: bool = False) -> float:
+        previous_potential = self.dfa.potential_function(self._previous_state, is_terminal_state=False)
+        current_potential = self.dfa.potential_function(self._cur_state, is_terminal_state=is_terminal_state)
+        reward = self.dfa.reward if is_terminal_state and self.is_true() else 0.0
+        return reward + current_potential - previous_potential
 
     def is_failed(self):
-        return self.cur_state in self.dfa.failure_states
+        return super().is_failed() or self._cur_state in self.dfa.failure_states
 
 
 def _compute_levels(dfa: DFA, property_states):
     """
-    Compute important details from
-    :param dfa:
+    Compute details from the DFA regarding distance to the goal, maximum distance and reachability.
+    :param dfa: the
     :param property_states:
-    :return:
+    :return: Three values:
+           | - a dictionary from the automaton states to the distance from any goal
+           | - the maximum distance of a state from any goal
+           | - the set of failure states.
     """
     assert property_states.issubset(dfa._states)
     level = 0
@@ -101,8 +132,8 @@ def _compute_levels(dfa: DFA, property_states):
         for s in dfa._states:
             if s in z_current:
                 continue
-            for a in dfa._transition_function.get(s, []):
-                next_state = dfa._transition_function[s][a]
+            for a in dfa.transition_function.get(s, []):
+                next_state = dfa.transition_function[s][a]
                 if next_state in z_current:
                     z_next.add(s)
                     state2level[s] = level
@@ -119,16 +150,3 @@ def _compute_levels(dfa: DFA, property_states):
 
     return state2level, max_level, failure_states
 
-
-def _potential_function(q, initial_state, reachability_levels, reward, is_terminal_state=False):
-    if is_terminal_state:
-        return 0
-    else:
-        # p = 1/(self.reachability_levels[q]) * self.reward
-        # if q == initial_state and reachability_levels[initial_state]==0:
-        #     return reward
-        initial_state_level = reachability_levels[initial_state]
-        p = initial_state_level - reachability_levels[q]
-        p = p/initial_state_level if initial_state_level!=0 else p
-        p *= reward
-    return p

@@ -7,7 +7,7 @@ from typing import Optional, Set, List, Callable
 import gym
 import numpy as np
 from flloat.semantics import PLInterpretation
-from pythomata.base import Symbol
+from pythomata.base import Symbol, State
 
 from temprl.automata import TemporalLogicFormula, RewardDFA, RewardAutomatonSimulator
 
@@ -18,16 +18,18 @@ class TemporalGoal(ABC):
         self,
         formula: TemporalLogicFormula,
         reward: float,
-        labels: Optional[Set[Symbol]] = None
+        labels: Optional[Set[Symbol]] = None,
+        reward_shaping: bool = True
     ):
         """
         :param formula: the formula to be satisfied.
         :param reward: the reward associated to the temporal goal.
-        :param labels: (optional) the set of all possible fluents (used to generate the full automaton).
+        :param labels: the set of all possible fluents (used to generate the full automaton).
+        :param reward_shaping: the set of all possible fluents (used to generate the full automaton).
         """
         self._formula = formula
         self._automaton = RewardDFA.from_formula(self._formula, reward, alphabet=labels)
-        self._simulator = RewardAutomatonSimulator(self._automaton)
+        self._simulator = RewardAutomatonSimulator(self._automaton, reward_shaping=reward_shaping)
         self._reward = reward
 
     @property
@@ -49,20 +51,23 @@ class TemporalGoal(ABC):
         :return: the list of active fluents.
         """
 
-    def step(self, observation, action):
+    def step(self, observation, action) -> Optional[State]:
         fluents = self.extract_fluents(observation, action)
         self._simulator.step(fluents)
         return self._simulator.cur_state
 
     def reset(self):
         self._simulator.reset()
-        return self._simulator.dfa._initial_state
+        return self._simulator.cur_state
+
+    def observe_reward(self, is_terminal_state: bool = False) -> float:
+        return self._simulator.observe_reward(is_terminal_state)
 
     def is_true(self):
         return self._simulator.is_true()
 
-    def is_terminal(self):
-        return self.is_true()
+    def is_failed(self):
+        return self._simulator.is_failed()
 
 
 class TemporalGoalWrapper(gym.Wrapper):
@@ -89,13 +94,14 @@ class TemporalGoalWrapper(gym.Wrapper):
         features = self.feature_extractor(obs)
         next_automata_states = [tg.step(obs, action) for tg in self.temp_goals]
 
-        temp_goal_status = all(tg.is_terminal() for tg in self.temp_goals)
-        temp_goal_rewards = sum(tg.reward for tg in self.temp_goals)
+        temp_goal_all_true = all(tg.is_true() for tg in self.temp_goals)
+        temp_goal_some_false = any(tg.is_failed() for tg in self.temp_goals)
+        done = done or temp_goal_all_true or temp_goal_some_false
+        temp_goal_rewards = sum(tg.observe_reward(is_terminal_state=done) for tg in self.temp_goals)
 
         obs_prime = np.concatenate([features, next_automata_states])
         reward_prime = reward + temp_goal_rewards
-
-        return obs_prime, reward_prime, done or temp_goal_status, info
+        return obs_prime, reward_prime, done, info
 
     def reset(self, **kwargs):
         obs = super().reset()
