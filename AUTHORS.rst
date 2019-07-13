@@ -2,8 +2,8 @@
 Credits
 =======
 
-Development Lead
-----------------
+Maintainer
+----------
 
 * Marco Favorito <marco.favorito@gmail.com>
 

@@ -2,6 +2,6 @@
 Usage
 =====
 
-To use RLTG in a project::
+To use TempRL in a project::
 
-    import rltg
+    import temprl
