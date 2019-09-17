@@ -5,7 +5,7 @@ Credits
 Maintainer
 ----------
 
-* Marco Favorito <marco.favorito@gmail.com>
+* [Marco Favorito](https://github.com/marcofavorito) <marco.favorito@gmail.com>
 
 Contributors
 ------------
