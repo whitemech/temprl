@@ -11,6 +11,7 @@ ipython = "*"
 flake8 = "*"
 flake8-docstrings = "*"
 tox-pipenv = "*"
+mypy = "*"
 
 [packages]
 gym = "*"
