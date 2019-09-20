@@ -1,5 +1,5 @@
 language: python
-install: pip install -U tox-travis
+install: pip install -U tox-travis coveralls
 deploy:
   provider: pypi
   distributions: sdist bdist_wheel
@@ -26,4 +26,7 @@ matrix:
 
 script:
   - tox
+
+after_success:
+  - coveralls
 
