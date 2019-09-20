@@ -2,8 +2,12 @@
 
 [![](https://img.shields.io/pypi/v/temprl.svg)](https://pypi.python.org/pypi/temprl)
 [![](https://img.shields.io/travis/sapienza-rl/temprl.svg)](https://travis-ci.org/sapienza-rl/temprl)
-[![](https://readthedocs.org/projects/temprl/badge/?version=latest)](https://temprl.readthedocs.io/en/latest/?badge=latest)
-[![](https://badges.gitter.im/rltg_flloat/Lobby.svg)](https://gitter.im/rltg_flloat/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![](https://img.shields.io/badge/python-3.6%20%7C%203.7-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7-blue)
+[![](https://coveralls.io/repos/github/sapienza-rl/temprl/badge.svg?branch=master)](https://coveralls.io/github/sapienza-rl/temprl?branch=master)
+[![](https://img.shields.io/badge/flake8-checked-blueviolet)](https://img.shields.io/badge/flake8-checked-blueviolet)
+[![](https://img.shields.io/badge/mypy-checked-blue)](https://img.shields.io/badge/mypy-checked-blue)
+[![](https://img.shields.io/badge/license-Apache%202-lightgrey)](https://img.shields.io/badge/license-Apache%202-lightgrey)
+
 
 Framework for Reinforcement Learning with Temporal Goals defined by LTLf/LDLf formulas.
 

@@ -1,9 +1,5 @@
 language: python
-python:
-- 3.6
-- 3.7
-install: pip install -U tox-travis
-script: tox
+install: pip install -U tox-travis coveralls
 deploy:
   provider: pypi
   distributions: sdist bdist_wheel
@@ -14,4 +10,23 @@ deploy:
     tags: true
     repo: marcofavorito/temprl
     python: 3.6
-  
+matrix:
+  include:
+    - python: 3.7
+      env: TOXENV=py37
+    - python: 3.7
+      env: TOXENV=flake8
+    - python: 3.7
+      env: TOXENV=mypy
+    - python: 3.7
+      env: TOXENV=docs
+
+    - python: 3.6
+      env: TOXENV=py36
+
+script:
+  - tox
+
+after_success:
+  - coveralls
+
