@@ -17,6 +17,7 @@ mypy = "*"
 gym = "*"
 pythomata = {editable = true,git = "https://github.com/marcofavorito/pythomata.git",ref = "develop"}
 flloat = {editable = true,git = "https://github.com/marcofavorito/flloat.git",ref = "develop"}
+mkdocs = "*"
 
 [requires]
 python_version = "3"
