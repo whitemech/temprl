@@ -17,7 +17,12 @@ about = {}
 with open(os.path.join(here, 'temprl', '__version__.py'), 'r') as f:
     exec(f.read(), about)
 
-requirements = ["gym", "flloat==1.0.0a0"]
+requirements = [
+    "gym",
+    "numpy",
+    "flloat==1.0.0a0",
+    "pythomata==1.0.0a0"
+]
 
 setup(
     name=about["__title__"],

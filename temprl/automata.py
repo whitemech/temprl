@@ -4,7 +4,7 @@
 
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import Union, List, Optional
+from typing import Union, Optional, Set
 
 from flloat.ldlf import LDLfFormula
 from flloat.ltlf import LTLfFormula
@@ -68,7 +68,7 @@ class RewardDFA(DFA, RewardAutomaton):
             cls,
             f: TemporalLogicFormula,
             reward,
-            alphabet: List[Symbol] = None
+            alphabet: Set[Symbol] = None
     ):
         """Return the reward automaton associated with the formula."""
         dfa = f.to_automaton(alphabet)
@@ -158,7 +158,7 @@ def _compute_levels(dfa: DFA, property_states):
     level = 0
     state2level = {final_state: level for final_state in property_states}
 
-    z_current = set()
+    z_current = set()  # type: Set
     z_next = set(property_states)
     while z_current != z_next:
         level += 1
