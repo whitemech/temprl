@@ -8,11 +8,17 @@ tox = "*"
 pytest = "*"
 pytest-cov = "*"
 ipython = "*"
+flake8 = "*"
+flake8-docstrings = "*"
+tox-pipenv = "*"
+mypy = "*"
 
 [packages]
 gym = "*"
 pythomata = {editable = true,git = "https://github.com/marcofavorito/pythomata.git",ref = "develop"}
 flloat = {editable = true,git = "https://github.com/marcofavorito/flloat.git",ref = "develop"}
+mkdocs = "*"
+markdown-include = "*"
 
 [requires]
 python_version = "3"

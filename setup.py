@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """The setup script."""
@@ -6,10 +6,10 @@ import os
 
 from setuptools import setup, find_packages
 
-with open('README.rst') as readme_file:
+with open('README.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
+with open('HISTORY.md') as history_file:
     history = history_file.read()
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -17,7 +17,12 @@ about = {}
 with open(os.path.join(here, 'temprl', '__version__.py'), 'r') as f:
     exec(f.read(), about)
 
-requirements = ["gym", "flloat==1.0.0a0"]
+requirements = [
+    "gym",
+    "numpy",
+    "flloat==1.0.0a0",
+    "pythomata==1.0.0a0"
+]
 
 setup(
     name=about["__title__"],
@@ -26,9 +31,8 @@ setup(
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
