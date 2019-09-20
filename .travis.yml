@@ -24,9 +24,6 @@ matrix:
     - python: 3.6
       env: TOXENV=py36
 
-install:
-  - ./.travis/install
-
 script:
-  - ./.travis/run tox
+  - tox
 
