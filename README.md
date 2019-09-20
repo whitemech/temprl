@@ -1,5 +1,4 @@
-# TempRL
-
+# TempRL 
 
 [![](https://img.shields.io/pypi/v/temprl.svg)](https://pypi.python.org/pypi/temprl)
 [![](https://img.shields.io/travis/sapienza-rl/temprl.svg)](https://travis-ci.org/sapienza-rl/temprl)
@@ -15,11 +14,16 @@ Install from `master` branch:
 
 - with `pip`:
 
-      pip3 install git+https://github.com/sapienza-rl/temprl.git
+
+        pip3 install git+https://github.com/sapienza-rl/temprl.git
+
 
 - or, clone the repository and install:
 
-      git clone htts://github.com/sapienza-rl/temprl.git
+
+        git clone htts://github.com/sapienza-rl/temprl.git
+        cd temprl
+        pip install .
 
 
 ## Tests
@@ -34,13 +38,17 @@ To run only the code style checks:
 
 ## Docs
 
-- To build the docs:
+To build the docs:
 
-      mkdocs build
+
+    mkdocs build
     
-- To view documentation in a browser
 
-      mkdocs serve
+To view documentation in a browser
+
+
+    mkdocs serve
+
 
 and then go to [http://localhost:8000](http://localhost:8000)
 
