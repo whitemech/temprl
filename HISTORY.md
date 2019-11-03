@@ -7,3 +7,8 @@
 ## 0.2.0 (2019-07-13)
 
 * Main refactoring of the package.
+
+## 0.2.1 (2019-11-03)
+
+* Improved testing and continuous integration.
+* Fix minor bugs and issues.

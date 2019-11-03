@@ -9,6 +9,7 @@ import numpy as np
 from gym.spaces import Discrete, MultiDiscrete
 
 logger = logging.getLogger(__name__)
+logging.getLogger("temprl").setLevel(level=logging.INFO)
 
 
 class GymTestEnv(gym.Env):
