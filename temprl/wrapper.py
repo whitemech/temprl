@@ -17,7 +17,8 @@ from temprl.automata import (
     RewardAutomatonSimulator
 )
 
-Observation, Action = Any, Any
+Observation = Any
+Action = Any
 
 
 class TemporalGoal(ABC):
@@ -40,8 +41,9 @@ class TemporalGoal(ABC):
                      | (used to generate the full automaton).
         :param reward_shaping: the set of all possible fluents
                              | (used to generate the full automaton).
-        :param extract_fluents: a callable that takes an observation and an actions
-                             | and returns a propositional interpretation with the active fluents.
+        :param extract_fluents: a callable that takes an observation
+                             | and an actions, and returns a
+                             | propositional interpretation with the active fluents.
                              | if None, the 'extract_fluents' method is taken.
         """
         self._formula = formula
@@ -56,7 +58,7 @@ class TemporalGoal(ABC):
         )
         self._reward = reward
         if extract_fluents is not None:
-            self.extract_fluents = extract_fluents
+            setattr(self, "extract_fluents", extract_fluents)
 
     @property
     def observation_space(self) -> Discrete:
@@ -145,15 +147,14 @@ class TemporalGoalWrapper(gym.Wrapper):
         combined_obs_space = (env_shape + temp_goals_shape)
         return MultiDiscrete(combined_obs_space)
 
-
     def step(self, action):
         """Do a step in the Gym environment."""
         obs, reward, done, info = super().step(action)
         features = self.feature_extractor(obs=obs, action=action)
         next_automata_states = [tg.step(obs, action) for tg in self.temp_goals]
 
-        temp_goal_all_true = all(tg.is_true() for tg in self.temp_goals)
-        temp_goal_some_false = any(tg.is_failed() for tg in self.temp_goals)
+        # temp_goal_all_true = all(tg.is_true() for tg in self.temp_goals)
+        # temp_goal_some_false = any(tg.is_failed() for tg in self.temp_goals)
         temp_goal_rewards = sum(
             tg.observe_reward(is_terminal_state=done)
             for tg in self.temp_goals

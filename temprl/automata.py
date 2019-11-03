@@ -115,7 +115,8 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
         super().step(s)
         self.visited_states.add(self._cur_state)
         if self._previous_state != self._cur_state:
-            logger.debug("transition idxs: {}, {}".format(self._previous_state, self._cur_state))
+            logger.debug("transition idxs: {}, {}"
+                         .format(self._previous_state, self._cur_state))
 
     def observe_reward(self, is_terminal_state: bool = False) -> float:
         """Observe the reward of the last transition."""

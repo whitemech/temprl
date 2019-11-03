@@ -18,6 +18,7 @@ from temprl.wrapper import TemporalGoalWrapper, TemporalGoal
 
 
 class TestSimpleEnv:
+    """This class contains tests for a simple Gym environment."""
 
     @classmethod
     def _build_model(cls, env):
@@ -39,8 +40,10 @@ class TestSimpleEnv:
 
         cls.model = cls._build_model(cls.env)
         memory = SequentialMemory(limit=100, window_length=1)
-        policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.05, value_test=.0, nb_steps=7000)
-        cls.dqn = DQNAgent(model=cls.model, nb_actions=cls.env.action_space.n, memory=memory, nb_steps_warmup=10, target_model_update=1e-2, policy=policy)
+        policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1.,
+                                      value_min=.05, value_test=.0, nb_steps=7000)
+        cls.dqn = DQNAgent(model=cls.model, nb_actions=cls.env.action_space.n, memory=memory,
+                           nb_steps_warmup=10, target_model_update=1e-2, policy=policy)
         cls.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
         cls.dqn.fit(cls.env, nb_steps=10000, visualize=False, verbose=2)
 
@@ -62,6 +65,7 @@ class TestSimpleEnv:
 
 
 class TestTempRLWithSimpleEnv:
+    """This class contains tests for a Gym wrapper with a simple temporal goal."""
 
     @classmethod
     def _build_model(cls, env):
@@ -134,8 +138,10 @@ class TestTempRLWithSimpleEnv:
         """Test that learning with the unwrapped env is feasible."""
         self.model = self._build_model(self.wrapped)
         memory = SequentialMemory(limit=1000, window_length=10)
-        policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.0, nb_steps=7000)
-        dqn = DQNAgent(model=self.model, nb_actions=3, memory=memory, nb_steps_warmup=5000, target_model_update=1e-2, policy=policy)
+        policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1.,
+                                      value_min=.1, value_test=.0, nb_steps=7000)
+        dqn = DQNAgent(model=self.model, nb_actions=3, memory=memory, nb_steps_warmup=5000,
+                       target_model_update=1e-2, policy=policy)
         dqn.compile(Adam(lr=1e-3), metrics=['mae'])
         dqn.fit(self.wrapped, nb_steps=10000, visualize=False, verbose=2)
 

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """This module contains tests for the temprl/wrapper.py module."""
 import pytest
+from conftest import GymTestEnv
 from flloat.parser.ldlf import LDLfParser
-from flloat.semantics import PLInterpretation
 
 from temprl.automata import RewardDFA
 from temprl.wrapper import TemporalGoal, TemporalGoalWrapper
-from conftest import GymTestEnv
 
 
 class TestWrapper:
@@ -40,7 +39,7 @@ class TestWrapper:
         assert isinstance(self.tg.automaton, RewardDFA)
 
     def test_extract_fluents_raises_exception(self):
-        """Test that the 'extract_fluents' property raises 'NotImplementedError' if not set in the constructor."""
+        """Test that 'extract_fluents' raises 'NotImplementedError' if not set properly."""
         with pytest.raises(NotImplementedError):
             self.tg.extract_fluents(None, None)
 
