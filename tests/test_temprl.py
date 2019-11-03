@@ -178,13 +178,13 @@ class TestTempRLWithSimpleEnv:
     def test_learning_wrapped_env(self):
         """Test that learning with the unwrapped env is feasible."""
         self.model = self._build_model(self.wrapped)
-        memory = SequentialMemory(limit=1000, window_length=10)
+        memory = SequentialMemory(limit=2000, window_length=10)
         policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1.,
-                                      value_min=.1, value_test=.0, nb_steps=7000)
+                                      value_min=.05, value_test=0.0, nb_steps=10000)
         dqn = DQNAgent(model=self.model, nb_actions=3, memory=memory, nb_steps_warmup=5000,
                        target_model_update=1e-2, policy=policy)
         dqn.compile(Adam(lr=1e-3), metrics=['mae'])
-        dqn.fit(self.wrapped, nb_steps=10000, visualize=False, verbose=2)
+        dqn.fit(self.wrapped, nb_steps=15000, visualize=False, verbose=2)
 
         history = dqn.test(self.wrapped, nb_episodes=5)
         logger.debug(history.history["episode_reward"])
