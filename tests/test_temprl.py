@@ -47,13 +47,6 @@ class TestSimpleEnv:
         cls.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
         cls.dqn.fit(cls.env, nb_steps=15000, visualize=False, verbose=2)
 
-    def test_best_action(self):
-        """Test that a simple model learns the optimal actions."""
-        assert self.dqn.forward((0, )) == 2
-        assert self.dqn.forward((1, )) == 2
-        assert self.dqn.forward((2, )) == 2
-        assert self.dqn.forward((3, )) == 2
-
     def test_optimal_policy(self):
         """Test that the optimal policy maximizes the reward."""
         history = self.dqn.test(self.env, nb_episodes=10)
