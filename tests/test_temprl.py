@@ -101,6 +101,65 @@ class TestTempRLWithSimpleEnv:
         """Test that the reward shaping works as expected."""
         obs = self.wrapped.reset()
         assert np.array_equal(obs, [0, 0])
+        assert not self.tg.is_true()
+        assert not self.tg.is_failed()
+
+        # s1
+        obs, reward, done, info = self.wrapped.step(2)
+        assert reward == 0
+        assert not self.tg.is_true()
+        assert not self.tg.is_failed()
+        # s2
+        obs, reward, done, info = self.wrapped.step(2)
+        assert reward == 0
+        assert not self.tg.is_true()
+        assert not self.tg.is_failed()
+        # s3 - positive reward
+        obs, reward, done, info = self.wrapped.step(2)
+        assert math.isclose(reward, 3.3333, rel_tol=1e-9, abs_tol=0.0001)
+        assert not self.tg.is_true()
+        assert not self.tg.is_failed()
+        # s2
+        obs, reward, done, info = self.wrapped.step(0)
+        assert reward == 0
+        assert not self.tg.is_true()
+        assert not self.tg.is_failed()
+        # s1
+        obs, reward, done, info = self.wrapped.step(0)
+        assert reward == 0
+        assert not self.tg.is_true()
+        assert not self.tg.is_failed()
+        # s0 - positive reward
+        obs, reward, done, info = self.wrapped.step(0)
+        assert math.isclose(reward, 3.3333, rel_tol=1e-9, abs_tol=0.0001)
+        assert not self.tg.is_true()
+        assert not self.tg.is_failed()
+        # s1
+        obs, reward, done, info = self.wrapped.step(2)
+        assert reward == 0
+        assert not self.tg.is_true()
+        assert not self.tg.is_failed()
+        # s2
+        obs, reward, done, info = self.wrapped.step(2)
+        assert reward == 0
+        assert not self.tg.is_true()
+        assert not self.tg.is_failed()
+        # s3
+        obs, reward, done, info = self.wrapped.step(2)
+        assert reward == 0
+        assert not self.tg.is_true()
+        assert not self.tg.is_failed()
+        # s4
+        obs, reward, done, info = self.wrapped.step(2)
+        assert math.isclose(reward, 4.3333, rel_tol=1e-9, abs_tol=0.0001)
+        assert done
+        assert not self.tg.is_failed()
+        assert self.tg.is_true()
+
+    def test_when_temporal_goal_is_failed(self):
+        """Test the case when the temporal goal is failed."""
+        obs = self.wrapped.reset()
+        assert np.array_equal(obs, [0, 0])
 
         # s1
         obs, reward, done, info = self.wrapped.step(2)
@@ -111,28 +170,10 @@ class TestTempRLWithSimpleEnv:
         # s3 - positive reward
         obs, reward, done, info = self.wrapped.step(2)
         assert math.isclose(reward, 3.3333, rel_tol=1e-9, abs_tol=0.0001)
-        # s2
-        obs, reward, done, info = self.wrapped.step(0)
-        assert reward == 0
-        # s1
-        obs, reward, done, info = self.wrapped.step(0)
-        assert reward == 0
-        # s0 - positive reward
-        obs, reward, done, info = self.wrapped.step(0)
-        assert math.isclose(reward, 3.3333, rel_tol=1e-9, abs_tol=0.0001)
-        # s1
+        # s4 - temporal goal fails.
         obs, reward, done, info = self.wrapped.step(2)
-        assert reward == 0
-        # s2
-        obs, reward, done, info = self.wrapped.step(2)
-        assert reward == 0
-        # s3
-        obs, reward, done, info = self.wrapped.step(2)
-        assert reward == 0
-        # s4
-        obs, reward, done, info = self.wrapped.step(2)
-        assert math.isclose(reward, 4.3333, rel_tol=1e-9, abs_tol=0.0001)
-        assert done
+        assert math.isclose(reward, 1 - 3.3333, rel_tol=1e-9, abs_tol=0.0001)
+        assert self.tg.is_failed()
 
     def test_learning_wrapped_env(self):
         """Test that learning with the unwrapped env is feasible."""
