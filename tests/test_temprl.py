@@ -3,7 +3,7 @@
 import math
 
 import numpy as np
-from conftest import GymTestObsWrapper, logger
+from conftest import GymTestObsWrapper
 from flloat.parser.ldlf import LDLfParser
 from flloat.semantics import PLInterpretation
 from gym.spaces import MultiDiscrete
