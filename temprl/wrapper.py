@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Main module."""
-
+import logging
 from abc import ABC
 from typing import Optional, Set, List, Callable, Any
 
@@ -19,6 +19,8 @@ from temprl.automata import (
 
 Observation = Any
 Action = Any
+
+logger = logging.getLogger(__name__)
 
 
 class TemporalGoal(ABC):
@@ -155,13 +157,17 @@ class TemporalGoalWrapper(gym.Wrapper):
 
         # temp_goal_all_true = all(tg.is_true() for tg in self.temp_goals)
         # temp_goal_some_false = any(tg.is_failed() for tg in self.temp_goals)
-        temp_goal_rewards = sum(
+        temp_goal_rewards = [
             tg.observe_reward(is_terminal_state=done)
             for tg in self.temp_goals
-        )
+        ]
+        total_goal_rewards = sum(temp_goal_rewards)
+
+        if any(r != 0.0 for r in temp_goal_rewards):
+            logger.debug("Non-zero goal rewards: {}".format(temp_goal_rewards))
 
         obs_prime = np.concatenate([features, next_automata_states])
-        reward_prime = reward + temp_goal_rewards
+        reward_prime = reward + total_goal_rewards
         return obs_prime, reward_prime, done, info
 
     def reset(self, **kwargs):

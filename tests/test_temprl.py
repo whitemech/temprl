@@ -93,58 +93,70 @@ class TestTempRLWithSimpleEnv:
     def test_reward_shaping(self):
         """Test that the reward shaping works as expected."""
         obs = self.wrapped.reset()
+        total_reward = 0
         assert np.array_equal(obs, [0, 0])
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
 
         # s1
         obs, reward, done, info = self.wrapped.step(2)
+        total_reward += reward
         assert reward == 0
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
         # s2
         obs, reward, done, info = self.wrapped.step(2)
+        total_reward += reward
         assert reward == 0
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
         # s3 - positive reward
         obs, reward, done, info = self.wrapped.step(2)
+        total_reward += reward
         assert math.isclose(reward, 3.3333, rel_tol=1e-9, abs_tol=0.0001)
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
         # s2
         obs, reward, done, info = self.wrapped.step(0)
+        total_reward += reward
         assert reward == 0
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
         # s1
         obs, reward, done, info = self.wrapped.step(0)
+        total_reward += reward
         assert reward == 0
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
         # s0 - positive reward
         obs, reward, done, info = self.wrapped.step(0)
+        total_reward += reward
         assert math.isclose(reward, 3.3333, rel_tol=1e-9, abs_tol=0.0001)
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
         # s1
         obs, reward, done, info = self.wrapped.step(2)
+        total_reward += reward
         assert reward == 0
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
         # s2
         obs, reward, done, info = self.wrapped.step(2)
+        total_reward += reward
         assert reward == 0
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
         # s3
         obs, reward, done, info = self.wrapped.step(2)
+        total_reward += reward
         assert reward == 0
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
         # s4
         obs, reward, done, info = self.wrapped.step(2)
+        total_reward += reward
         assert math.isclose(reward, 4.3333, rel_tol=1e-9, abs_tol=0.0001)
+        assert total_reward == 11.0
         assert done
         assert not self.tg.is_failed()
         assert self.tg.is_true()
