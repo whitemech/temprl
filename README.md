@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/pypi/v/temprl.svg)](https://pypi.python.org/pypi/temprl)
 [![](https://img.shields.io/travis/sapienza-rl/temprl.svg)](https://travis-ci.org/sapienza-rl/temprl)
-[![](https://img.shields.io/badge/python-3.6%20%7C%203.7-blue)](https://img.shields.io/badge/python-3.6%20%7C%203.7-blue)
+[![](https://img.shields.io/pypi/pyversions/temprl.svg)](https://pypi.python.org/pypi/temprl)
 [![](https://coveralls.io/repos/github/sapienza-rl/temprl/badge.svg?branch=master)](https://coveralls.io/github/sapienza-rl/temprl?branch=master)
 [![](https://img.shields.io/badge/flake8-checked-blueviolet)](https://img.shields.io/badge/flake8-checked-blueviolet)
 [![](https://img.shields.io/badge/mypy-checked-blue)](https://img.shields.io/badge/mypy-checked-blue)
