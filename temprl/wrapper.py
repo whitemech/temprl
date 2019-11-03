@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Main module."""
-
+import logging
 from abc import ABC
 from typing import Optional, Set, List, Callable, Any
 
@@ -20,6 +20,8 @@ from temprl.automata import (
 Observation = Any
 Action = Any
 
+logger = logging.getLogger(__name__)
+
 
 class TemporalGoal(ABC):
     """Abstract class to represent a temporal goal."""
@@ -30,7 +32,8 @@ class TemporalGoal(ABC):
         reward: float,
         labels: Optional[Set[Symbol]] = None,
         reward_shaping: bool = True,
-        extract_fluents: Optional[Callable] = None
+        extract_fluents: Optional[Callable] = None,
+        zero_terminal_state: bool = False
     ):
         """
         Initialize a temporal goal.
@@ -45,6 +48,8 @@ class TemporalGoal(ABC):
                              | and an actions, and returns a
                              | propositional interpretation with the active fluents.
                              | if None, the 'extract_fluents' method is taken.
+        :param zero_terminal_state: when reward_shaping is True, make the
+                                  | potential function at a terminal state equal to zero.
         """
         self._formula = formula
         self._automaton = RewardDFA.from_formula(
@@ -54,7 +59,8 @@ class TemporalGoal(ABC):
         )
         self._simulator = RewardAutomatonSimulator(
             self._automaton,
-            reward_shaping=reward_shaping
+            reward_shaping=reward_shaping,
+            zero_terminal_state=zero_terminal_state
         )
         self._reward = reward
         if extract_fluents is not None:
@@ -155,13 +161,17 @@ class TemporalGoalWrapper(gym.Wrapper):
 
         # temp_goal_all_true = all(tg.is_true() for tg in self.temp_goals)
         # temp_goal_some_false = any(tg.is_failed() for tg in self.temp_goals)
-        temp_goal_rewards = sum(
+        temp_goal_rewards = [
             tg.observe_reward(is_terminal_state=done)
             for tg in self.temp_goals
-        )
+        ]
+        total_goal_rewards = sum(temp_goal_rewards)
+
+        if any(r != 0.0 for r in temp_goal_rewards):
+            logger.debug("Non-zero goal rewards: {}".format(temp_goal_rewards))
 
         obs_prime = np.concatenate([features, next_automata_states])
-        reward_prime = reward + temp_goal_rewards
+        reward_prime = reward + total_goal_rewards
         return obs_prime, reward_prime, done, info
 
     def reset(self, **kwargs):

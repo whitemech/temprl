@@ -11,4 +11,9 @@
 ## 0.2.1 (2019-11-03)
 
 * Improved testing and continuous integration.
-* Fix minor bugs and issues.
+* Fixed minor bugs and issues.
+
+## 0.2.2 (2019-11-03)
+
+* Improved support for reward shaping.
+* Fixed minor bugs and issues.
