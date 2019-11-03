@@ -39,13 +39,13 @@ class TestSimpleEnv:
         cls.env = GymTestObsWrapper(n_states=5)
 
         cls.model = cls._build_model(cls.env)
-        memory = SequentialMemory(limit=100, window_length=1)
+        memory = SequentialMemory(limit=2000, window_length=1)
         policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1.,
-                                      value_min=.05, value_test=.0, nb_steps=7000)
+                                      value_min=.05, value_test=.0, nb_steps=10000)
         cls.dqn = DQNAgent(model=cls.model, nb_actions=cls.env.action_space.n, memory=memory,
                            nb_steps_warmup=10, target_model_update=1e-2, policy=policy)
         cls.dqn.compile(Adam(lr=1e-3), metrics=['mae'])
-        cls.dqn.fit(cls.env, nb_steps=10000, visualize=False, verbose=2)
+        cls.dqn.fit(cls.env, nb_steps=15000, visualize=False, verbose=2)
 
     def test_best_action(self):
         """Test that a simple model learns the optimal actions."""
@@ -56,8 +56,8 @@ class TestSimpleEnv:
 
     def test_optimal_policy(self):
         """Test that the optimal policy maximizes the reward."""
-        history = self.dqn.test(self.env, nb_episodes=5)
-        assert all(total_reward == 1.0 for total_reward in history.history["episode_reward"])
+        history = self.dqn.test(self.env, nb_episodes=10)
+        assert np.isclose(np.average(history.history["episode_reward"][1:]), 1.0)
 
     @classmethod
     def teardown_class(cls):
@@ -186,11 +186,9 @@ class TestTempRLWithSimpleEnv:
         dqn.compile(Adam(lr=1e-3), metrics=['mae'])
         dqn.fit(self.wrapped, nb_steps=15000, visualize=False, verbose=2)
 
-        history = dqn.test(self.wrapped, nb_episodes=5)
-        logger.debug(history.history["episode_reward"])
-        print(history.history["episode_reward"])
-        assert all(math.isclose(total_reward, 11.0, rel_tol=1e-9, abs_tol=0.0001)
-                   for total_reward in history.history["episode_reward"])
+        history = dqn.test(self.wrapped, nb_episodes=10)
+        print("Reward history: {}".format(history.history["episode_reward"]))
+        assert np.isclose(np.average(history.history["episode_reward"][1:]), 11.0)
 
     @classmethod
     def teardown_class(cls):
