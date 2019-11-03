@@ -32,7 +32,8 @@ class TemporalGoal(ABC):
         reward: float,
         labels: Optional[Set[Symbol]] = None,
         reward_shaping: bool = True,
-        extract_fluents: Optional[Callable] = None
+        extract_fluents: Optional[Callable] = None,
+        zero_terminal_state: bool = False
     ):
         """
         Initialize a temporal goal.
@@ -47,6 +48,8 @@ class TemporalGoal(ABC):
                              | and an actions, and returns a
                              | propositional interpretation with the active fluents.
                              | if None, the 'extract_fluents' method is taken.
+        :param zero_terminal_state: when reward_shaping is True, make the
+                                  | potential function at a terminal state equal to zero.
         """
         self._formula = formula
         self._automaton = RewardDFA.from_formula(
@@ -56,7 +59,8 @@ class TemporalGoal(ABC):
         )
         self._simulator = RewardAutomatonSimulator(
             self._automaton,
-            reward_shaping=reward_shaping
+            reward_shaping=reward_shaping,
+            zero_terminal_state=zero_terminal_state
         )
         self._reward = reward
         if extract_fluents is not None:

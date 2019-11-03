@@ -4,7 +4,7 @@
 import logging
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import Union, Optional, Set
+from typing import Union, Optional, Set, cast
 
 from flloat.ldlf import LDLfFormula
 from flloat.ltlf import LTLfFormula
@@ -67,7 +67,7 @@ class RewardDFA(DFA, RewardAutomaton):
 
         self.sink_state = self._find_sink_state()
 
-    def _find_sink_state(self):
+    def _find_sink_state(self) -> State:
         for s, delta in self.transition_function.items():
             if s in self.failure_states and all(s == t for _, t in delta.items()):
                 return s
@@ -102,12 +102,14 @@ class RewardDFA(DFA, RewardAutomaton):
 class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
     """A DFA simulator for a reward automaton."""
 
-    def __init__(self, dfa: RewardDFA, reward_shaping: bool):
+    def __init__(self, dfa: RewardDFA, reward_shaping: bool, zero_terminal_state: bool = True):
         """Initialize the reward DFA simulator."""
         super().__init__(dfa)
+        self._cur_state = cast(Optional[State], self._cur_state)  # type: ignore
         self.dfa = dfa
         self.visited_states = {self._cur_state}
         self.reward_shaping = reward_shaping
+        self.zero_terminal_state = zero_terminal_state
         self._previous_state = None  # type: Optional[State]
 
     def reset(self):
@@ -129,17 +131,21 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
 
     def observe_reward(self, is_terminal_state: bool = False) -> float:
         """Observe the reward of the last transition."""
-        previous_potential = self.dfa.potential_function(
-            self._previous_state,
-            is_terminal_state=False
-        )
-        current_potential = self.dfa.potential_function(
-            self._cur_state,
-            is_terminal_state=is_terminal_state
-        )
-        reward = self.dfa.reward\
+        reward = self.dfa.reward \
             if is_terminal_state and self.is_true() else 0.0
-        return reward + current_potential - previous_potential
+
+        if self.reward_shaping:
+            previous_potential = self.dfa.potential_function(
+                self._previous_state,
+                is_terminal_state=False
+            )
+            current_potential = self.dfa.potential_function(
+                self._cur_state,
+                is_terminal_state=is_terminal_state and self.zero_terminal_state
+            )
+            return current_potential - previous_potential
+        else:
+            return reward
 
     def is_failed(self):
         """Check if the simulation is failed."""
