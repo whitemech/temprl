@@ -4,7 +4,7 @@
 import logging
 from abc import abstractmethod, ABC
 from copy import copy
-from typing import Union, Optional, Set
+from typing import Union, Optional, Set, cast
 
 from flloat.ldlf import LDLfFormula
 from flloat.ltlf import LTLfFormula
@@ -65,6 +65,13 @@ class RewardDFA(DFA, RewardAutomaton):
         self.reachability_levels, self.max_level,\
             self.failure_states = self._compute_levels()
 
+        self.sink_state = self._find_sink_state()
+
+    def _find_sink_state(self) -> State:
+        for s, delta in self.transition_function.items():
+            if s in self.failure_states and all(s == t for _, t in delta.items()):
+                return s
+
     @classmethod
     def from_formula(
             cls,
@@ -78,7 +85,7 @@ class RewardDFA(DFA, RewardAutomaton):
 
     def potential_function(self, q: Optional[State], is_terminal_state=False):
         """Return the potential function to the given automaton state."""
-        if is_terminal_state:
+        if is_terminal_state or q is None:
             return 0
         else:
             initial_state_level = self.reachability_levels[self._initial_state]
@@ -95,12 +102,14 @@ class RewardDFA(DFA, RewardAutomaton):
 class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
     """A DFA simulator for a reward automaton."""
 
-    def __init__(self, dfa: RewardDFA, reward_shaping: bool):
+    def __init__(self, dfa: RewardDFA, reward_shaping: bool, zero_terminal_state: bool = True):
         """Initialize the reward DFA simulator."""
         super().__init__(dfa)
+        self._cur_state = cast(Optional[State], self._cur_state)  # type: ignore
         self.dfa = dfa
         self.visited_states = {self._cur_state}
         self.reward_shaping = reward_shaping
+        self.zero_terminal_state = zero_terminal_state
         self._previous_state = None  # type: Optional[State]
 
     def reset(self):
@@ -113,6 +122,8 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
         """Do a step for the simulation.."""
         self._previous_state = self._cur_state
         super().step(s)
+        if self._cur_state is None:
+            self._cur_state = self.dfa.sink_state
         self.visited_states.add(self._cur_state)
         if self._previous_state != self._cur_state:
             logger.debug("transition idxs: {}, {}"
@@ -120,17 +131,21 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
 
     def observe_reward(self, is_terminal_state: bool = False) -> float:
         """Observe the reward of the last transition."""
-        previous_potential = self.dfa.potential_function(
-            self._previous_state,
-            is_terminal_state=False
-        )
-        current_potential = self.dfa.potential_function(
-            self._cur_state,
-            is_terminal_state=is_terminal_state
-        )
-        reward = self.dfa.reward\
+        reward = self.dfa.reward \
             if is_terminal_state and self.is_true() else 0.0
-        return reward + current_potential - previous_potential
+
+        if self.reward_shaping:
+            previous_potential = self.dfa.potential_function(
+                self._previous_state,
+                is_terminal_state=False
+            )
+            current_potential = self.dfa.potential_function(
+                self._cur_state,
+                is_terminal_state=is_terminal_state and self.zero_terminal_state
+            )
+            return current_potential - previous_potential
+        else:
+            return reward
 
     def is_failed(self):
         """Check if the simulation is failed."""
@@ -154,7 +169,7 @@ def _compute_levels(dfa: DFA, property_states):
            | - the maximum distance of a state from any goal
            | - the set of failure states.
     """
-    assert property_states.issubset(dfa._states)
+    assert property_states.issubset(dfa.states)
     level = 0
     state2level = {final_state: level for final_state in property_states}
 
@@ -164,7 +179,7 @@ def _compute_levels(dfa: DFA, property_states):
         level += 1
         z_current = z_next
         z_next = copy(z_current)
-        for s in dfa._states:
+        for s in dfa.states:
             if s in z_current:
                 continue
             for a in dfa.transition_function.get(s, []):
@@ -179,8 +194,8 @@ def _compute_levels(dfa: DFA, property_states):
 
     # levels for failure state (i.e. that cannot reach a final state)
     failure_states = set()
-    for s in filter(lambda x: x not in z_current, dfa._states):
-        state2level[s] = level
+    for s in filter(lambda x: x not in z_current, dfa.states):
+        state2level[s] = max_level
         failure_states.add(s)
 
     return state2level, max_level, failure_states
