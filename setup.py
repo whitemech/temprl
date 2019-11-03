@@ -20,8 +20,8 @@ with open(os.path.join(here, 'temprl', '__version__.py'), 'r') as f:
 requirements = [
     "gym",
     "numpy",
-    "flloat==1.0.0a0",
-    "pythomata==1.0.0a0"
+    "flloat==0.2.3",
+    "pythomata==0.2.0"
 ]
 
 setup(
