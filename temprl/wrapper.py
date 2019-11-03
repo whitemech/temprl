@@ -2,12 +2,13 @@
 
 """Main module."""
 
-from abc import abstractmethod, ABC
-from typing import Optional, Set, List, Callable
+from abc import ABC
+from typing import Optional, Set, List, Callable, Any
 
 import gym
 import numpy as np
 from flloat.semantics import PLInterpretation
+from gym.spaces import Discrete, MultiDiscrete
 from pythomata.base import Symbol, State
 
 from temprl.automata import (
@@ -15,6 +16,8 @@ from temprl.automata import (
     RewardDFA,
     RewardAutomatonSimulator
 )
+
+Observation, Action = Any, Any
 
 
 class TemporalGoal(ABC):
@@ -25,7 +28,8 @@ class TemporalGoal(ABC):
         formula: TemporalLogicFormula,
         reward: float,
         labels: Optional[Set[Symbol]] = None,
-        reward_shaping: bool = True
+        reward_shaping: bool = True,
+        extract_fluents: Optional[Callable] = None
     ):
         """
         Initialize a temporal goal.
@@ -36,6 +40,9 @@ class TemporalGoal(ABC):
                      | (used to generate the full automaton).
         :param reward_shaping: the set of all possible fluents
                              | (used to generate the full automaton).
+        :param extract_fluents: a callable that takes an observation and an actions
+                             | and returns a propositional interpretation with the active fluents.
+                             | if None, the 'extract_fluents' method is taken.
         """
         self._formula = formula
         self._automaton = RewardDFA.from_formula(
@@ -48,6 +55,13 @@ class TemporalGoal(ABC):
             reward_shaping=reward_shaping
         )
         self._reward = reward
+        if extract_fluents is not None:
+            self.extract_fluents = extract_fluents
+
+    @property
+    def observation_space(self) -> Discrete:
+        """Return the observation space of the temporal goal."""
+        return Discrete(len(self._automaton.states))
 
     @property
     def formula(self):
@@ -64,13 +78,13 @@ class TemporalGoal(ABC):
         """Get the reward."""
         return self._reward
 
-    @abstractmethod
     def extract_fluents(self, obs, action) -> PLInterpretation:
         """
         Extract high-level features from the observation.
 
         :return: the list of active fluents.
         """
+        raise NotImplementedError
 
     def step(self, observation, action) -> Optional[State]:
         """Do a step in the simulation."""
@@ -103,7 +117,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         self,
         env: gym.Env,
         temp_goals: List[TemporalGoal],
-        feature_extractor: Optional[Callable[[np.ndarray], np.ndarray]] = None
+        feature_extractor: Optional[Callable[[Observation, Action], np.ndarray]] = None
     ):
         """
         Wrap a Gym environment with a temporal goal.
@@ -116,17 +130,30 @@ class TemporalGoalWrapper(gym.Wrapper):
         super().__init__(env)
         self.temp_goals = temp_goals
         self.feature_extractor = feature_extractor\
-            if feature_extractor is not None else (lambda x: x)
+            if feature_extractor is not None else (lambda obs, action: obs)
+
+        self.observation_space = self._get_observation_space()
+
+    def _get_observation_space(self) -> gym.spaces.Space:
+        """Return the observation space."""
+        if isinstance(self.env.observation_space, MultiDiscrete):
+            env_shape = tuple(self.env.observation_space.nvec)
+        else:
+            env_shape = (self.env.observation_space.n, )
+        temp_goals_shape = tuple(tg.observation_space.n for tg in self.temp_goals)
+
+        combined_obs_space = (env_shape + temp_goals_shape)
+        return MultiDiscrete(combined_obs_space)
+
 
     def step(self, action):
         """Do a step in the Gym environment."""
         obs, reward, done, info = super().step(action)
-        features = self.feature_extractor(obs)
+        features = self.feature_extractor(obs=obs, action=action)
         next_automata_states = [tg.step(obs, action) for tg in self.temp_goals]
 
         temp_goal_all_true = all(tg.is_true() for tg in self.temp_goals)
         temp_goal_some_false = any(tg.is_failed() for tg in self.temp_goals)
-        done = done or temp_goal_all_true or temp_goal_some_false
         temp_goal_rewards = sum(
             tg.observe_reward(is_terminal_state=done)
             for tg in self.temp_goals
@@ -142,6 +169,6 @@ class TemporalGoalWrapper(gym.Wrapper):
         for tg in self.temp_goals:
             tg.reset()
 
-        features = self.feature_extractor(obs)
+        features = self.feature_extractor(obs, None)
         automata_states = [tg.reset() for tg in self.temp_goals]
         return np.concatenate([features, automata_states])

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Classes that implement automata that give the rewards to the RL agent."""
-
+import logging
 from abc import abstractmethod, ABC
 from copy import copy
 from typing import Union, Optional, Set
@@ -12,6 +12,8 @@ from flloat.semantics import PLInterpretation
 from pythomata.base import Symbol, State
 from pythomata.dfa import DFA
 from pythomata.simulator import DFASimulator, Simulator
+
+logger = logging.getLogger(__name__)
 
 TemporalLogicFormula = Union[LTLfFormula, LDLfFormula]
 
@@ -79,9 +81,6 @@ class RewardDFA(DFA, RewardAutomaton):
         if is_terminal_state:
             return 0
         else:
-            # p = 1/(self.reachability_levels[q]) * self.reward
-            # if q == initial_state and reachability_levels[initial_state]==0:
-            #     return reward
             initial_state_level = self.reachability_levels[self._initial_state]
             p = initial_state_level - self.reachability_levels[q]
             p = p / initial_state_level if initial_state_level != 0 else p
@@ -116,7 +115,7 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
         super().step(s)
         self.visited_states.add(self._cur_state)
         if self._previous_state != self._cur_state:
-            print("transition idxs: ", self._previous_state, self._cur_state)
+            logger.debug("transition idxs: {}, {}".format(self._previous_state, self._cur_state))
 
     def observe_reward(self, is_terminal_state: bool = False) -> float:
         """Observe the reward of the last transition."""
