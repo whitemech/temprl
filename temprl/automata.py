@@ -195,7 +195,7 @@ def _compute_levels(dfa: DFA, property_states):
     # levels for failure state (i.e. that cannot reach a final state)
     failure_states = set()
     for s in filter(lambda x: x not in z_current, dfa.states):
-        state2level[s] = max_level
+        state2level[s] = level
         failure_states.add(s)
 
     return state2level, max_level, failure_states

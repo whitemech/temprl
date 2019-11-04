@@ -33,7 +33,8 @@ class TemporalGoal(ABC):
         labels: Optional[Set[Symbol]] = None,
         reward_shaping: bool = True,
         extract_fluents: Optional[Callable] = None,
-        zero_terminal_state: bool = False
+        zero_terminal_state: bool = False,
+        one_hot_encoding: bool = False,
     ):
         """
         Initialize a temporal goal.
@@ -50,6 +51,8 @@ class TemporalGoal(ABC):
                              | if None, the 'extract_fluents' method is taken.
         :param zero_terminal_state: when reward_shaping is True, make the
                                   | potential function at a terminal state equal to zero.
+        :param one_hot_encoding: use one-hot encoding for representing the
+                               | automata dimensions.
         """
         self._formula = formula
         self._automaton = RewardDFA.from_formula(
@@ -63,6 +66,7 @@ class TemporalGoal(ABC):
             zero_terminal_state=zero_terminal_state
         )
         self._reward = reward
+        self._one_hot_encoding = one_hot_encoding
         if extract_fluents is not None:
             setattr(self, "extract_fluents", extract_fluents)
 
@@ -150,7 +154,7 @@ class TemporalGoalWrapper(gym.Wrapper):
             env_shape = (self.env.observation_space.n, )
         temp_goals_shape = tuple(tg.observation_space.n for tg in self.temp_goals)
 
-        combined_obs_space = (env_shape + temp_goals_shape)
+        combined_obs_space = env_shape + temp_goals_shape
         return MultiDiscrete(combined_obs_space)
 
     def step(self, action):
@@ -182,4 +186,5 @@ class TemporalGoalWrapper(gym.Wrapper):
 
         features = self.feature_extractor(obs, None)
         automata_states = [tg.reset() for tg in self.temp_goals]
-        return np.concatenate([features, automata_states])
+        new_observation = np.concatenate([features, automata_states])
+        return new_observation
