@@ -143,7 +143,8 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
                 self._cur_state,
                 is_terminal_state=is_terminal_state and self.zero_terminal_state
             )
-            return current_potential - previous_potential + (reward if is_terminal_state and self.zero_terminal_state else 0)
+            return current_potential - previous_potential + \
+                (reward if is_terminal_state and self.zero_terminal_state else 0)
         else:
             return reward
 
