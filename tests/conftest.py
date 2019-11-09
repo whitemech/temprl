@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """This module contains the configurations for the tests."""
 import logging
+from collections import defaultdict
 from enum import Enum
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import gym
 import numpy as np
@@ -100,3 +101,50 @@ class GymTestObsWrapper(gym.ObservationWrapper):
     def observation(self, observation):
         """Wrap the observation."""
         return np.asarray([observation])
+
+
+def q_function_learn(env: gym.Env, nb_episodes=100,
+                     alpha=0.1, eps=0.1, gamma=0.9) -> Dict[Any, np.ndarray]:
+    """Learn a Q-function from a Gym env using vanilla Q-Learning.
+
+    :return the Q function: a dictionary from states to array of Q values for every action.
+    """
+    nb_actions = env.action_space.n
+    Q = defaultdict(lambda: np.random.random(nb_actions, ))  # type: Dict[Any, np.ndarray]
+
+    def choose_action(state):
+        if np.random.random() < eps:
+            return np.random.randint(0, nb_actions)
+        else:
+            return np.argmax(Q[state])
+
+    for e in range(nb_episodes):
+        state = env.reset()
+        done = False
+        while not done:
+            action = choose_action(state)
+            state2, reward, done, info = env.step(action)
+            Q[state][action] += alpha * (reward + gamma * np.max(Q[state2]) - Q[state][action])
+            state = state2
+
+    return Q
+
+
+def q_function_test(env: gym.Env, Q: Dict[Any, np.ndarray], nb_episodes=10) -> np.ndarray:
+    """Test a Q-function against a Gym env.
+
+    :return a list of rewards collected for every episode.
+    """
+    rewards = np.array([])
+    for e in range(nb_episodes):
+        state = env.reset()
+        total_reward = 0
+        done = False
+        while not done:
+            action = np.argmax(Q[state])
+            state2, reward, done, info = env.step(action)
+            total_reward += reward
+            state = state2
+
+        rewards = np.append(rewards, total_reward)
+    return rewards

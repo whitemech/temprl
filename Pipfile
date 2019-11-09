@@ -14,15 +14,13 @@ tox-pipenv = "*"
 mypy = "*"
 mkdocs = "*"
 markdown-include = "*"
-tensorflow = "==1.14.0"
 keras = "*"
-keras-rl = "*"
+numpy = "*"
 
 [packages]
 gym = "*"
 pythomata = "==0.2.0"
 flloat = "==0.2.3"
-numpy = "*"
 
 [requires]
 python_version = "3"

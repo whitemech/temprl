@@ -3,10 +3,9 @@
 """Main module."""
 import logging
 from abc import ABC
-from typing import Optional, Set, List, Callable, Any
+from typing import Optional, Set, List, Callable, Any, Tuple
 
 import gym
-import numpy as np
 from flloat.semantics import PLInterpretation
 from gym.spaces import Discrete, MultiDiscrete
 from pythomata.base import Symbol, State
@@ -139,7 +138,8 @@ class TemporalGoalWrapper(gym.Wrapper):
         self,
         env: gym.Env,
         temp_goals: List[TemporalGoal],
-        feature_extractor: Optional[Callable[[Observation, Action], np.ndarray]] = None
+        feature_extractor: Optional[Callable[[Observation, Action], Any]] = None,
+        combine: Optional[Callable[[Observation, Tuple], Any]] = None,
     ):
         """
         Wrap a Gym environment with a temporal goal.
@@ -148,11 +148,15 @@ class TemporalGoalWrapper(gym.Wrapper):
         :param temp_goals: the temporal goal to be learnt
         :param feature_extractor: (optional) extract feature
                                 | from the environment state
+        :param combine: (optional) combine the agent state with
+                      | the temporal goal state.
         """
         super().__init__(env)
         self.temp_goals = temp_goals
         self.feature_extractor = feature_extractor\
             if feature_extractor is not None else (lambda obs, action: obs)
+        self.combine = combine\
+            if combine is not None else (lambda obs, qs: tuple((obs, *qs)))
 
         self.observation_space = self._get_observation_space()
 
@@ -171,7 +175,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         """Do a step in the Gym environment."""
         obs, reward, done, info = super().step(action)
         features = self.feature_extractor(obs=obs, action=action)
-        next_automata_states = [tg.step(obs, action) for tg in self.temp_goals]
+        next_automata_states = tuple([tg.step(obs, action) for tg in self.temp_goals])
 
         # temp_goal_all_true = all(tg.is_true() for tg in self.temp_goals)
         # temp_goal_some_false = any(tg.is_failed() for tg in self.temp_goals)
@@ -184,7 +188,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         if any(r != 0.0 for r in temp_goal_rewards):
             logger.debug("Non-zero goal rewards: {}".format(temp_goal_rewards))
 
-        obs_prime = np.concatenate([features, next_automata_states])
+        obs_prime = self.combine(features, next_automata_states)
         reward_prime = reward + total_goal_rewards
         return obs_prime, reward_prime, done, info
 
@@ -195,6 +199,6 @@ class TemporalGoalWrapper(gym.Wrapper):
             tg.reset()
 
         features = self.feature_extractor(obs, None)
-        automata_states = [tg.reset() for tg in self.temp_goals]
-        new_observation = np.concatenate([features, automata_states])
+        automata_states = tuple([tg.reset() for tg in self.temp_goals])
+        new_observation = self.combine(features, automata_states)
         return new_observation
