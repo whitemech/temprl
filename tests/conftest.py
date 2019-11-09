@@ -3,7 +3,7 @@
 import logging
 from collections import defaultdict
 from enum import Enum
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import gym
 import numpy as np
@@ -109,7 +109,7 @@ def q_function_learn(env: gym.Env, nb_episodes=100, alpha=0.1, eps=0.1, gamma=0.
     :return the Q function: a dictionary from states to array of Q values for every action.
     """
     nb_actions = env.action_space.n
-    Q = defaultdict(lambda: np.random.random(nb_actions, ))
+    Q = defaultdict(lambda: np.random.random(nb_actions, ))  # type: Dict[Any, np.ndarray]
 
     def choose_action(state):
         if np.random.random() < eps:
@@ -129,7 +129,7 @@ def q_function_learn(env: gym.Env, nb_episodes=100, alpha=0.1, eps=0.1, gamma=0.
     return Q
 
 
-def q_function_test(env: gym.Env, Q: np.ndarray, nb_episodes=10) -> np.ndarray:
+def q_function_test(env: gym.Env, Q: Dict[Any, np.ndarray], nb_episodes=10) -> np.ndarray:
     """Test a Q-function against a Gym env.
 
     :return a list of rewards collected for every episode.
