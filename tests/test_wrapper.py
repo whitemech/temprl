@@ -2,13 +2,13 @@
 """This module contains tests for the temprl/wrapper.py module."""
 import numpy as np
 import pytest
-from .conftest import GymTestEnv, GymTestObsWrapper
 from flloat.parser.ldlf import LDLfParser
 from flloat.semantics import PLInterpretation
 from gym.spaces import MultiDiscrete
 
 from temprl.automata import RewardDFA
 from temprl.wrapper import TemporalGoal, TemporalGoalWrapper
+from .conftest import GymTestEnv, GymTestObsWrapper
 
 
 class TestWrapper:
