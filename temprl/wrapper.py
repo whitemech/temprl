@@ -6,7 +6,6 @@ from abc import ABC
 from typing import Optional, Set, List, Callable, Any, Tuple
 
 import gym
-import numpy as np
 from flloat.semantics import PLInterpretation
 from gym.spaces import Discrete, MultiDiscrete
 from pythomata.base import Symbol, State

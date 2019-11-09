@@ -103,7 +103,11 @@ class GymTestObsWrapper(gym.ObservationWrapper):
         return np.asarray([observation])
 
 
-def q_function_learn(env, nb_episodes=100, alpha=0.1, eps=0.1, gamma=0.9):
+def q_function_learn(env: gym.Env, nb_episodes=100, alpha=0.1, eps=0.1, gamma=0.9) -> np.ndarray:
+    """Learn a Q-function from a Gym env using vanilla Q-Learning.
+
+    :return the Q function: a dictionary from states to array of Q values for every action.
+    """
     nb_actions = env.action_space.n
     Q = defaultdict(lambda: np.random.random(nb_actions, ))
 
@@ -125,7 +129,11 @@ def q_function_learn(env, nb_episodes=100, alpha=0.1, eps=0.1, gamma=0.9):
     return Q
 
 
-def q_function_test(env, Q, nb_episodes=10):
+def q_function_test(env: gym.Env, Q: np.ndarray, nb_episodes=10) -> np.ndarray:
+    """Test a Q-function against a Gym env.
+
+    :return a list of rewards collected for every episode.
+    """
     rewards = np.array([])
     for e in range(nb_episodes):
         state = env.reset()

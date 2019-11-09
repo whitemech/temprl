@@ -538,7 +538,7 @@ class TestWrapperCombine:
 
     @classmethod
     def setup_class(cls):
-        """Test that combine"""
+        """Set the tests up."""
         cls.env = GymTestEnv(n_states=5)
         cls.tg = TemporalGoal(
             formula=LDLfParser()("<(!s4)*;s3;(!s4)*;s0;(!s4)*;s4>tt"),
@@ -547,8 +547,8 @@ class TestWrapperCombine:
             extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs[0])}),
         )
         cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg],
-                                      feature_extractor=None,
-                                      combine=None)
+                                          feature_extractor=None,
+                                          combine=None)
 
     def test_default_combine(self):
         """Test that the default 'combine' function work as expected."""
@@ -567,4 +567,3 @@ class TestWrapperCombine:
         self.wrapped.combine = lambda obs, qs: (np.asarray([obs]), qs)
         state = self.wrapped.reset()
         assert state == (np.asarray([0]), (0, ))
-
