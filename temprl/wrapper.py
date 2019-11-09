@@ -10,6 +10,7 @@ import numpy as np
 from flloat.semantics import PLInterpretation
 from gym.spaces import Discrete, MultiDiscrete
 from pythomata.base import Symbol, State
+from pythomata.dfa import DFA
 
 from temprl.automata import (
     TemporalLogicFormula,
@@ -28,8 +29,9 @@ class TemporalGoal(ABC):
 
     def __init__(
         self,
-        formula: TemporalLogicFormula,
-        reward: float,
+        formula: Optional[TemporalLogicFormula] = None,
+        reward: float = 1.0,
+        automaton: Optional[DFA] = None,
         labels: Optional[Set[Symbol]] = None,
         reward_shaping: bool = True,
         extract_fluents: Optional[Callable] = None,
@@ -39,7 +41,9 @@ class TemporalGoal(ABC):
         """
         Initialize a temporal goal.
 
-        :param formula: the formula to be satisfied.
+        :param formula: the formula to be satisfied. it will be ignored if automaton is set.
+        :param automaton: the pythomata.DFA instance. it will be
+                        | the preferred input against 'formula'.
         :param reward: the reward associated to the temporal goal.
         :param labels: the set of all possible fluents
                      | (used to generate the full automaton).
@@ -54,12 +58,18 @@ class TemporalGoal(ABC):
         :param one_hot_encoding: use one-hot encoding for representing the
                                | automata dimensions.
         """
+        if formula is None and automaton is None:
+            raise ValueError("Provide either a formula or an automaton.")
+
         self._formula = formula
-        self._automaton = RewardDFA.from_formula(
-            self._formula,
-            reward,
-            alphabet=labels
-        )
+        if automaton:
+            self._automaton = RewardDFA(automaton, reward)
+        else:
+            self._automaton = RewardDFA.from_formula(
+                self._formula,
+                reward,
+                alphabet=labels
+            )
         self._simulator = RewardAutomatonSimulator(
             self._automaton,
             reward_shaping=reward_shaping,
