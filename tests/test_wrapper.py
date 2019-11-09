@@ -2,7 +2,7 @@
 """This module contains tests for the temprl/wrapper.py module."""
 import numpy as np
 import pytest
-from conftest import GymTestEnv, GymTestObsWrapper
+from .conftest import GymTestEnv, GymTestObsWrapper
 from flloat.parser.ldlf import LDLfParser
 from flloat.semantics import PLInterpretation
 from gym.spaces import MultiDiscrete
@@ -67,6 +67,7 @@ class TestWrapperRewardShaping:
             reward=10.0,
             labels={"s0", "s1", "s2", "s3", "s4"},
             reward_shaping=True,
+            zero_terminal_state=True,
             extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs[0])})
         )
         cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg], feature_extractor=None)
@@ -376,3 +377,40 @@ class TestWrapperRewardShapingWithZeroTerminalState:
         obs, reward, done, info = self.wrapped.step(2)
         assert np.isclose(reward, 1 - 3.3333, rtol=1e-9, atol=0.0001)
         assert self.tg.is_failed()
+
+
+class TestWrapperCombine:
+    """This class contains tests for the 'combine' optional parameter."""
+
+    @classmethod
+    def setup_class(cls):
+        """Test that combine"""
+        cls.env = GymTestEnv(n_states=5)
+        cls.tg = TemporalGoal(
+            formula=LDLfParser()("<(!s4)*;s3;(!s4)*;s0;(!s4)*;s4>tt"),
+            reward=10.0,
+            labels={"s0", "s1", "s2", "s3", "s4"},
+            extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs[0])}),
+        )
+        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg],
+                                      feature_extractor=None,
+                                      combine=None)
+
+    def test_default_combine(self):
+        """Test that the default 'combine' function work as expected."""
+        state = self.wrapped.reset()
+        assert state == (0, 0)
+
+    def test_default_combine_with_custom_feature_extractor(self):
+        """Test that the default 'combine' with a custom feature extractor works."""
+        self.wrapped.feature_extractor = lambda obs, action: np.asarray([obs])
+        state = self.wrapped.reset()
+        assert state == (np.asarray([0]), 0)
+
+    def test_custom_combine_with_custom_feature_extractor(self):
+        """Test that the default 'combine' with a custom feature extractor works."""
+        self.wrapped.feature_extractor = lambda obs, action: np.asarray([obs])
+        self.wrapped.combine = lambda obs, qs: (np.asarray([obs]), qs)
+        state = self.wrapped.reset()
+        assert state == (np.asarray([0]), (0, ))
+

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """This module contains the configurations for the tests."""
 import logging
+from collections import defaultdict
 from enum import Enum
 from typing import Optional
 
@@ -100,3 +101,41 @@ class GymTestObsWrapper(gym.ObservationWrapper):
     def observation(self, observation):
         """Wrap the observation."""
         return np.asarray([observation])
+
+
+def q_function_learn(env, nb_episodes=100, alpha=0.1, eps=0.1, gamma=0.9):
+    nb_actions = env.action_space.n
+    Q = defaultdict(lambda: np.random.random(nb_actions, ))
+
+    def choose_action(state):
+        if np.random.random() < eps:
+            return np.random.randint(0, nb_actions)
+        else:
+            return np.argmax(Q[state])
+
+    for e in range(nb_episodes):
+        state = env.reset()
+        done = False
+        while not done:
+            action = choose_action(state)
+            state2, reward, done, info = env.step(action)
+            Q[state][action] += alpha * (reward + gamma * np.max(Q[state2]) - Q[state][action])
+            state = state2
+
+    return Q
+
+
+def q_function_test(env, Q, nb_episodes=10):
+    rewards = np.array([])
+    for e in range(nb_episodes):
+        state = env.reset()
+        total_reward = 0
+        done = False
+        while not done:
+            action = np.argmax(Q[state])
+            state2, reward, done, info = env.step(action)
+            total_reward += reward
+            state = state2
+
+        rewards = np.append(rewards, total_reward)
+    return rewards
