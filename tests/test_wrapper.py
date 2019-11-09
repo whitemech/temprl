@@ -214,8 +214,11 @@ class TestWrapperRewardShapingFromDFA:
     def setup_class(cls):
         """Set the tests up."""
         cls.env = GymTestObsWrapper(n_states=5)
+        cls.dfa = LDLfParser()("<(!s4)*;s3;(!s4)*;s0;(!s4)*;s4>tt").to_automaton(
+            labels={"s0", "s1", "s2", "s3", "s4"}
+        )
         cls.tg = TemporalGoal(
-            automaton=LDLfParser()("<(!s4)*;s3;(!s4)*;s0;(!s4)*;s4>tt").to_automaton(labels={"s0", "s1", "s2", "s3", "s4"}),
+            automaton=cls.dfa,
             reward=10.0,
             reward_shaping=True,
             zero_terminal_state=True,
