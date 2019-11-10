@@ -82,7 +82,11 @@ class TemporalGoal(ABC):
     @property
     def observation_space(self) -> Discrete:
         """Return the observation space of the temporal goal."""
-        return Discrete(len(self._automaton.states))
+        # we add one virtual state for the 'super' sink state
+        # - that is, when the symbol is not in the alphabet.
+        # This is going to be a temporary workaround due to
+        # the Pythomata's lack of support for this corner case.
+        return Discrete(len(self._automaton.states) + 1)
 
     @property
     def formula(self):
@@ -111,7 +115,9 @@ class TemporalGoal(ABC):
         """Do a step in the simulation."""
         fluents = self.extract_fluents(observation, action)
         self._simulator.step(fluents)
-        return self._simulator.cur_state
+
+        result = self._simulator.cur_state if self._simulator.cur_state is not None else len(self._simulator.dfa.states)
+        return result
 
     def reset(self):
         """Reset the simulation."""

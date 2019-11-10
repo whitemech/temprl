@@ -31,7 +31,8 @@ class TestWrapper:
 
     def test_observation_space(self):
         """Test that the combined observation space is computed as expected."""
-        assert self.wrapped.observation_space == MultiDiscrete((5, 6))
+        # assert self.wrapped.observation_space == MultiDiscrete((5, 6))
+        assert self.wrapped.observation_space == MultiDiscrete((5, 7))
 
     def test_temporal_goal_reward(self):
         """Test that the 'reward' property of the temporal goal works correctly."""
@@ -75,7 +76,8 @@ class TestWrapperFromDFA:
 
     def test_observation_space(self):
         """Test that the combined observation space is computed as expected."""
-        assert self.wrapped.observation_space == MultiDiscrete((5, 6))
+        # assert self.wrapped.observation_space == MultiDiscrete((5, 6))
+        assert self.wrapped.observation_space == MultiDiscrete((5, 7))
 
     def test_temporal_goal_reward(self):
         """Test that the 'reward' property of the temporal goal works correctly."""
