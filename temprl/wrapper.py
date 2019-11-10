@@ -116,7 +116,8 @@ class TemporalGoal(ABC):
         fluents = self.extract_fluents(observation, action)
         self._simulator.step(fluents)
 
-        result = self._simulator.cur_state if self._simulator.cur_state is not None else len(self._simulator.dfa.states)
+        result = self._simulator.cur_state if self._simulator.cur_state is not None\
+            else len(self._simulator.dfa.states)
         return result
 
     def reset(self):
