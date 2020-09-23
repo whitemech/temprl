@@ -66,7 +66,7 @@ class TestTempRLWithSimpleEnv:
         cls.wrapped = TemporalGoalWrapper(
             env=cls.env, temp_goals=[cls.tg], feature_extractor=None
         )
-        cls.Q = q_function_learn(cls.wrapped, nb_episodes=500)
+        cls.Q = q_function_learn(cls.wrapped, nb_episodes=5000)
 
     def test_learning_wrapped_env(self):
         """Test that learning with the unwrapped env is feasible."""

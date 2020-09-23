@@ -138,11 +138,12 @@ def q_function_learn(
     :return the Q function: a dictionary from states to array of Q values for every action.
     """
     nb_actions = env.action_space.n
-    Q = defaultdict(
+    Q: Dict[Any, np.ndarray] = defaultdict(
         lambda: np.random.randn(
             nb_actions,
         )
-    )  # type: Dict[Any, np.ndarray]
+        * 0.01
+    )
 
     def choose_action(state):
         if np.random.random() < eps:

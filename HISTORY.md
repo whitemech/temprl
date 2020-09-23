@@ -1,5 +1,13 @@
 # History
 
+## 0.2.3 (2020-09-24)
+
+* Let temporal wrapper initialization directly from DFA
+* Added 'combine' method to customize how to do the actual
+  product between DFA states and the environment state space.
+* Added new linters.
+* Renewed documentation.
+
 ## 0.2.2 (2019-11-03)
 
 * Improved support for reward shaping.
