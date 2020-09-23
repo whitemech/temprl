@@ -8,7 +8,7 @@ If it fixes a bug or resolves a feature request, be sure to link to that issue.
 
 ## Types of changes
 
-What types of changes does your code introduce to agents-tac?
+What types of changes does your code introduce?
 _Put an `x` in the boxes that apply_
 
 - [ ] Bugfix (non-breaking change which fixes an issue)
@@ -19,7 +19,7 @@ _Put an `x` in the boxes that apply_
 
 _Put an `x` in the boxes that apply._
 
-- [ ] I have read the [CONTRIBUTING](../master/CONTRIBUTING.rst) doc
+- [ ] I have read the [CONTRIBUTING](../blob/master/CONTRIBUTING.md) doc
 - [ ] I am making a pull request against the `develop` branch (left side). Also you should start your branch off our `develop`.
 - [ ] Lint and unit tests pass locally with my changes
 - [ ] I have added tests that prove my fix is effective or that my feature works
@@ -27,4 +27,3 @@ _Put an `x` in the boxes that apply._
 ## Further comments
 
 If this is a relatively large or complex change, kick off the discussion by explaining why you chose the solution you did and what alternatives you considered, etc...
-

@@ -1,15 +1,35 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright 2020 Marco Favorito
+#
+# ------------------------------
+#
+# This file is part of temprl.
+#
+# temprl is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# temprl is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with temprl.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 """Classes that implement automata that give the rewards to the RL agent."""
 import logging
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from copy import copy
-from typing import Union, Optional, Set, cast
+from typing import Optional, Set, Union, cast
 
 from flloat.ldlf import LDLfFormula
 from flloat.ltlf import LTLfFormula
 from flloat.semantics import PLInterpretation
-from pythomata.base import Symbol, State
+from pythomata.base import State, Symbol
 from pythomata.dfa import DFA
 from pythomata.simulator import DFASimulator, Simulator
 
@@ -58,12 +78,15 @@ class RewardDFA(DFA, RewardAutomaton):
             set(dfa._alphabet),
             dfa._initial_state,
             set(dfa._accepting_states),
-            dfa._transition_function
+            dfa._transition_function,
         )
 
         self.reward = reward
-        self.reachability_levels, self.max_level,\
-            self.failure_states = self._compute_levels()
+        (
+            self.reachability_levels,
+            self.max_level,
+            self.failure_states,
+        ) = self._compute_levels()
 
         self.sink_state = self._find_sink_state()
 
@@ -72,13 +95,8 @@ class RewardDFA(DFA, RewardAutomaton):
             if s in self.failure_states and all(s == t for _, t in delta.items()):
                 return s
 
-    @classmethod
-    def from_formula(
-            cls,
-            f: TemporalLogicFormula,
-            reward,
-            alphabet: Set[Symbol] = None
-    ):
+    @staticmethod
+    def from_formula(f: TemporalLogicFormula, reward, alphabet: Set[Symbol] = None):
         """Return the reward automaton associated with the formula."""
         dfa = f.to_automaton(alphabet)
         return RewardDFA(dfa, reward)
@@ -102,7 +120,9 @@ class RewardDFA(DFA, RewardAutomaton):
 class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
     """A DFA simulator for a reward automaton."""
 
-    def __init__(self, dfa: RewardDFA, reward_shaping: bool, zero_terminal_state: bool = True):
+    def __init__(
+        self, dfa: RewardDFA, reward_shaping: bool, zero_terminal_state: bool = True
+    ):
         """Initialize the reward DFA simulator."""
         super().__init__(dfa)
         self._cur_state = cast(Optional[State], self._cur_state)  # type: ignore
@@ -118,7 +138,7 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
         self.visited_states = {self._cur_state}
         self._previous_state = None
 
-    def step(self, s: PLInterpretation, **kwargs):
+    def step(self, s: PLInterpretation, **_kwargs):
         """Do a step for the simulation.."""
         self._previous_state = self._cur_state
         super().step(s)
@@ -126,32 +146,33 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
             self._cur_state = self.dfa.sink_state
         self.visited_states.add(self._cur_state)
         if self._previous_state != self._cur_state:
-            logger.debug("transition idxs: {}, {}"
-                         .format(self._previous_state, self._cur_state))
+            logger.debug(
+                "transition idxs: {}, {}".format(self._previous_state, self._cur_state)
+            )
 
     def observe_reward(self, is_terminal_state: bool = False) -> float:
         """Observe the reward of the last transition."""
-        reward = self.dfa.reward \
-            if is_terminal_state and self.is_true() else 0.0
+        reward = self.dfa.reward if is_terminal_state and self.is_true() else 0.0
 
         if self.reward_shaping:
             previous_potential = self.dfa.potential_function(
-                self._previous_state,
-                is_terminal_state=False
+                self._previous_state, is_terminal_state=False
             )
             current_potential = self.dfa.potential_function(
                 self._cur_state,
-                is_terminal_state=is_terminal_state and self.zero_terminal_state
+                is_terminal_state=is_terminal_state and self.zero_terminal_state,
             )
-            return current_potential - previous_potential + \
-                (reward if is_terminal_state and self.zero_terminal_state else 0)
+            return (
+                current_potential
+                - previous_potential
+                + (reward if is_terminal_state and self.zero_terminal_state else 0)
+            )
         else:
             return reward
 
     def is_failed(self):
         """Check if the simulation is failed."""
-        return super().is_failed()\
-            or self._cur_state in self.dfa.failure_states
+        return super().is_failed() or self._cur_state in self.dfa.failure_states
 
 
 def _compute_levels(dfa: DFA, property_states):

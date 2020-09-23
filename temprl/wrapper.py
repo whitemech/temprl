@@ -1,21 +1,37 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright 2020 Marco Favorito
+#
+# ------------------------------
+#
+# This file is part of temprl.
+#
+# temprl is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# temprl is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with temprl.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 """Main module."""
 import logging
 from abc import ABC
-from typing import Optional, Set, List, Callable, Any, Tuple
+from typing import Any, Callable, List, Optional, Set, Tuple
 
 import gym
 from flloat.semantics import PLInterpretation
 from gym.spaces import Discrete, MultiDiscrete
-from pythomata.base import Symbol, State
+from pythomata.base import State, Symbol
 from pythomata.dfa import DFA
 
-from temprl.automata import (
-    TemporalLogicFormula,
-    RewardDFA,
-    RewardAutomatonSimulator
-)
+from temprl.automata import RewardAutomatonSimulator, RewardDFA, TemporalLogicFormula
 
 Observation = Any
 Action = Any
@@ -65,19 +81,16 @@ class TemporalGoal(ABC):
             self._automaton = RewardDFA(automaton, reward)
         else:
             self._automaton = RewardDFA.from_formula(
-                self._formula,
-                reward,
-                alphabet=labels
+                self._formula, reward, alphabet=labels
             )
         self._simulator = RewardAutomatonSimulator(
             self._automaton,
             reward_shaping=reward_shaping,
-            zero_terminal_state=zero_terminal_state
+            zero_terminal_state=zero_terminal_state,
         )
         self._reward = reward
         self._one_hot_encoding = one_hot_encoding
-        if extract_fluents is not None:
-            setattr(self, "extract_fluents", extract_fluents)
+        self._extract_fluents: Optional[Callable] = extract_fluents
 
     @property
     def observation_space(self) -> Discrete:
@@ -109,15 +122,20 @@ class TemporalGoal(ABC):
 
         :return: the list of active fluents.
         """
-        raise NotImplementedError
+        if self._extract_fluents is None:
+            raise NotImplementedError
+        return self._extract_fluents(obs, action)
 
     def step(self, observation, action) -> Optional[State]:
         """Do a step in the simulation."""
         fluents = self.extract_fluents(observation, action)
         self._simulator.step(fluents)
 
-        result = self._simulator.cur_state if self._simulator.cur_state is not None\
+        result = (
+            self._simulator.cur_state
+            if self._simulator.cur_state is not None
             else len(self._simulator.dfa.states)
+        )
         return result
 
     def reset(self):
@@ -160,11 +178,14 @@ class TemporalGoalWrapper(gym.Wrapper):
         """
         super().__init__(env)
         self.temp_goals = temp_goals
-        self.feature_extractor = feature_extractor\
-            if feature_extractor is not None else (lambda obs, action: obs)
-        self.combine = combine\
-            if combine is not None else (lambda obs, qs: tuple((obs, *qs)))
-
+        self.feature_extractor = (
+            feature_extractor
+            if feature_extractor is not None
+            else (lambda obs, action: obs)
+        )
+        self.combine = (
+            combine if combine is not None else (lambda obs, qs: tuple((obs, *qs)))
+        )
         self.observation_space = self._get_observation_space()
 
     def _get_observation_space(self) -> gym.spaces.Space:
@@ -172,7 +193,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         if isinstance(self.env.observation_space, MultiDiscrete):
             env_shape = tuple(self.env.observation_space.nvec)
         else:
-            env_shape = (self.env.observation_space.n, )
+            env_shape = (self.env.observation_space.n,)
         temp_goals_shape = tuple(tg.observation_space.n for tg in self.temp_goals)
 
         combined_obs_space = env_shape + temp_goals_shape
@@ -184,11 +205,8 @@ class TemporalGoalWrapper(gym.Wrapper):
         features = self.feature_extractor(obs=obs, action=action)
         next_automata_states = tuple([tg.step(obs, action) for tg in self.temp_goals])
 
-        # temp_goal_all_true = all(tg.is_true() for tg in self.temp_goals)
-        # temp_goal_some_false = any(tg.is_failed() for tg in self.temp_goals)
         temp_goal_rewards = [
-            tg.observe_reward(is_terminal_state=done)
-            for tg in self.temp_goals
+            tg.observe_reward(is_terminal_state=done) for tg in self.temp_goals
         ]
         total_goal_rewards = sum(temp_goal_rewards)
 
@@ -199,7 +217,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         reward_prime = reward + total_goal_rewards
         return obs_prime, reward_prime, done, info
 
-    def reset(self, **kwargs):
+    def reset(self, **_kwargs):
         """Reset the Gym environment."""
         obs = super().reset()
         for tg in self.temp_goals:

@@ -1,22 +1,70 @@
-# TempRL 
+<h1 align="center">
+  <b>temprl</b>
+</h1>
 
-[![](https://img.shields.io/pypi/v/temprl.svg)](https://pypi.python.org/pypi/temprl)
-[![](https://img.shields.io/travis/sapienza-rl/temprl.svg)](https://travis-ci.org/sapienza-rl/temprl)
-[![](https://img.shields.io/pypi/pyversions/temprl.svg)](https://pypi.python.org/pypi/temprl)
-[![](https://coveralls.io/repos/github/sapienza-rl/temprl/badge.svg?branch=master)](https://coveralls.io/github/sapienza-rl/temprl?branch=master)
-[![](https://img.shields.io/badge/flake8-checked-blueviolet)](https://img.shields.io/badge/flake8-checked-blueviolet)
-[![](https://img.shields.io/badge/mypy-checked-blue)](https://img.shields.io/badge/mypy-checked-blue)
-[![](https://img.shields.io/badge/license-Apache%202-lightgrey)](https://img.shields.io/badge/license-Apache%202-lightgrey)
-
+<p align="center">
+  <a href="https://pypi.org/project/temprl">
+    <img alt="PyPI" src="https://img.shields.io/pypi/v/temprl">
+  </a>
+  <a href="https://pypi.org/project/temprl">
+    <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/temprl" />
+  </a>
+  <a href="">
+    <img alt="PyPI - Status" src="https://img.shields.io/pypi/status/temprl" />
+  </a>
+  <a href="">
+    <img alt="PyPI - Implementation" src="https://img.shields.io/pypi/implementation/temprl">
+  </a>
+  <a href="">
+    <img alt="PyPI - Wheel" src="https://img.shields.io/pypi/wheel/temprl">
+  </a>
+  <a href="https://github.com/whitemech/temprl/blob/master/LICENSE">
+    <img alt="GitHub" src="https://img.shields.io/github/license/whitemech/temprl">
+  </a>
+</p>
+<p align="center">
+  <a href="">
+    <img alt="test" src="https://github.com/whitemech/temprl/workflows/test/badge.svg">
+  </a>
+  <a href="">
+    <img alt="lint" src="https://github.com/whitemech/temprl/workflows/lint/badge.svg">
+  </a>
+  <a href="">
+    <img alt="docs" src="https://github.com/whitemech/temprl/workflows/docs/badge.svg">
+  </a>
+  <a href="https://codecov.io/gh/whitemech/temprl">
+    <img alt="codecov" src="https://codecov.io/gh/whitemech/temprl/branch/master/graph/badge.svg?token=FG3ATGP5P5">
+  </a>
+</p>
+<p align="center">
+  <a href="https://img.shields.io/badge/flake8-checked-blueviolet">
+    <img alt="" src="https://img.shields.io/badge/flake8-checked-blueviolet">
+  </a>
+  <a href="https://img.shields.io/badge/mypy-checked-blue">
+    <img alt="" src="https://img.shields.io/badge/mypy-checked-blue">
+  </a>
+  <a href="https://img.shields.io/badge/code%20style-black-black">
+    <img alt="black" src="https://img.shields.io/badge/code%20style-black-black" />
+  </a>
+  <a href="https://www.mkdocs.org/">
+    <img alt="" src="https://img.shields.io/badge/docs-mkdocs-9cf">
+  </a>
+</p>
 
 Framework for Reinforcement Learning with Temporal Goals defined by LTLf/LDLf formulas.
 
+Status: **development**.
 
 ## Install
 
-Install from `master` branch:
+Install the package:
 
-- with `pip`:
+- from PyPI:
+
+
+        pip3 install temprl
+
+- with `pip` from GitHub:
 
 
         pip3 install git+https://github.com/sapienza-rl/temprl.git
@@ -32,32 +80,31 @@ Install from `master` branch:
 
 ## Tests
 
-To run the tests:
+To run tests: `tox`
 
-    tox
+To run only the code tests: `tox -e py3.7`
 
-To run only the code style checks:
+To run only the linters: 
+- `tox -e flake8`
+- `tox -e mypy`
+- `tox -e black-check`
+- `tox -e isort-check`
 
-    tox -e flake8
+Please look at the `tox.ini` file for the full list of supported commands. 
 
 ## Docs
 
-To build the docs:
+To build the docs: `mkdocs build`
 
-
-    mkdocs build
-    
-
-To view documentation in a browser
-
-
-    mkdocs serve
-
-
+To view documentation in a browser: `mkdocs serve`
 and then go to [http://localhost:8000](http://localhost:8000)
-
 
 ## License
 
-Copyright 2018-2019 Marco Favorito
+temprl is released under the GNU Lesser General Public License v3.0 or later (LGPLv3+).
 
+Copyright 2018-2020 Marco Favorito
+
+## Authors
+
+- [Marco Favorito](https://whitemech.github.io/)

@@ -1,11 +1,33 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright 2020 Marco Favorito
+#
+# ------------------------------
+#
+# This file is part of temprl.
+#
+# temprl is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# temprl is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with temprl.  If not, see <https://www.gnu.org/licenses/>.
+#
+
 """Tests for `temprl` package."""
 
 import numpy as np
 from flloat.parser.ldlf import LDLfParser
 from flloat.semantics import PLInterpretation
-from temprl.wrapper import TemporalGoalWrapper, TemporalGoal
-from .conftest import GymTestEnv, q_function_learn, q_function_test
+
+from temprl.wrapper import TemporalGoal, TemporalGoalWrapper
+from tests.utils import GymTestEnv, q_function_learn, q_function_test
 
 
 class TestSimpleEnv:
@@ -39,10 +61,12 @@ class TestTempRLWithSimpleEnv:
             reward=10.0,
             labels={"s0", "s1", "s2", "s3", "s4"},
             reward_shaping=True,
-            extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs)})
+            extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs)}),
         )
-        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg], feature_extractor=None)
-        cls.Q = q_function_learn(cls.wrapped, nb_episodes=100)
+        cls.wrapped = TemporalGoalWrapper(
+            env=cls.env, temp_goals=[cls.tg], feature_extractor=None
+        )
+        cls.Q = q_function_learn(cls.wrapped, nb_episodes=500)
 
     def test_learning_wrapped_env(self):
         """Test that learning with the unwrapped env is feasible."""
