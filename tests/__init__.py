@@ -20,9 +20,4 @@
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-"""This module contains the configurations for the tests."""
-
-import logging
-
-logger = logging.getLogger(__name__)
-logging.getLogger("temprl").setLevel(level=logging.INFO)
+"""Tests for the `temprl` package."""
