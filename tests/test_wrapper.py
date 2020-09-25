@@ -25,7 +25,7 @@ import numpy as np
 import pytest
 from flloat.parser.ldlf import LDLfParser
 from flloat.semantics import PLInterpretation
-from gym.spaces import MultiDiscrete
+from gym.spaces import Discrete, MultiDiscrete, Tuple
 
 from temprl.automata import RewardDFA
 from temprl.wrapper import TemporalGoal, TemporalGoalWrapper
@@ -48,13 +48,13 @@ class TestWrapper:
             reward_shaping=True,
             extract_fluents=None,
         )
-        cls.wrapped = TemporalGoalWrapper(
-            env=cls.env, temp_goals=[cls.tg], feature_extractor=None
-        )
+        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg])
 
     def test_observation_space(self):
         """Test that the combined observation space is computed as expected."""
-        assert self.wrapped.observation_space == MultiDiscrete((5, 7))
+        assert self.wrapped.observation_space == Tuple(
+            (Discrete(5), MultiDiscrete([7]))
+        )
 
     def test_temporal_goal_reward(self):
         """Test that the 'reward' property of the temporal goal works correctly."""
@@ -94,13 +94,13 @@ class TestWrapperFromDFA:
             reward_shaping=True,
             extract_fluents=None,
         )
-        cls.wrapped = TemporalGoalWrapper(
-            env=cls.env, temp_goals=[cls.tg], feature_extractor=None
-        )
+        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg])
 
     def test_observation_space(self):
         """Test that the combined observation space is computed as expected."""
-        assert self.wrapped.observation_space == MultiDiscrete((5, 7))
+        assert self.wrapped.observation_space == Tuple(
+            (Discrete(5), MultiDiscrete([7]))
+        )
 
     def test_temporal_goal_reward(self):
         """Test that the 'reward' property of the temporal goal works correctly."""
@@ -139,15 +139,13 @@ class TestWrapperRewardShaping:
             zero_terminal_state=True,
             extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs[0])}),
         )
-        cls.wrapped = TemporalGoalWrapper(
-            env=cls.env, temp_goals=[cls.tg], feature_extractor=None
-        )
+        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg])
 
     def test_reward_shaping(self):
         """Test that the reward shaping works as expected."""
         obs = self.wrapped.reset()
         total_reward = 0
-        assert np.array_equal(obs, [0, 0])
+        assert np.array_equal(obs, [[0], [0]])
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
 
@@ -217,7 +215,7 @@ class TestWrapperRewardShaping:
     def test_when_temporal_goal_is_failed(self):
         """Test the case when the temporal goal is failed."""
         obs = self.wrapped.reset()
-        assert np.array_equal(obs, [0, 0])
+        assert np.array_equal(obs, [[0], [0]])
 
         # s1
         obs, reward, done, info = self.wrapped.step(Action.RIGHT)
@@ -251,15 +249,13 @@ class TestWrapperRewardShapingFromDFA:
             zero_terminal_state=True,
             extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs[0])}),
         )
-        cls.wrapped = TemporalGoalWrapper(
-            env=cls.env, temp_goals=[cls.tg], feature_extractor=None
-        )
+        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg])
 
     def test_reward_shaping(self):
         """Test that the reward shaping works as expected."""
         obs = self.wrapped.reset()
         total_reward = 0
-        assert np.array_equal(obs, [0, 0])
+        assert np.array_equal(obs, [[0], [0]])
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
 
@@ -329,7 +325,7 @@ class TestWrapperRewardShapingFromDFA:
     def test_when_temporal_goal_is_failed(self):
         """Test the case when the temporal goal is failed."""
         obs = self.wrapped.reset()
-        assert np.array_equal(obs, [0, 0])
+        assert np.array_equal(obs, [[0], [0]])
 
         # s1
         obs, reward, done, info = self.wrapped.step(Action.RIGHT)
@@ -360,16 +356,14 @@ class TestWrapperNoRewardShaping:
             reward_shaping=False,
             extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs[0])}),
         )
-        cls.wrapped = TemporalGoalWrapper(
-            env=cls.env, temp_goals=[cls.tg], feature_extractor=None
-        )
+        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg])
 
     def test_no_reward_shaping(self):
         """Test that the reward shaping works as expected."""
         self.wrapped.temp_goals[0]._simulator.reward_shaping = False
         obs = self.wrapped.reset()
         total_reward = 0
-        assert np.array_equal(obs, [0, 0])
+        assert np.array_equal(obs, [[0], [0]])
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
 
@@ -439,7 +433,7 @@ class TestWrapperNoRewardShaping:
     def test_when_temporal_goal_is_failed(self):
         """Test the case when the temporal goal is failed."""
         obs = self.wrapped.reset()
-        assert np.array_equal(obs, [0, 0])
+        assert np.array_equal(obs, [[0], [0]])
 
         # s1
         obs, reward, done, info = self.wrapped.step(Action.RIGHT)
@@ -471,15 +465,13 @@ class TestWrapperRewardShapingWithZeroTerminalState:
             zero_terminal_state=True,
             extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs[0])}),
         )
-        cls.wrapped = TemporalGoalWrapper(
-            env=cls.env, temp_goals=[cls.tg], feature_extractor=None
-        )
+        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg])
 
     def test_reward_shaping(self):
         """Test that the reward shaping works as expected."""
         obs = self.wrapped.reset()
         total_reward = 0
-        assert np.array_equal(obs, [0, 0])
+        assert np.array_equal(obs, [[0], [0]])
         assert not self.tg.is_true()
         assert not self.tg.is_failed()
 
@@ -549,7 +541,7 @@ class TestWrapperRewardShapingWithZeroTerminalState:
     def test_when_temporal_goal_is_failed(self):
         """Test the case when the temporal goal is failed."""
         obs = self.wrapped.reset()
-        assert np.array_equal(obs, [0, 0])
+        assert np.array_equal(obs, [[0], [0]])
 
         # s1
         obs, reward, done, info = self.wrapped.step(Action.RIGHT)
@@ -564,49 +556,3 @@ class TestWrapperRewardShapingWithZeroTerminalState:
         obs, reward, done, info = self.wrapped.step(Action.RIGHT)
         assert np.isclose(reward, 1 - 3.3333, rtol=1e-9, atol=0.0001)
         assert self.tg.is_failed()
-
-
-class TestWrapperCombine:
-    """This class contains tests for the 'combine' optional parameter."""
-
-    @classmethod
-    def setup_class(cls):
-        """Set the tests up."""
-        cls.env = GymTestEnv(n_states=5)
-        cls.tg = TemporalGoal(
-            formula=LDLfParser()("<(!s4)*;s3;(!s4)*;s0;(!s4)*;s4>tt"),
-            reward=10.0,
-            labels={"s0", "s1", "s2", "s3", "s4"},
-            extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs[0])}),
-        )
-        cls.wrapped = TemporalGoalWrapper(
-            env=cls.env, temp_goals=[cls.tg], feature_extractor=None, combine=None
-        )
-
-    def test_default_combine(self):
-        """Test that the default 'combine' function work as expected."""
-        state = self.wrapped.reset()
-        assert state == (0, 0)
-
-    def test_default_combine_with_custom_feature_extractor(self):
-        """Test that the default 'combine' with a custom feature extractor works."""
-        old_feature_extractor = self.wrapped.feature_extractor
-
-        self.wrapped.feature_extractor = lambda obs, action: np.asarray([obs])
-        state = self.wrapped.reset()
-        assert state == (np.asarray([0]), 0)
-
-        self.wrapped.feature_extractor = old_feature_extractor
-
-    def test_custom_combine_with_custom_feature_extractor(self):
-        """Test that the default 'combine' with a custom feature extractor works."""
-        old_feature_extractor = self.wrapped.feature_extractor
-        old_combine = self.wrapped.combine
-
-        self.wrapped.feature_extractor = lambda obs, action: np.asarray([obs])
-        self.wrapped.combine = lambda obs, qs: (np.asarray([obs]), qs)
-        state = self.wrapped.reset()
-        assert state == (np.asarray([0]), (0,))
-
-        self.wrapped.feature_extractor = old_feature_extractor
-        self.wrapped.combine = old_combine

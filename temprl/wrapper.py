@@ -23,18 +23,16 @@
 """Main module."""
 import logging
 from abc import ABC
-from typing import Any, Callable, List, Optional, Set, Tuple
+from typing import Callable, List, Optional, Set
 
 import gym
 from flloat.semantics import PLInterpretation
 from gym.spaces import Discrete, MultiDiscrete
+from gym.spaces import Tuple as GymTuple
 from pythomata.base import State, Symbol
 from pythomata.dfa import DFA
 
 from temprl.automata import RewardAutomatonSimulator, RewardDFA, TemporalLogicFormula
-
-Observation = Any
-Action = Any
 
 logger = logging.getLogger(__name__)
 
@@ -163,47 +161,26 @@ class TemporalGoalWrapper(gym.Wrapper):
         self,
         env: gym.Env,
         temp_goals: List[TemporalGoal],
-        feature_extractor: Optional[Callable[[Observation, Action], Any]] = None,
-        combine: Optional[Callable[[Observation, Tuple], Any]] = None,
     ):
         """
         Wrap a Gym environment with a temporal goal.
 
         :param env: the Gym environment to wrap.
         :param temp_goals: the temporal goal to be learnt
-        :param feature_extractor: (optional) extract feature
-                                | from the environment state
-        :param combine: (optional) combine the agent state with
-                      | the temporal goal state.
         """
         super().__init__(env)
         self.temp_goals = temp_goals
-        self.feature_extractor = (
-            feature_extractor
-            if feature_extractor is not None
-            else (lambda obs, action: obs)
-        )
-        self.combine = (
-            combine if combine is not None else (lambda obs, qs: tuple((obs, *qs)))
-        )
         self.observation_space = self._get_observation_space()
 
     def _get_observation_space(self) -> gym.spaces.Space:
         """Return the observation space."""
-        if isinstance(self.env.observation_space, MultiDiscrete):
-            env_shape = tuple(self.env.observation_space.nvec)
-        else:
-            env_shape = (self.env.observation_space.n,)
         temp_goals_shape = tuple(tg.observation_space.n for tg in self.temp_goals)
-
-        combined_obs_space = env_shape + temp_goals_shape
-        return MultiDiscrete(combined_obs_space)
+        return GymTuple((self.env.observation_space, MultiDiscrete(temp_goals_shape)))
 
     def step(self, action):
         """Do a step in the Gym environment."""
         obs, reward, done, info = super().step(action)
-        features = self.feature_extractor(obs=obs, action=action)
-        next_automata_states = tuple([tg.step(obs, action) for tg in self.temp_goals])
+        next_automata_states = [tg.step(obs, action) for tg in self.temp_goals]
 
         temp_goal_rewards = [
             tg.observe_reward(is_terminal_state=done) for tg in self.temp_goals
@@ -213,7 +190,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         if any(r != 0.0 for r in temp_goal_rewards):
             logger.debug("Non-zero goal rewards: {}".format(temp_goal_rewards))
 
-        obs_prime = self.combine(features, next_automata_states)
+        obs_prime = (obs, next_automata_states)
         reward_prime = reward + total_goal_rewards
         return obs_prime, reward_prime, done, info
 
@@ -223,7 +200,5 @@ class TemporalGoalWrapper(gym.Wrapper):
         for tg in self.temp_goals:
             tg.reset()
 
-        features = self.feature_extractor(obs, None)
-        automata_states = tuple([tg.reset() for tg in self.temp_goals])
-        new_observation = self.combine(features, automata_states)
-        return new_observation
+        automata_states = [tg.reset() for tg in self.temp_goals]
+        return obs, automata_states
