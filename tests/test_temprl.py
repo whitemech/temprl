@@ -25,9 +25,10 @@
 import numpy as np
 from flloat.parser.ldlf import LDLfParser
 from flloat.semantics import PLInterpretation
+from gym.spaces import MultiDiscrete
 
 from temprl.wrapper import TemporalGoal, TemporalGoalWrapper
-from tests.utils import GymTestEnv, q_function_learn, q_function_test
+from tests.utils import GymTestEnv, q_function_learn, q_function_test, wrap_observation
 
 
 class TestSimpleEnv:
@@ -37,7 +38,7 @@ class TestSimpleEnv:
     def setup_class(cls):
         """Set the tests up."""
         cls.env = GymTestEnv(n_states=5)
-        cls.Q = q_function_learn(cls.env, nb_episodes=100)
+        cls.Q = q_function_learn(cls.env, nb_episodes=200)
 
     def test_optimal_policy(self):
         """Test that the optimal policy maximizes the reward."""
@@ -63,8 +64,11 @@ class TestTempRLWithSimpleEnv:
             reward_shaping=True,
             extract_fluents=lambda obs, action: PLInterpretation({"s" + str(obs)}),
         )
-        cls.wrapped = TemporalGoalWrapper(
-            env=cls.env, temp_goals=[cls.tg], feature_extractor=None
+        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg])
+        # from (s, [q]) to (s, q)
+        n, q = cls.env.observation_space.n, cls.tg.observation_space.n
+        cls.wrapped = wrap_observation(
+            cls.wrapped, MultiDiscrete([n, q]), lambda o: (o[0], o[1][0])
         )
         cls.Q = q_function_learn(cls.wrapped, nb_episodes=5000)
 
