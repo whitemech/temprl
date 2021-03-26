@@ -342,7 +342,7 @@ test = ["pytest (>=4.0.2,<6)", "toml"]
 
 [[package]]
 name = "flloat"
-version = "0.2.3"
+version = "0.3.0"
 description = "A Python implementation of the FLLOAT library."
 category = "main"
 optional = false
@@ -350,7 +350,8 @@ python-versions = "*"
 
 [package.dependencies]
 lark-parser = "*"
-pythomata = "0.2.0"
+pythomata = ">=0.3.2"
+sympy = "*"
 
 [[package]]
 name = "future"
@@ -864,6 +865,18 @@ mkdocs = ">=1.1"
 nbconvert = ">=6.0.0"
 
 [[package]]
+name = "mpmath"
+version = "1.2.1"
+description = "Python library for arbitrary-precision floating-point arithmetic"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+develop = ["pytest (>=4.6)", "pycodestyle", "pytest-cov", "codecov", "wheel"]
+tests = ["pytest (>=4.6)"]
+
+[[package]]
 name = "mypy"
 version = "0.782"
 description = "Optional static typing for Python"
@@ -1314,14 +1327,15 @@ pytest = "*"
 
 [[package]]
 name = "pythomata"
-version = "0.2.0"
-description = "A Python package implementing automata."
+version = "0.3.2"
+description = "A Python package for automata theory."
 category = "main"
 optional = false
 python-versions = "*"
 
 [package.dependencies]
 graphviz = "*"
+sympy = "*"
 
 [[package]]
 name = "python-dateutil"
@@ -1494,6 +1508,17 @@ python-versions = ">=3.6"
 [package.dependencies]
 importlib-metadata = {version = ">=1.7.0", markers = "python_version < \"3.8\""}
 pbr = ">=2.0.0,<2.1.0 || >2.1.0"
+
+[[package]]
+name = "sympy"
+version = "1.7.1"
+description = "Computer algebra system (CAS) in Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+mpmath = ">=0.19"
 
 [[package]]
 name = "terminado"
@@ -1707,7 +1732,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "01c3086df84489a662a8dbe9f93124438405f3bf8db9bfc6fcb6f27fb5ee4d15"
+content-hash = "986aaf778167e2398f1ab22641587b771c35cc0846f48c0772664a715e0fb16b"
 
 [metadata.files]
 appdirs = [
@@ -1935,7 +1960,8 @@ flake8-isort = [
     {file = "flake8_isort-4.0.0-py2.py3-none-any.whl", hash = "sha256:729cd6ef9ba3659512dee337687c05d79c78e1215fdf921ed67e5fe46cce2f3c"},
 ]
 flloat = [
-    {file = "flloat-0.2.3.tar.gz", hash = "sha256:6e57cb4b6d817259c66098e5b56abda7821f45ba1a4d006be3bb5ef9ba8c09a8"},
+    {file = "flloat-0.3.0-py2.py3-none-any.whl", hash = "sha256:4423ee6fe4df59669493101e1bcbfc1089ea4809fc48d1029923d363527c418c"},
+    {file = "flloat-0.3.0.tar.gz", hash = "sha256:1705f1f0a4c270bbcdc47bdaf8977a9f51cd2c8974162309359f043daa12f93d"},
 ]
 future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
@@ -2132,6 +2158,10 @@ mkdocs-material-extensions = [
 mknotebooks = [
     {file = "mknotebooks-0.6.2.post0.dev98-py3-none-any.whl", hash = "sha256:1d4c7b5a82a31b41c3b5973095601765cbf3571db6ee5921fbe390a6f8c6e8c5"},
 ]
+mpmath = [
+    {file = "mpmath-1.2.1-py3-none-any.whl", hash = "sha256:604bc21bd22d2322a177c73bdb573994ef76e62edd595d17e00aff24b0667e5c"},
+    {file = "mpmath-1.2.1.tar.gz", hash = "sha256:79ffb45cf9f4b101a807595bcb3e72e0396202e0b1d25d689134b48c4216a81a"},
+]
 mypy = [
     {file = "mypy-0.782-cp35-cp35m-macosx_10_6_x86_64.whl", hash = "sha256:2c6cde8aa3426c1682d35190b59b71f661237d74b053822ea3d748e2c9578a7c"},
     {file = "mypy-0.782-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:9c7a9a7ceb2871ba4bac1cf7217a7dd9ccd44c27c2950edbc6dc08530f32ad4e"},
@@ -2307,7 +2337,8 @@ pytest-randomly = [
     {file = "pytest_randomly-3.5.0-py3-none-any.whl", hash = "sha256:9db10d160237f3f8ee60cef72e4cb9ea88d2893c9dd5c8aa334b060cdeb67c3a"},
 ]
 pythomata = [
-    {file = "pythomata-0.2.0.tar.gz", hash = "sha256:e2db686d76c986b1ecef9c9c45a9c87092c13589537df3c55d692493b3f9be54"},
+    {file = "pythomata-0.3.2-py2.py3-none-any.whl", hash = "sha256:b6e1a4bb2ba9bff2f7f0e9b3f357d512b4a633bfd9ba8f63a59d89556396f784"},
+    {file = "pythomata-0.3.2.tar.gz", hash = "sha256:10a31e6fffed84f1eacdf8820b9f3af5a7dbaf329d936bf7c4618f464b22fed5"},
 ]
 python-dateutil = [
     {file = "python-dateutil-2.8.1.tar.gz", hash = "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"},
@@ -2501,6 +2532,10 @@ snowballstemmer = [
 stevedore = [
     {file = "stevedore-3.3.0-py3-none-any.whl", hash = "sha256:50d7b78fbaf0d04cd62411188fa7eedcb03eb7f4c4b37005615ceebe582aa82a"},
     {file = "stevedore-3.3.0.tar.gz", hash = "sha256:3a5bbd0652bf552748871eaa73a4a8dc2899786bc497a2aa1fcb4dcdb0debeee"},
+]
+sympy = [
+    {file = "sympy-1.7.1-py3-none-any.whl", hash = "sha256:c986df98babfb9f5ddea49ba7b69398f6d1cfada5ae0dc0431691cddaff851f6"},
+    {file = "sympy-1.7.1.tar.gz", hash = "sha256:a3de9261e97535b83bb8607b0da2c7d03126650fafea2b2789657b229c246b2e"},
 ]
 terminado = [
     {file = "terminado-0.9.3-py3-none-any.whl", hash = "sha256:430e876ec9d4d93a4fd8a49e82dcfae0c25f846540d0c5ca774b397533e237e8"},
