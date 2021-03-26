@@ -26,12 +26,9 @@ from abc import ABC
 from typing import Callable, List, Optional, Set
 
 import gym
-from flloat.semantics import PLInterpretation
 from gym.spaces import Discrete, MultiDiscrete
 from gym.spaces import Tuple as GymTuple
-from pythomata.base import State, Symbol
-from pythomata.dfa import DFA
-
+from pythomata.core import DFA, StateType, SymbolType
 from temprl.automata import RewardAutomatonSimulator, RewardDFA, TemporalLogicFormula
 
 logger = logging.getLogger(__name__)
@@ -45,7 +42,7 @@ class TemporalGoal(ABC):
         formula: Optional[TemporalLogicFormula] = None,
         reward: float = 1.0,
         automaton: Optional[DFA] = None,
-        labels: Optional[Set[Symbol]] = None,
+        labels: Optional[Set[SymbolType]] = None,
         reward_shaping: bool = True,
         extract_fluents: Optional[Callable] = None,
         zero_terminal_state: bool = False,
@@ -114,7 +111,7 @@ class TemporalGoal(ABC):
         """Get the reward."""
         return self._reward
 
-    def extract_fluents(self, obs, action) -> PLInterpretation:
+    def extract_fluents(self, obs, action) -> Set[str]:
         """
         Extract high-level features from the observation.
 
@@ -124,14 +121,14 @@ class TemporalGoal(ABC):
             raise NotImplementedError
         return self._extract_fluents(obs, action)
 
-    def step(self, observation, action) -> Optional[State]:
+    def step(self, observation, action) -> Optional[StateType]:
         """Do a step in the simulation."""
         fluents = self.extract_fluents(observation, action)
         self._simulator.step(fluents)
 
         result = (
-            self._simulator.cur_state
-            if self._simulator.cur_state is not None
+            self._simulator._cur_state
+            if self._simulator._cur_state is not None
             else len(self._simulator.dfa.states)
         )
         return result
@@ -139,7 +136,7 @@ class TemporalGoal(ABC):
     def reset(self):
         """Reset the simulation."""
         self._simulator.reset()
-        return self._simulator.cur_state
+        return self._simulator._cur_state
 
     def observe_reward(self, is_terminal_state: bool = False) -> float:
         """Observe the reward of the last transition."""

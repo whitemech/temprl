@@ -24,14 +24,12 @@
 import logging
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Optional, Set, Union, cast
+from typing import AbstractSet, Optional, Set, Union, cast
 
 from flloat.ldlf import LDLfFormula
 from flloat.ltlf import LTLfFormula
-from flloat.semantics import PLInterpretation
-from pythomata.base import State, Symbol
-from pythomata.dfa import DFA
-from pythomata.simulator import DFASimulator, Simulator
+from pythomata.core import DFA, StateType, SymbolType
+from pythomata.simulator import AbstractSimulator, AutomatonSimulator
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +44,7 @@ class RewardAutomaton(ABC):
         """Return the potential at a given state."""
 
 
-class RewardSimulator(Simulator):
+class RewardSimulator(AbstractSimulator):
     """A simulator for a reward automaton."""
 
     @abstractmethod
@@ -72,14 +70,11 @@ class RewardDFA(DFA, RewardAutomaton):
 
     def __init__(self, dfa: DFA, reward):
         """Initialize the reward automaton."""
-        dfa = dfa.complete().renumbering()
-        super().__init__(
-            set(dfa._states),
-            set(dfa._alphabet),
-            dfa._initial_state,
-            set(dfa._accepting_states),
-            dfa._transition_function,
-        )
+        self.dfa = dfa.complete()
+        # TODO: renumbering removed
+        # TODO: forward interface
+        self._transition_function = self.dfa._transition_function
+        self.to_graphviz = self.dfa.to_graphviz
 
         self.reward = reward
         (
@@ -90,23 +85,69 @@ class RewardDFA(DFA, RewardAutomaton):
 
         self.sink_state = self._find_sink_state()
 
-    def _find_sink_state(self) -> State:
-        for s, delta in self.transition_function.items():
-            if s in self.failure_states and all(s == t for _, t in delta.items()):
+    def _find_sink_state(self) -> StateType:
+        # TODO: assumption SymbolicDFA
+        for s, delta in self._transition_function.items():
+            if s in self.failure_states and all(s == t for t, _ in delta.items()):
                 return s
 
+    @property
+    def states(self) -> AbstractSet[StateType]:
+        """
+        Get the set of states.
+        :return: the set of states of the automaton.
+        """
+        return self.dfa.states
+
+    @property
+    def initial_state(self) -> StateType:
+        """
+        Get the initial state.
+        :return: the initial state.
+        """
+        return self.dfa.initial_state
+
+    @property
+    def accepting_states(self) -> AbstractSet[StateType]:
+        """
+        Get the set of accepting states.
+        :return: the set of accepting states.
+        """
+        return self.dfa.accepting_states
+
+    def get_successors(
+        self, state: StateType, symbol: SymbolType
+    ) -> AbstractSet[StateType]:
+        """
+        Get the successors of the state in input when reading a symbol.
+        :param state: the state from which to compute the successors.
+        :param symbol: the symbol of the transition.
+        :return: the set of successor states.
+        :raise ValueError: if the state does not belong to the automaton, or the symbol is not correct.
+        """
+        return self.dfa.get_successors(state, symbol)
+
+    def get_successor(
+        self, state: StateType, symbol: SymbolType
+    ) -> Optional[StateType]:
+        """
+        Get the (unique) successor.
+        If not defined, return None.
+        """
+        return self.dfa.get_successor(state, symbol)
+
     @staticmethod
-    def from_formula(f: TemporalLogicFormula, reward, alphabet: Set[Symbol] = None):
+    def from_formula(f: TemporalLogicFormula, reward, alphabet: Set[SymbolType] = None):
         """Return the reward automaton associated with the formula."""
         dfa = f.to_automaton(alphabet)
         return RewardDFA(dfa, reward)
 
-    def potential_function(self, q: Optional[State], is_terminal_state=False):
+    def potential_function(self, q: Optional[StateType], is_terminal_state=False):
         """Return the potential function to the given automaton state."""
         if is_terminal_state or q is None:
             return 0
         else:
-            initial_state_level = self.reachability_levels[self._initial_state]
+            initial_state_level = self.reachability_levels[self.initial_state]
             p = initial_state_level - self.reachability_levels[q]
             p = p / initial_state_level if initial_state_level != 0 else p
             p *= self.reward
@@ -114,10 +155,10 @@ class RewardDFA(DFA, RewardAutomaton):
 
     def _compute_levels(self):
         """Compute the levels for the potential function."""
-        return _compute_levels(self, self._accepting_states)
+        return _compute_levels(self, self.accepting_states)
 
 
-class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
+class RewardAutomatonSimulator(AutomatonSimulator, RewardSimulator):
     """A DFA simulator for a reward automaton."""
 
     def __init__(
@@ -125,12 +166,11 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
     ):
         """Initialize the reward DFA simulator."""
         super().__init__(dfa)
-        self._cur_state = cast(Optional[State], self._cur_state)  # type: ignore
         self.dfa = dfa
         self.visited_states = {self._cur_state}
         self.reward_shaping = reward_shaping
         self.zero_terminal_state = zero_terminal_state
-        self._previous_state = None  # type: Optional[State]
+        self._previous_state = None
 
     def reset(self):
         """Reset the simulator."""
@@ -138,7 +178,7 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
         self.visited_states = {self._cur_state}
         self._previous_state = None
 
-    def step(self, s: PLInterpretation, **_kwargs):
+    def step(self, s: Set[str], **_kwargs):
         """Do a step for the simulation.."""
         self._previous_state = self._cur_state
         super().step(s)
@@ -149,6 +189,10 @@ class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
             logger.debug(
                 "transition idxs: {}, {}".format(self._previous_state, self._cur_state)
             )
+
+    @property
+    def _cur_state(self):
+        return list(self._current_states)[0] if len(self._current_states) > 0 else None
 
     def observe_reward(self, is_terminal_state: bool = False) -> float:
         """Observe the reward of the last transition."""
@@ -204,8 +248,8 @@ def _compute_levels(dfa: DFA, property_states):
         for s in dfa.states:
             if s in z_current:
                 continue
-            for a in dfa.transition_function.get(s, []):
-                next_state = dfa.transition_function[s][a]
+            for a in dfa._transition_function.get(s, []):
+                next_state = dfa._transition_function[s][a]
                 if next_state in z_current:
                     z_next.add(s)
                     state2level[s] = level
