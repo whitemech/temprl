@@ -23,7 +23,7 @@
 """Test utils."""
 from collections import defaultdict
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 import gym
 import numpy as np
@@ -195,3 +195,19 @@ def q_function_test(
 
         rewards = np.append(rewards, total_reward)
     return rewards
+
+
+def wrap_observation(
+    env: gym.Env, observation_space: gym.spaces.Space, observe: Callable
+):
+    """Wrap a Gym environment with an observation wrapper."""
+
+    class _wrapper(gym.ObservationWrapper):
+        def __init__(self, env):
+            super().__init__(env)
+            self.observation_space = observation_space
+
+        def observation(self, observation):
+            return observe(observation)
+
+    return _wrapper(env)

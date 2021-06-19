@@ -28,7 +28,7 @@ from pythomata.impl.symbolic import SymbolicDFA
 
 from temprl.automata import RewardDFA
 from temprl.wrapper import TemporalGoal, TemporalGoalWrapper
-from tests.utils import GymTestEnv, q_function_learn, q_function_test
+from tests.utils import GymTestEnv, q_function_learn, q_function_test, wrap_observation
 
 
 class TestSimpleEnv:
@@ -38,7 +38,7 @@ class TestSimpleEnv:
     def setup_class(cls):
         """Set the tests up."""
         cls.env = GymTestEnv(n_states=5)
-        cls.Q = q_function_learn(cls.env, nb_episodes=100)
+        cls.Q = q_function_learn(cls.env, nb_episodes=200)
 
     def test_optimal_policy(self):
         """Test that the optimal policy maximizes the reward."""
@@ -92,11 +92,12 @@ class TestTempRLWithSimpleEnv:
             automaton=cls.automaton,
             reward=10.0,
         )
-        cls.wrapped = TemporalGoalWrapper(
-            env=cls.env,
-            temp_goals=[cls.tg],
-            feature_extractor=None,
-            fluent_extractor=lambda obs, action: {"s" + str(obs)},
+        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg],
+                                          fluent_extractor=lambda obs, action: {"s" + str(obs)})
+        # from (s, [q]) to (s, q)
+        n, q = cls.env.observation_space.n, cls.tg.observation_space.n
+        cls.wrapped = wrap_observation(
+            cls.wrapped, MultiDiscrete([n, q]), lambda o: (o[0], o[1][0])
         )
 
     def test_observation_space(self):

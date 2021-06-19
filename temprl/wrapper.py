@@ -23,17 +23,16 @@
 """Main module."""
 import logging
 from abc import ABC
-from typing import Any, Callable, List, Optional, Tuple
+from typing import List
+from typing import Tuple
 
 import gym
 from gym.spaces import Discrete, MultiDiscrete
+from gym.spaces import Tuple as GymTuple
 from pythomata.core import DFA
 
 from temprl.automata import RewardDFA, RewardDFASimulator
 from temprl.types import FluentExtractor, Interpretation, State
-
-Observation = Any
-Action = Any
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +41,9 @@ class TemporalGoal(ABC):
     """Abstract class to represent a temporal goal."""
 
     def __init__(
-        self,
-        reward: float,
-        automaton: DFA = None,
+            self,
+            reward: float,
+            automaton: DFA = None,
     ):
         """
         Initialize a temporal goal.
@@ -96,12 +95,10 @@ class TemporalGoalWrapper(gym.Wrapper):
     """Gym wrapper to include a temporal goal in the environment."""
 
     def __init__(
-        self,
-        env: gym.Env,
-        temp_goals: List[TemporalGoal],
-        fluent_extractor: FluentExtractor,
-        feature_extractor: Optional[Callable[[Observation, Action], Any]] = None,
-        combine: Optional[Callable[[Observation, Tuple], Any]] = None,
+            self,
+            env: gym.Env,
+            temp_goals: List[TemporalGoal],
+            fluent_extractor: FluentExtractor,
     ):
         """
         Wrap a Gym environment with a temporal goal.
@@ -111,44 +108,25 @@ class TemporalGoalWrapper(gym.Wrapper):
         :param fluent_extractor: the extractor of the fluents.
           A callable that takes in input an observation and the last action
           taken, and returns the set of fluents true in the current state.
-        :param feature_extractor: (optional) extract feature
-                                | from the environment state
-        :param combine: (optional) combine the agent state with
-                      | the temporal goal state.
         """
         super().__init__(env)
         self.temp_goals = temp_goals
         self.fluent_extractor: FluentExtractor = fluent_extractor
-        self.feature_extractor = (
-            feature_extractor
-            if feature_extractor is not None
-            else (lambda obs, action: obs)
-        )
-        self.combine = (
-            combine if combine is not None else (lambda obs, qs: tuple((obs, *qs)))
-        )
         self.observation_space = self._get_observation_space()
 
     def _get_observation_space(self) -> gym.spaces.Space:
         """Return the observation space."""
-        if isinstance(self.env.observation_space, MultiDiscrete):
-            env_shape = tuple(self.env.observation_space.nvec)
-        else:
-            env_shape = (self.env.observation_space.n,)
         temp_goals_shape = tuple(tg.observation_space.n for tg in self.temp_goals)
-
-        combined_obs_space = env_shape + temp_goals_shape
-        return MultiDiscrete(combined_obs_space)
+        return GymTuple((self.env.observation_space, MultiDiscrete(temp_goals_shape)))
 
     def step(self, action):
         """Do a step in the Gym environment."""
         obs, reward, done, info = super().step(action)
-        features = self.feature_extractor(obs=obs, action=action)
         fluents = self.fluent_extractor(obs, action)
         states_and_rewards = [tg.step(fluents) for tg in self.temp_goals]
         next_automata_states, temp_goal_rewards = zip(*states_and_rewards)
         total_goal_rewards = sum(temp_goal_rewards)
-        obs_prime = self.combine(features, next_automata_states)
+        obs_prime = (obs, next_automata_states)
         reward_prime = reward + total_goal_rewards
         return obs_prime, reward_prime, done, info
 
@@ -158,7 +136,5 @@ class TemporalGoalWrapper(gym.Wrapper):
         for tg in self.temp_goals:
             tg.reset()
 
-        features = self.feature_extractor(obs, None)
-        automata_states = tuple([tg.reset() for tg in self.temp_goals])
-        new_observation = self.combine(features, automata_states)
-        return new_observation
+        automata_states = [tg.reset() for tg in self.temp_goals]
+        return obs, automata_states
