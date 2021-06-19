@@ -92,8 +92,11 @@ class TestTempRLWithSimpleEnv:
             automaton=cls.automaton,
             reward=10.0,
         )
-        cls.wrapped = TemporalGoalWrapper(env=cls.env, temp_goals=[cls.tg],
-                                          fluent_extractor=lambda obs, action: {"s" + str(obs)})
+        cls.wrapped = TemporalGoalWrapper(
+            env=cls.env,
+            temp_goals=[cls.tg],
+            fluent_extractor=lambda obs, action: {"s" + str(obs)},
+        )
         # from (s, [q]) to (s, q)
         n, q = cls.env.observation_space.n, cls.tg.observation_space.n
         cls.wrapped = wrap_observation(
@@ -102,11 +105,11 @@ class TestTempRLWithSimpleEnv:
 
     def test_observation_space(self):
         """Test that the combined observation space is computed as expected."""
-        assert self.wrapped.observation_space == MultiDiscrete((5, 6))
+        assert MultiDiscrete((5, 6)) == self.wrapped.observation_space
 
     def test_temporal_goal_reward(self):
         """Test that the 'reward' property of the temporal goal works correctly."""
-        assert self.tg.reward == 10.0
+        assert 10.0 == self.tg.reward
 
     def test_temporal_goal_automaton(self):
         """Test that the 'automaton' property of the temporal goal works correctly."""

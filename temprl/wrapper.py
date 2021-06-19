@@ -23,8 +23,7 @@
 """Main module."""
 import logging
 from abc import ABC
-from typing import List
-from typing import Tuple
+from typing import List, Tuple
 
 import gym
 from gym.spaces import Discrete, MultiDiscrete
@@ -41,9 +40,9 @@ class TemporalGoal(ABC):
     """Abstract class to represent a temporal goal."""
 
     def __init__(
-            self,
-            reward: float,
-            automaton: DFA = None,
+        self,
+        reward: float,
+        automaton: DFA = None,
     ):
         """
         Initialize a temporal goal.
@@ -61,11 +60,7 @@ class TemporalGoal(ABC):
     @property
     def observation_space(self) -> Discrete:
         """Return the observation space of the temporal goal."""
-        # we add one virtual state for the 'super' sink state
-        # - that is, when the symbol is not in the alphabet.
-        # This is going to be a temporary workaround due to
-        # the Pythomata's lack of support for this corner case.
-        return Discrete(len(self._automaton.states) + 1)
+        return Discrete(len(self._automaton.states))
 
     @property
     def automaton(self):
@@ -95,10 +90,10 @@ class TemporalGoalWrapper(gym.Wrapper):
     """Gym wrapper to include a temporal goal in the environment."""
 
     def __init__(
-            self,
-            env: gym.Env,
-            temp_goals: List[TemporalGoal],
-            fluent_extractor: FluentExtractor,
+        self,
+        env: gym.Env,
+        temp_goals: List[TemporalGoal],
+        fluent_extractor: FluentExtractor,
     ):
         """
         Wrap a Gym environment with a temporal goal.

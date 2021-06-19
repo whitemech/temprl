@@ -83,6 +83,8 @@ class RewardDFA(AbstractRewardMachine):
         super().__init__()
         self._automaton = dfa
         self._reward = reward
+        self._sink_state = None
+        assert self._sink_state not in self._automaton.states
 
     def get_successor(
         self, state: StateType, symbol: SymbolType
@@ -105,7 +107,9 @@ class RewardDFA(AbstractRewardMachine):
 
         :return: the set of states of the automaton.
         """
-        return self._automaton.states
+        # we add one virtual state for the 'super' sink state
+        # that is, when the symbol is not in the alphabet.
+        return set(self._automaton.states).union({self._sink_state})
 
     @property
     def initial_state(self) -> StateType:
@@ -157,7 +161,12 @@ class RewardDFA(AbstractRewardMachine):
         :param end_state: the state we end up in.
         :return: the reward signal.
         """
-        return 0.0 if not self._automaton.is_accepting(end_state) else self.reward
+        return (
+            0.0
+            if not self._automaton.is_accepting(end_state)
+            or end_state == self._sink_state
+            else self.reward
+        )
 
 
 class RewardDFASimulator(AbstractRewardMachineSimulator):
