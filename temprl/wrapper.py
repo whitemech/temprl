@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Marco Favorito
+# Copyright 2020-2021 Marco Favorito
 #
 # ------------------------------
 #
@@ -23,15 +23,14 @@
 """Main module."""
 import logging
 from abc import ABC
-from typing import Any, Callable, List, Optional, Set, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 import gym
-from flloat.semantics import PLInterpretation
 from gym.spaces import Discrete, MultiDiscrete
-from pythomata.base import State, Symbol
-from pythomata.dfa import DFA
+from pythomata.core import DFA
 
-from temprl.automata import RewardAutomatonSimulator, RewardDFA, TemporalLogicFormula
+from temprl.automata import RewardDFA, RewardDFASimulator
+from temprl.types import FluentExtractor, Interpretation, State
 
 Observation = Any
 Action = Any
@@ -44,53 +43,21 @@ class TemporalGoal(ABC):
 
     def __init__(
         self,
-        formula: Optional[TemporalLogicFormula] = None,
-        reward: float = 1.0,
-        automaton: Optional[DFA] = None,
-        labels: Optional[Set[Symbol]] = None,
-        reward_shaping: bool = True,
-        extract_fluents: Optional[Callable] = None,
-        zero_terminal_state: bool = False,
-        one_hot_encoding: bool = False,
+        reward: float,
+        automaton: DFA = None,
     ):
         """
         Initialize a temporal goal.
 
-        :param formula: the formula to be satisfied. it will be ignored if automaton is set.
         :param automaton: the pythomata.DFA instance. it will be
                         | the preferred input against 'formula'.
         :param reward: the reward associated to the temporal goal.
-        :param labels: the set of all possible fluents
-                     | (used to generate the full automaton).
-        :param reward_shaping: the set of all possible fluents
-                             | (used to generate the full automaton).
-        :param extract_fluents: a callable that takes an observation
-                             | and an actions, and returns a
-                             | propositional interpretation with the active fluents.
-                             | if None, the 'extract_fluents' method is taken.
-        :param zero_terminal_state: when reward_shaping is True, make the
-                                  | potential function at a terminal state equal to zero.
-        :param one_hot_encoding: use one-hot encoding for representing the
-                               | automata dimensions.
         """
-        if formula is None and automaton is None:
-            raise ValueError("Provide either a formula or an automaton.")
-
-        self._formula = formula
-        if automaton:
-            self._automaton = RewardDFA(automaton, reward)
-        else:
-            self._automaton = RewardDFA.from_formula(
-                self._formula, reward, alphabet=labels
-            )
-        self._simulator = RewardAutomatonSimulator(
+        self._automaton = RewardDFA(automaton, reward)
+        self._simulator = RewardDFASimulator(
             self._automaton,
-            reward_shaping=reward_shaping,
-            zero_terminal_state=zero_terminal_state,
         )
         self._reward = reward
-        self._one_hot_encoding = one_hot_encoding
-        self._extract_fluents: Optional[Callable] = extract_fluents
 
     @property
     def observation_space(self) -> Discrete:
@@ -102,11 +69,6 @@ class TemporalGoal(ABC):
         return Discrete(len(self._automaton.states) + 1)
 
     @property
-    def formula(self):
-        """Get the formula."""
-        return self._formula
-
-    @property
     def automaton(self):
         """Get the automaton."""
         return self._automaton
@@ -116,44 +78,18 @@ class TemporalGoal(ABC):
         """Get the reward."""
         return self._reward
 
-    def extract_fluents(self, obs, action) -> PLInterpretation:
+    def reset(self) -> State:
+        """Reset the simulator."""
+        return self._simulator.reset()
+
+    def step(self, symbol: Interpretation) -> Tuple[State, float]:
         """
-        Extract high-level features from the observation.
+        Do a step.
 
-        :return: the list of active fluents.
+        :param symbol: the symbol to read.
+        :return: the generated reward signal.
         """
-        if self._extract_fluents is None:
-            raise NotImplementedError
-        return self._extract_fluents(obs, action)
-
-    def step(self, observation, action) -> Optional[State]:
-        """Do a step in the simulation."""
-        fluents = self.extract_fluents(observation, action)
-        self._simulator.step(fluents)
-
-        result = (
-            self._simulator.cur_state
-            if self._simulator.cur_state is not None
-            else len(self._simulator.dfa.states)
-        )
-        return result
-
-    def reset(self):
-        """Reset the simulation."""
-        self._simulator.reset()
-        return self._simulator.cur_state
-
-    def observe_reward(self, is_terminal_state: bool = False) -> float:
-        """Observe the reward of the last transition."""
-        return self._simulator.observe_reward(is_terminal_state)
-
-    def is_true(self):
-        """Check if the simulation is in a final state."""
-        return self._simulator.is_true()
-
-    def is_failed(self):
-        """Check whether the simulation has failed."""
-        return self._simulator.is_failed()
+        return self._simulator.step(symbol)
 
 
 class TemporalGoalWrapper(gym.Wrapper):
@@ -163,6 +99,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         self,
         env: gym.Env,
         temp_goals: List[TemporalGoal],
+        fluent_extractor: FluentExtractor,
         feature_extractor: Optional[Callable[[Observation, Action], Any]] = None,
         combine: Optional[Callable[[Observation, Tuple], Any]] = None,
     ):
@@ -171,6 +108,9 @@ class TemporalGoalWrapper(gym.Wrapper):
 
         :param env: the Gym environment to wrap.
         :param temp_goals: the temporal goal to be learnt
+        :param fluent_extractor: the extractor of the fluents.
+          A callable that takes in input an observation and the last action
+          taken, and returns the set of fluents true in the current state.
         :param feature_extractor: (optional) extract feature
                                 | from the environment state
         :param combine: (optional) combine the agent state with
@@ -178,6 +118,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         """
         super().__init__(env)
         self.temp_goals = temp_goals
+        self.fluent_extractor: FluentExtractor = fluent_extractor
         self.feature_extractor = (
             feature_extractor
             if feature_extractor is not None
@@ -203,16 +144,10 @@ class TemporalGoalWrapper(gym.Wrapper):
         """Do a step in the Gym environment."""
         obs, reward, done, info = super().step(action)
         features = self.feature_extractor(obs=obs, action=action)
-        next_automata_states = tuple([tg.step(obs, action) for tg in self.temp_goals])
-
-        temp_goal_rewards = [
-            tg.observe_reward(is_terminal_state=done) for tg in self.temp_goals
-        ]
+        fluents = self.fluent_extractor(obs, action)
+        states_and_rewards = [tg.step(fluents) for tg in self.temp_goals]
+        next_automata_states, temp_goal_rewards = zip(*states_and_rewards)
         total_goal_rewards = sum(temp_goal_rewards)
-
-        if any(r != 0.0 for r in temp_goal_rewards):
-            logger.debug("Non-zero goal rewards: {}".format(temp_goal_rewards))
-
         obs_prime = self.combine(features, next_automata_states)
         reward_prime = reward + total_goal_rewards
         return obs_prime, reward_prime, done, info

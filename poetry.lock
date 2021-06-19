@@ -366,18 +366,6 @@ test = ["pytest (>=4.0.2,<6)", "toml"]
 
 [[package]]
 category = "main"
-description = "A Python implementation of the FLLOAT library."
-name = "flloat"
-optional = false
-python-versions = "*"
-version = "0.2.3"
-
-[package.dependencies]
-lark-parser = "*"
-pythomata = "0.2.0"
-
-[[package]]
-category = "main"
 description = "Clean single-source support for Python 3 and 2"
 name = "future"
 optional = false
@@ -728,19 +716,6 @@ python-versions = ">=3.6"
 version = "1.0.0"
 
 [[package]]
-category = "main"
-description = "a modern parsing library"
-name = "lark-parser"
-optional = false
-python-versions = "*"
-version = "0.11.3"
-
-[package.extras]
-atomic_cache = ["atomicwrites"]
-nearley = ["js2py"]
-regex = ["regex"]
-
-[[package]]
 category = "dev"
 description = "A lexer and codec to work with LaTeX code in Python."
 name = "latexcodec"
@@ -911,6 +886,18 @@ jupyter-client = "*"
 markdown = ">=3.3.3"
 mkdocs = ">=1.1"
 nbconvert = ">=6.0.0"
+
+[[package]]
+category = "main"
+description = "Python library for arbitrary-precision floating-point arithmetic"
+name = "mpmath"
+optional = false
+python-versions = "*"
+version = "1.2.1"
+
+[package.extras]
+develop = ["pytest (>=4.6)", "pycodestyle", "pytest-cov", "codecov", "wheel"]
+tests = ["pytest (>=4.6)"]
 
 [[package]]
 category = "dev"
@@ -1357,14 +1344,15 @@ version = ">=3.6.0"
 
 [[package]]
 category = "main"
-description = "A Python package implementing automata."
+description = "A Python package for automata theory."
 name = "pythomata"
 optional = false
 python-versions = "*"
-version = "0.2.0"
+version = "0.3.2"
 
 [package.dependencies]
 graphviz = "*"
+sympy = "*"
 
 [[package]]
 category = "dev"
@@ -1554,6 +1542,17 @@ pbr = ">=2.0.0,<2.1.0 || >2.1.0"
 [package.dependencies.importlib-metadata]
 python = "<3.8"
 version = ">=1.7.0"
+
+[[package]]
+category = "main"
+description = "Computer algebra system (CAS) in Python"
+name = "sympy"
+optional = false
+python-versions = ">=3.6"
+version = "1.8"
+
+[package.dependencies]
+mpmath = ">=0.19"
 
 [[package]]
 category = "dev"
@@ -1783,7 +1782,7 @@ docs = ["sphinx", "jaraco.packaging (>=8.2)", "rst.linker (>=1.9)"]
 testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "pytest-enabler", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
 [metadata]
-content-hash = "95e6ee084be54f370d157cfb6dc546e8d90e17013b6a45983ccb84a1c9a4de29"
+content-hash = "6167994559ade5649db9def7e575b973e00e0c12d21a7450f0e654d8193e6c76"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -2015,9 +2014,6 @@ flake8-isort = [
     {file = "flake8-isort-4.0.0.tar.gz", hash = "sha256:2b91300f4f1926b396c2c90185844eb1a3d5ec39ea6138832d119da0a208f4d9"},
     {file = "flake8_isort-4.0.0-py2.py3-none-any.whl", hash = "sha256:729cd6ef9ba3659512dee337687c05d79c78e1215fdf921ed67e5fe46cce2f3c"},
 ]
-flloat = [
-    {file = "flloat-0.2.3.tar.gz", hash = "sha256:6e57cb4b6d817259c66098e5b56abda7821f45ba1a4d006be3bb5ef9ba8c09a8"},
-]
 future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
 ]
@@ -2107,9 +2103,6 @@ jupyterlab-pygments = [
 jupyterlab-widgets = [
     {file = "jupyterlab_widgets-1.0.0-py3-none-any.whl", hash = "sha256:caeaf3e6103180e654e7d8d2b81b7d645e59e432487c1d35a41d6d3ee56b3fef"},
     {file = "jupyterlab_widgets-1.0.0.tar.gz", hash = "sha256:5c1a29a84d3069208cb506b10609175b249b6486d6b1cbae8fcde2a11584fb78"},
-]
-lark-parser = [
-    {file = "lark-parser-0.11.3.tar.gz", hash = "sha256:e29ca814a98bb0f81674617d878e5f611cb993c19ea47f22c80da3569425f9bd"},
 ]
 latexcodec = [
     {file = "latexcodec-2.0.1-py2.py3-none-any.whl", hash = "sha256:c277a193638dc7683c4c30f6684e3db728a06efb0dc9cf346db8bd0aa6c5d271"},
@@ -2213,6 +2206,10 @@ mkdocs-material-extensions = [
 ]
 mknotebooks = [
     {file = "mknotebooks-0.6.2.post0.dev98-py3-none-any.whl", hash = "sha256:1d4c7b5a82a31b41c3b5973095601765cbf3571db6ee5921fbe390a6f8c6e8c5"},
+]
+mpmath = [
+    {file = "mpmath-1.2.1-py3-none-any.whl", hash = "sha256:604bc21bd22d2322a177c73bdb573994ef76e62edd595d17e00aff24b0667e5c"},
+    {file = "mpmath-1.2.1.tar.gz", hash = "sha256:79ffb45cf9f4b101a807595bcb3e72e0396202e0b1d25d689134b48c4216a81a"},
 ]
 mypy = [
     {file = "mypy-0.782-cp35-cp35m-macosx_10_6_x86_64.whl", hash = "sha256:2c6cde8aa3426c1682d35190b59b71f661237d74b053822ea3d748e2c9578a7c"},
@@ -2386,7 +2383,8 @@ pytest-randomly = [
     {file = "pytest_randomly-3.8.0-py3-none-any.whl", hash = "sha256:f5b7a09e84ee1eabcdedbb73c51d0929ae2f582bab6941dbb513bb49296d6340"},
 ]
 pythomata = [
-    {file = "pythomata-0.2.0.tar.gz", hash = "sha256:e2db686d76c986b1ecef9c9c45a9c87092c13589537df3c55d692493b3f9be54"},
+    {file = "pythomata-0.3.2-py2.py3-none-any.whl", hash = "sha256:b6e1a4bb2ba9bff2f7f0e9b3f357d512b4a633bfd9ba8f63a59d89556396f784"},
+    {file = "pythomata-0.3.2.tar.gz", hash = "sha256:10a31e6fffed84f1eacdf8820b9f3af5a7dbaf329d936bf7c4618f464b22fed5"},
 ]
 python-dateutil = [
     {file = "python-dateutil-2.8.1.tar.gz", hash = "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"},
@@ -2579,6 +2577,10 @@ snowballstemmer = [
 stevedore = [
     {file = "stevedore-3.3.0-py3-none-any.whl", hash = "sha256:50d7b78fbaf0d04cd62411188fa7eedcb03eb7f4c4b37005615ceebe582aa82a"},
     {file = "stevedore-3.3.0.tar.gz", hash = "sha256:3a5bbd0652bf552748871eaa73a4a8dc2899786bc497a2aa1fcb4dcdb0debeee"},
+]
+sympy = [
+    {file = "sympy-1.8-py3-none-any.whl", hash = "sha256:3b0b3776e357f789951bb14776c6a841f931680f20d5f8fe55977885657c9b7a"},
+    {file = "sympy-1.8.tar.gz", hash = "sha256:1ca588a9f6ce6a323c5592f9635159c2093572826668a1022c75c75bdf0297cb"},
 ]
 terminado = [
     {file = "terminado-0.10.1-py3-none-any.whl", hash = "sha256:c89ace5bffd0e7268bdcf22526830eb787fd146ff9d78691a0528386f92b9ae3"},

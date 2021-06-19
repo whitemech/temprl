@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Marco Favorito
+# Copyright 2020-2021 Marco Favorito
 #
 # ------------------------------
 #
@@ -23,201 +23,168 @@
 """Classes that implement automata that give the rewards to the RL agent."""
 import logging
 from abc import ABC, abstractmethod
-from copy import copy
-from typing import Optional, Set, Union, cast
+from typing import AbstractSet, Optional, Tuple
 
-from flloat.ldlf import LDLfFormula
-from flloat.ltlf import LTLfFormula
-from flloat.semantics import PLInterpretation
-from pythomata.base import State, Symbol
-from pythomata.dfa import DFA
-from pythomata.simulator import DFASimulator, Simulator
+from pythomata.core import DFA, StateType, SymbolType, TransitionType
+
+from temprl.types import Interpretation, State
 
 logger = logging.getLogger(__name__)
 
-TemporalLogicFormula = Union[LTLfFormula, LDLfFormula]
 
+class AbstractRewardMachine(DFA):
+    """
+    Interface for reward machines.
 
-class RewardAutomaton(ABC):
-    """Abstract class for an automaton that gives rewards."""
-
-    @abstractmethod
-    def potential_function(self, q, is_terminal_state=False):
-        """Return the potential at a given state."""
-
-
-class RewardSimulator(Simulator):
-    """A simulator for a reward automaton."""
+    That is, the machine yields a reward whenever a transitions
+    ends to an accepting state.
+    """
 
     @abstractmethod
-    def is_failed(self) -> bool:
+    def get_reward(
+        self, start_state: State, symbol: Interpretation, end_state: State
+    ) -> float:
         """
-        Tell if the simulation is failed.
+        Get the reward associated to the transition.
 
-        :return: True if the simulation is in a failure state, False otherwise.
+        :param start_state: the starting state.
+        :param symbol: the read symbol.
+        :param end_state: the state we end up in.
+        :return: the reward signal.
+        """
+
+
+class AbstractRewardMachineSimulator(ABC):
+    """Interface for abstract reward machine simulator."""
+
+    @abstractmethod
+    def reset(self) -> State:
+        """
+        Reset the simulation to its initial state.
+
+        :return: the initial state.
         """
 
     @abstractmethod
-    def observe_reward(self, is_terminal_state: bool = False) -> float:
+    def step(self, symbol: Interpretation) -> Tuple[State, float]:
         """
-        Observe the reward according to the last transition.
+        Do a step.
 
-        :param is_terminal_state: whether we are at the end of the RL episode.
-        :return: the reward
+        :param symbol: the symbol to read.
+        :return: the new state and the generated reward signal.
         """
 
 
-class RewardDFA(DFA, RewardAutomaton):
-    """This class implements the reward automaton."""
+class RewardDFA(AbstractRewardMachine):
+    """This class implements the reward automaton using a pythomata.DFA object."""
 
     def __init__(self, dfa: DFA, reward):
         """Initialize the reward automaton."""
-        dfa = dfa.complete().renumbering()
-        super().__init__(
-            set(dfa._states),
-            set(dfa._alphabet),
-            dfa._initial_state,
-            set(dfa._accepting_states),
-            dfa._transition_function,
-        )
+        super().__init__()
+        self._automaton = dfa
+        self._reward = reward
 
-        self.reward = reward
-        (
-            self.reachability_levels,
-            self.max_level,
-            self.failure_states,
-        ) = self._compute_levels()
+    def get_successor(
+        self, state: StateType, symbol: SymbolType
+    ) -> Optional[StateType]:
+        """
+        Get the (unique) successor.
 
-        self.sink_state = self._find_sink_state()
+        :param: state: the starting state.
+        :param: symbol: the symbol to read.
+        :returns: the next state. If not defined, return None.
+        """
+        # SymbolicDFA wants a dictionary, not a set
+        symbol = {symbol_name: True for symbol_name in symbol}
+        return self._automaton.get_successor(state, symbol)
 
-    def _find_sink_state(self) -> State:
-        for s, delta in self.transition_function.items():
-            if s in self.failure_states and all(s == t for _, t in delta.items()):
-                return s
+    @property
+    def states(self) -> AbstractSet[StateType]:
+        """
+        Get the set of states.
 
-    @staticmethod
-    def from_formula(f: TemporalLogicFormula, reward, alphabet: Set[Symbol] = None):
-        """Return the reward automaton associated with the formula."""
-        dfa = f.to_automaton(alphabet)
-        return RewardDFA(dfa, reward)
+        :return: the set of states of the automaton.
+        """
+        return self._automaton.states
 
-    def potential_function(self, q: Optional[State], is_terminal_state=False):
-        """Return the potential function to the given automaton state."""
-        if is_terminal_state or q is None:
-            return 0
-        else:
-            initial_state_level = self.reachability_levels[self._initial_state]
-            p = initial_state_level - self.reachability_levels[q]
-            p = p / initial_state_level if initial_state_level != 0 else p
-            p *= self.reward
-        return p
+    @property
+    def initial_state(self) -> StateType:
+        """
+        Get the initial state.
 
-    def _compute_levels(self):
-        """Compute the levels for the potential function."""
-        return _compute_levels(self, self._accepting_states)
+        :return: the initial state.
+        """
+        return self._automaton.initial_state
+
+    @property
+    def accepting_states(self) -> AbstractSet[StateType]:
+        """
+        Get the set of accepting states.
+
+        :return: the set of accepting states.
+        """
+        return self._automaton.accepting_states
+
+    def get_transitions_from(self, state: StateType) -> AbstractSet[TransitionType]:
+        """
+        Get the outgoing transitions from a state.
+
+        A transition is a triple (source_state, guard, destination_state).
+
+        :param: state: the source state.
+        :returns: the set of transitions object associated with that triple.
+        :raise: ValueError: if the state does not belong to the automaton.
+        """
+        return self._automaton.get_transitions_from(state)
+
+    @property
+    def reward(self) -> float:
+        """Return the reward."""
+        return self._reward
+
+    def get_reward(
+        self, _start_state: State, _symbol: Interpretation, end_state: State
+    ) -> float:
+        """
+        Get the reward associated to the transition.
+
+        This method returns the reward only if the end state is accepting,
+        because the automaton is an acceptor and the reward only depends
+        on the acceptance condition of the destination state.
+
+        :param _start_state: the starting state. Not used in this implementation.
+        :param _symbol: the read symbol.
+        :param end_state: the state we end up in.
+        :return: the reward signal.
+        """
+        return 0.0 if not self._automaton.is_accepting(end_state) else self.reward
 
 
-class RewardAutomatonSimulator(DFASimulator, RewardSimulator):
+class RewardDFASimulator(AbstractRewardMachineSimulator):
     """A DFA simulator for a reward automaton."""
 
-    def __init__(
-        self, dfa: RewardDFA, reward_shaping: bool, zero_terminal_state: bool = True
-    ):
+    def __init__(self, dfa: AbstractRewardMachine):
         """Initialize the reward DFA simulator."""
-        super().__init__(dfa)
-        self._cur_state = cast(Optional[State], self._cur_state)  # type: ignore
-        self.dfa = dfa
-        self.visited_states = {self._cur_state}
-        self.reward_shaping = reward_shaping
-        self.zero_terminal_state = zero_terminal_state
-        self._previous_state = None  # type: Optional[State]
+        self.reward_machine = dfa
+        self._current_state: Optional[State] = self.reward_machine.initial_state
 
-    def reset(self):
-        """Reset the simulator."""
-        super().reset()
-        self.visited_states = {self._cur_state}
-        self._previous_state = None
+    def reset(self) -> State:
+        """
+        Reset the simulation to its initial state.
 
-    def step(self, s: PLInterpretation, **_kwargs):
-        """Do a step for the simulation.."""
-        self._previous_state = self._cur_state
-        super().step(s)
-        if self._cur_state is None:
-            self._cur_state = self.dfa.sink_state
-        self.visited_states.add(self._cur_state)
-        if self._previous_state != self._cur_state:
-            logger.debug(
-                "transition idxs: {}, {}".format(self._previous_state, self._cur_state)
-            )
+        :return: the initial state.
+        """
+        self._current_state = self.reward_machine.initial_state
+        return self._current_state
 
-    def observe_reward(self, is_terminal_state: bool = False) -> float:
-        """Observe the reward of the last transition."""
-        reward = self.dfa.reward if is_terminal_state and self.is_true() else 0.0
+    def step(self, symbol: Interpretation) -> Tuple[State, float]:
+        """
+        Do a step.
 
-        if self.reward_shaping:
-            previous_potential = self.dfa.potential_function(
-                self._previous_state, is_terminal_state=False
-            )
-            current_potential = self.dfa.potential_function(
-                self._cur_state,
-                is_terminal_state=is_terminal_state and self.zero_terminal_state,
-            )
-            return (
-                current_potential
-                - previous_potential
-                + (reward if is_terminal_state and self.zero_terminal_state else 0)
-            )
-        else:
-            return reward
-
-    def is_failed(self):
-        """Check if the simulation is failed."""
-        return super().is_failed() or self._cur_state in self.dfa.failure_states
-
-
-def _compute_levels(dfa: DFA, property_states):
-    """Compute details from the DFA.
-
-    The details are:
-    - distance to the goal
-    - maximum distance
-    - reachability
-
-    :param dfa: the
-    :param property_states:
-    :return: Three values:
-           | - a dictionary from the automaton states to
-           |   the distance from any goal
-           | - the maximum distance of a state from any goal
-           | - the set of failure states.
-    """
-    assert property_states.issubset(dfa.states)
-    level = 0
-    state2level = {final_state: level for final_state in property_states}
-
-    z_current = set()  # type: Set
-    z_next = set(property_states)
-    while z_current != z_next:
-        level += 1
-        z_current = z_next
-        z_next = copy(z_current)
-        for s in dfa.states:
-            if s in z_current:
-                continue
-            for a in dfa.transition_function.get(s, []):
-                next_state = dfa.transition_function[s][a]
-                if next_state in z_current:
-                    z_next.add(s)
-                    state2level[s] = level
-
-    z_current = z_next
-
-    max_level = level - 1
-
-    # levels for failure state (i.e. that cannot reach a final state)
-    failure_states = set()
-    for s in filter(lambda x: x not in z_current, dfa.states):
-        state2level[s] = level
-        failure_states.add(s)
-
-    return state2level, max_level, failure_states
+        :param symbol: the symbol to read.
+        :return: the new state and the generated reward signal.
+        """
+        next_state = self.reward_machine.get_successor(self._current_state, symbol)
+        reward = self.reward_machine.get_reward(self._current_state, symbol, next_state)
+        self._current_state = next_state
+        return next_state, reward
