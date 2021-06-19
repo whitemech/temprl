@@ -20,4 +20,12 @@
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-"""Tests for the `temprl` package."""
+"""This module contains the definition of custom types."""
+from typing import AbstractSet, Any, Callable, Hashable
+
+Interpretation = AbstractSet[Hashable]
+Observation = Any
+Action = Any
+FluentExtractor = Callable[[Observation, Action], Interpretation]
+
+State = Any

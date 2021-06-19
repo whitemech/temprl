@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Marco Favorito
+# Copyright 2020-2021 Marco Favorito
 #
 # ------------------------------
 #
@@ -40,7 +40,7 @@ from pathlib import Path
 HEADER_REGEX = r"""(#!/usr/bin/env python3
 )?# -\*- coding: utf-8 -\*-
 #
-# Copyright 2020 Marco Favorito
+# Copyright 2020-2021 Marco Favorito
 #
 # ------------------------------
 #
@@ -70,7 +70,7 @@ def check_copyright(file: Path) -> bool:
     optionally prefixed by the shebang. Return False otherwise.
 
     :param file: the file to check.
-    :return True if the file is compliant with the checks, False otherwise.
+    :returns: True if the file is compliant with the checks, False otherwise.
     """
     content = file.read_text()
     header_regex = re.compile(HEADER_REGEX, re.MULTILINE)

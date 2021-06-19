@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Marco Favorito
+# Copyright 2020-2021 Marco Favorito
 #
 # ------------------------------
 #
@@ -133,9 +133,15 @@ class GymTestObsWrapper(gym.ObservationWrapper):
 def q_function_learn(
     env: gym.Env, nb_episodes=100, alpha=0.1, eps=0.1, gamma=0.9
 ) -> Dict[Any, np.ndarray]:
-    """Learn a Q-function from a Gym env using vanilla Q-Learning.
+    """
+    Learn a Q-function from a Gym env using vanilla Q-Learning.
 
-    :return the Q function: a dictionary from states to array of Q values for every action.
+    :param env: the environment
+    :param nb_episodes: the number of episodes
+    :param alpha: the learning rate
+    :param eps: the epsilon parameter in eps-greedy exploration
+    :param gamma: the discount factor
+    :returns: the Q function, a dictionary from states to array of Q values for every action.
     """
     nb_actions = env.action_space.n
     Q: Dict[Any, np.ndarray] = defaultdict(
@@ -168,9 +174,13 @@ def q_function_learn(
 def q_function_test(
     env: gym.Env, Q: Dict[Any, np.ndarray], nb_episodes=10
 ) -> np.ndarray:
-    """Test a Q-function against a Gym env.
+    """
+    Test a Q-function against a Gym env.
 
-    :return a list of rewards collected for every episode.
+    :param env: the environment
+    :param Q: the action-value function
+    :param nb_episodes: the number of episodes
+    :returns: a list of rewards collected for every episode.
     """
     rewards = np.array([])
     for _ in range(nb_episodes):

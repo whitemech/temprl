@@ -36,8 +36,7 @@ include = []
 python = "^3.7"
 gym = "^0.17.2"
 numpy = "^1.19.0"
-flloat = "==0.2.3"
-pythomata = "==0.2.0"
+pythomata = "0.3.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0.1"
@@ -64,6 +63,7 @@ ipython = "^7.18.1"
 jupyter = "^1.0.0"
 mknotebooks = "^0.6.0"
 mkdocs-bibtex = { git = "https://github.com/marcofavorito/mkdocs-bibtex.git", branch = "master" }
+darglint = "^1.8.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
