@@ -21,11 +21,11 @@
 #
 
 """This module contains the definition of custom types."""
-from typing import AbstractSet, Any, Callable, Hashable
+from typing import AbstractSet, Any, Callable, Hashable, Optional
 
 Interpretation = AbstractSet[Hashable]
 Observation = Any
 Action = Any
-FluentExtractor = Callable[[Observation, Action], Interpretation]
+FluentExtractor = Callable[[Observation, Optional[Action]], Interpretation]
 
 State = Any
