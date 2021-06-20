@@ -1,14 +1,16 @@
 site_name: temprl
+site_url: https://whitemech.github.io/temprl
 repo_name: 'whitemech/temprl'
 repo_url: https://github.com/whitemech/temprl
 
 nav:
 - Home: index.md
+- Examples:
+    Taxi: example-taxi.ipynb
 - Authors: authors.md
 - How to contribute: contributing.md
 - Changelog: history.md
 - References: references.md
-
 
 plugins:
 - mknotebooks:
