@@ -61,7 +61,7 @@ markdown_include = "^0.6.0"
 mkdocs-material = "^5.5.11"
 ipython = "^7.18.1"
 jupyter = "^1.0.0"
-mknotebooks = "^0.6.0"
+mknotebooks = "^0.7.0"
 mkdocs-bibtex = { git = "https://github.com/marcofavorito/mkdocs-bibtex.git", branch = "master" }
 darglint = "^1.8.0"
 
