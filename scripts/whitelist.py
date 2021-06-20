@@ -1,4 +1,7 @@
+# flake8: noqa
 # type: ignore
-_.automaton  # unused property (temprl/wrapper.py:90)
-_._one_hot_encoding  # unused attribute (temprl/wrapper.py:92)
-TemporalGoalWrapper  # unused class (temprl/wrapper.py:159)
+# pylint: skip-file
+logger  # unused variable (/home/marcofavorito/workfolder/temprl/temprl/automata.py:32)
+start_state  # unused variable (/home/marcofavorito/workfolder/temprl/temprl/automata.py:45)
+logger  # unused variable (/home/marcofavorito/workfolder/temprl/temprl/wrapper.py:38)
+TemporalGoalWrapper  # unused class (/home/marcofavorito/workfolder/temprl/temprl/wrapper.py:95)
