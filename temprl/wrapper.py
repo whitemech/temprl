@@ -72,9 +72,14 @@ class TemporalGoal(ABC):
         """Get the reward."""
         return self._reward
 
-    def reset(self) -> State:
-        """Reset the simulator."""
-        return self._simulator.reset()
+    def reset(self, initial_obs: Interpretation) -> State:
+        """
+        Reset the simulator.
+
+        :param initial_obs: the fluents in the initial state.
+        :return: the temporal goal state.
+        """
+        return self._simulator.reset(initial_obs)
 
     def step(self, symbol: Interpretation) -> Tuple[State, float]:
         """
@@ -128,8 +133,6 @@ class TemporalGoalWrapper(gym.Wrapper):
     def reset(self, **_kwargs):
         """Reset the Gym environment."""
         obs = super().reset()
-        for tg in self.temp_goals:
-            tg.reset()
-
-        automata_states = [tg.reset() for tg in self.temp_goals]
+        fluents = self.fluent_extractor(obs, None)
+        automata_states = [tg.reset(fluents) for tg in self.temp_goals]
         return obs, automata_states

@@ -58,10 +58,11 @@ class AbstractRewardMachineSimulator(ABC):
     """Interface for abstract reward machine simulator."""
 
     @abstractmethod
-    def reset(self) -> State:
+    def reset(self, initial_obs: Interpretation) -> State:
         """
         Reset the simulation to its initial state.
 
+        :param initial_obs: the fluents in the initial state.
         :return: the initial state.
         """
 
@@ -177,14 +178,17 @@ class RewardDFASimulator(AbstractRewardMachineSimulator):
         self.reward_machine = dfa
         self._current_state: Optional[State] = self.reward_machine.initial_state
 
-    def reset(self) -> State:
+    def reset(self, initial_obs: Interpretation) -> State:
         """
         Reset the simulation to its initial state.
 
+        :param initial_obs: the fluents in the initial state.
         :return: the initial state.
         """
         self._current_state = self.reward_machine.initial_state
-        return self._current_state
+        next_state, _reward = self.step(initial_obs)
+        self._current_state = next_state
+        return next_state
 
     def step(self, symbol: Interpretation) -> Tuple[State, float]:
         """
