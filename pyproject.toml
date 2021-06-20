@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "temprl"
-version = "0.2.3"
+version = "0.3.0"
 description = "Framework for Reinforcement Learning with Temporal Goals."
 authors = ["MarcoFavorito <marco.favorito@gmail.com>"]
 license = "LGPL-3.0-or-later"

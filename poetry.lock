@@ -845,7 +845,6 @@ pypandoc = ">=1.5"
 reference = "eaac92d5a5fd73b34d20565bfc6e75bbdabac87e"
 type = "git"
 url = "https://github.com/marcofavorito/mkdocs-bibtex.git"
-
 [[package]]
 category = "dev"
 description = "A Material Design theme for MkDocs"
@@ -1144,7 +1143,7 @@ wcwidth = "*"
 [[package]]
 category = "dev"
 description = "Run a subprocess in a pseudo terminal"
-marker = "python_version >= \"3.3\" and sys_platform != \"win32\" or sys_platform != \"win32\" or os_name != \"nt\" or python_version >= \"3.3\" and sys_platform != \"win32\" and (python_version >= \"3.3\" and sys_platform != \"win32\" or sys_platform != \"win32\")"
+marker = "sys_platform != \"win32\" or os_name != \"nt\" or python_version >= \"3.3\" and sys_platform != \"win32\""
 name = "ptyprocess"
 optional = false
 python-versions = "*"
