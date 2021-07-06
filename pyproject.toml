@@ -34,7 +34,7 @@ include = []
 
 [tool.poetry.dependencies]
 python = "^3.7"
-gym = "^0.17.2"
+gym = ">=0.17.2"
 numpy = "^1.19.0"
 flloat = "^0.3.0"
 pythomata = "^0.3.0"
