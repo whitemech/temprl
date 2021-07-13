@@ -113,7 +113,7 @@ class StepController:
     def check(self,
               fluents: [Set[str]]) -> bool:
         """
-        Check if the step on the DFA can take place
+        Check if the step on the DFA can take place.
 
         :param fluents: A set of fluents
         :return:
