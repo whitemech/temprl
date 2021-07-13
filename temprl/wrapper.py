@@ -96,22 +96,44 @@ class TemporalGoal(ABC):
 
 
 class StepController:
+    """ A class that allows to control the steps to be done by the temporal goals. """
     def __init__(self,
                  step_func: Callable[[Set[str]], bool],
                  allow_first: bool = True):
+        """
+        Create the StepController.
+
+        :param step_func: A function that takes a set of fluents and returns a boolean
+        :param allow_first: If True, the first step always takes place
+        """
         self.started = False
         self.step_func = step_func
         self.allow_first = allow_first
 
     def check(self,
-              fluents) -> bool:
+              fluents: [Set[str]]) -> bool:
+        """
+        Check if the step on the DFA can take place
+
+        :param fluents: A set of fluents
+        :return:
+        """
         if self.allow_first and not self.started:
+            # always allow the first step
             self.started = True
             return True
-        may_step = self.step_func(fluents)
-        return self.started and may_step
+        elif not self.started:
+            # otherwise, if no step ever took place, check if it can start
+            self.started = self.step_func(fluents)
+            return self.started
+        else:
+            # else, simply check with the step function
+            return self.step_func(fluents)
 
     def reset(self):
+        """
+        Reset the StepController
+        """
         self.started = False
 
 
