@@ -23,7 +23,7 @@
 """Main module."""
 import logging
 from abc import ABC
-from typing import List, Tuple
+from typing import List, Tuple, Callable, Set
 
 import gym
 from gym.spaces import Discrete, MultiDiscrete
@@ -90,6 +90,29 @@ class TemporalGoal(ABC):
         """
         return self._simulator.step(symbol)
 
+    def current_dfa_state(self) -> State:
+        return self._simulator._current_state
+
+
+class StepController:
+    def __init__(self,
+                 step_func: Callable[[Set[str]], bool],
+                 allow_first: bool = True):
+        self.started = False
+        self.step_func = step_func
+        self.allow_first = allow_first
+
+    def check(self,
+              fluents) -> bool:
+        if self.allow_first and not self.started:
+            self.started = True
+            return True
+        may_step = self.step_func(fluents)
+        return self.started and may_step
+
+    def reset(self):
+        self.started = False
+
 
 class TemporalGoalWrapper(gym.Wrapper):
     """Gym wrapper to include a temporal goal in the environment."""
@@ -99,6 +122,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         env: gym.Env,
         temp_goals: List[TemporalGoal],
         fluent_extractor: FluentExtractor,
+        step_controller: StepController
     ):
         """
         Wrap a Gym environment with a temporal goal.
@@ -112,6 +136,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         super().__init__(env)
         self.temp_goals = temp_goals
         self.fluent_extractor: FluentExtractor = fluent_extractor
+        self.step_controller = step_controller
         self.observation_space = self._get_observation_space()
 
     def _get_observation_space(self) -> gym.spaces.Space:
@@ -123,7 +148,8 @@ class TemporalGoalWrapper(gym.Wrapper):
         """Do a step in the Gym environment."""
         obs, reward, done, info = super().step(action)
         fluents = self.fluent_extractor(obs, action)
-        states_and_rewards = [tg.step(fluents) for tg in self.temp_goals]
+        states_and_rewards = [tg.step(fluents) if self.step_controller.check(fluents) else (tg.current_dfa_state(), 0.)
+                              for tg in self.temp_goals]
         next_automata_states, temp_goal_rewards = zip(*states_and_rewards)
         total_goal_rewards = sum(temp_goal_rewards)
         obs_prime = (obs, next_automata_states)
