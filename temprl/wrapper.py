@@ -91,6 +91,7 @@ class TemporalGoal(ABC):
         return self._simulator.step(symbol)
 
     def current_dfa_state(self) -> State:
+        """Get the current DFA state."""
         return self._simulator._current_state
 
 
