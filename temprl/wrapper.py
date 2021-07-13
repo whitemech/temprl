@@ -132,7 +132,7 @@ class StepController:
 
     def reset(self):
         """
-        Reset the StepController
+        Reset the StepController.
         """
         self.started = False
 
