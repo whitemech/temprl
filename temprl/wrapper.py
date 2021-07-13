@@ -23,7 +23,7 @@
 """Main module."""
 import logging
 from abc import ABC
-from typing import List, Tuple, Callable, Set
+from typing import List, Tuple, Callable, Set, Optional
 
 import gym
 from gym.spaces import Discrete, MultiDiscrete
@@ -122,7 +122,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         env: gym.Env,
         temp_goals: List[TemporalGoal],
         fluent_extractor: FluentExtractor,
-        step_controller: StepController
+        step_controller: Optional[StepController]
     ):
         """
         Wrap a Gym environment with a temporal goal.
@@ -136,7 +136,8 @@ class TemporalGoalWrapper(gym.Wrapper):
         super().__init__(env)
         self.temp_goals = temp_goals
         self.fluent_extractor: FluentExtractor = fluent_extractor
-        self.step_controller = step_controller
+        self.step_controller = step_controller if step_controller else StepController(step_func=lambda fluents: True,
+                                                                                      allow_first=True)
         self.observation_space = self._get_observation_space()
 
     def _get_observation_space(self) -> gym.spaces.Space:
