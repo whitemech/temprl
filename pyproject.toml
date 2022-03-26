@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "temprl"
-version = "0.2.3"
+version = "0.3.0"
 description = "Framework for Reinforcement Learning with Temporal Goals."
 authors = ["MarcoFavorito <marco.favorito@gmail.com>"]
 license = "LGPL-3.0-or-later"
@@ -35,9 +35,8 @@ include = []
 [tool.poetry.dependencies]
 python = "^3.7"
 gym = ">=0.17.2"
-numpy = "^1.19.0"
-flloat = "^0.3.0"
-pythomata = "^0.3.0"
+numpy = "^1.21.5"
+pythomata = "0.3.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0.1"
@@ -59,11 +58,12 @@ vulture = "^2.1"
 bandit = "^1.6.2"
 mkdocs = "^1.1.2"
 markdown_include = "^0.6.0"
-mkdocs-material = "^5.5.11"
+mkdocs-material = "^7.2"
 ipython = "^7.18.1"
 jupyter = "^1.0.0"
 mknotebooks = "^0.6.0"
 mkdocs-bibtex = { git = "https://github.com/marcofavorito/mkdocs-bibtex.git", branch = "master" }
+darglint = "^1.8.0"
 
 [build-system]
 requires = ["poetry>=0.12"]

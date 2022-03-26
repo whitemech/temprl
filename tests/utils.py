@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2020 Marco Favorito
+# Copyright 2020-2021 Marco Favorito
 #
 # ------------------------------
 #
@@ -23,11 +23,12 @@
 """Test utils."""
 from collections import defaultdict
 from enum import Enum
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, cast
 
 import gym
 import numpy as np
 from gym.spaces import Discrete, MultiDiscrete
+from numpy.typing import NDArray
 
 
 class Action(Enum):
@@ -97,7 +98,13 @@ class GymTestEnv(gym.Env):
 
         return self._current_state, reward, done, {}
 
-    def reset(self):
+    def reset(
+        self,
+        *,
+        seed: Optional[int] = None,
+        return_info: bool = False,
+        options: Optional[dict] = None,
+    ):
         """Reset the Gym env."""
         self._current_state = 0
         self.counter = 0
@@ -106,9 +113,7 @@ class GymTestEnv(gym.Env):
 
     def render(self, mode="human"):
         """Render the current state of the environment."""
-        print(
-            "Current state={}, action={}".format(self._current_state, self._last_action)
-        )
+        print(f"Current state={self._current_state}, action={self._last_action}")
 
 
 class GymTestObsWrapper(gym.ObservationWrapper):
@@ -123,7 +128,9 @@ class GymTestObsWrapper(gym.ObservationWrapper):
         """Initialize the wrapper."""
         super().__init__(GymTestEnv(n_states))
 
-        self.observation_space = MultiDiscrete((self.env.observation_space.n,))
+        self.observation_space = MultiDiscrete(
+            [cast(Discrete, self.env.observation_space).n]
+        )
 
     def observation(self, observation):
         """Wrap the observation."""
@@ -133,11 +140,17 @@ class GymTestObsWrapper(gym.ObservationWrapper):
 def q_function_learn(
     env: gym.Env, nb_episodes=100, alpha=0.1, eps=0.1, gamma=0.9
 ) -> Dict[Any, np.ndarray]:
-    """Learn a Q-function from a Gym env using vanilla Q-Learning.
-
-    :return the Q function: a dictionary from states to array of Q values for every action.
     """
-    nb_actions = env.action_space.n
+    Learn a Q-function from a Gym env using vanilla Q-Learning.
+
+    :param env: the environment
+    :param nb_episodes: the number of episodes
+    :param alpha: the learning rate
+    :param eps: the epsilon parameter in eps-greedy exploration
+    :param gamma: the discount factor
+    :returns: the Q function, a dictionary from states to array of Q values for every action.
+    """
+    nb_actions = cast(Discrete, env.action_space).n
     Q: Dict[Any, np.ndarray] = defaultdict(
         lambda: np.random.randn(
             nb_actions,
@@ -148,15 +161,14 @@ def q_function_learn(
     def choose_action(state):
         if np.random.random() < eps:
             return np.random.randint(0, nb_actions)
-        else:
-            return np.argmax(Q[state])
+        return np.argmax(Q[state])
 
     for _ in range(nb_episodes):
         state = env.reset()
         done = False
         while not done:
             action = choose_action(state)
-            state2, reward, done, info = env.step(action)
+            state2, reward, done, _info = env.step(action)
             Q[state][action] += alpha * (
                 reward + gamma * np.max(Q[state2]) - Q[state][action]
             )
@@ -168,18 +180,22 @@ def q_function_learn(
 def q_function_test(
     env: gym.Env, Q: Dict[Any, np.ndarray], nb_episodes=10
 ) -> np.ndarray:
-    """Test a Q-function against a Gym env.
-
-    :return a list of rewards collected for every episode.
     """
-    rewards = np.array([])
+    Test a Q-function against a Gym env.
+
+    :param env: the environment
+    :param Q: the action-value function
+    :param nb_episodes: the number of episodes
+    :returns: a list of rewards collected for every episode.
+    """
+    rewards: NDArray[np.float64] = np.array([])
     for _ in range(nb_episodes):
         state = env.reset()
-        total_reward = 0
+        total_reward = 0.0
         done = False
         while not done:
             action = np.argmax(Q[state])
-            state2, reward, done, info = env.step(action)
+            state2, reward, done, _info = env.step(action)
             total_reward += reward
             state = state2
 
