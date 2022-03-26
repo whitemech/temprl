@@ -63,12 +63,12 @@ class TemporalGoal(ABC):
         return Discrete(len(self._automaton.states))
 
     @property
-    def automaton(self):
+    def automaton(self) -> RewardDFA:
         """Get the automaton."""
         return self._automaton
 
     @property
-    def reward(self):
+    def reward(self) -> float:
         """Get the reward."""
         return self._reward
 
@@ -117,7 +117,9 @@ class TemporalGoalWrapper(gym.Wrapper):
     def _get_observation_space(self) -> gym.spaces.Space:
         """Return the observation space."""
         temp_goals_shape = tuple(tg.observation_space.n for tg in self.temp_goals)
-        return GymTuple((self.env.observation_space, MultiDiscrete(temp_goals_shape)))
+        return GymTuple(
+            (self.env.observation_space, MultiDiscrete(list(temp_goals_shape)))
+        )
 
     def step(self, action):
         """Do a step in the Gym environment."""

@@ -23,6 +23,7 @@
 """Tests for `temprl` package."""
 
 import numpy as np
+import sympy
 from gym.spaces import MultiDiscrete
 from pythomata.impl.symbolic import SymbolicDFA
 
@@ -105,21 +106,27 @@ class TestTempRLWithSimpleEnv:
 
     def test_observation_space(self):
         """Test that the combined observation space is computed as expected."""
-        assert MultiDiscrete((5, 6)) == self.wrapped.observation_space
+        assert MultiDiscrete([5, 6]) == self.wrapped.observation_space
 
     def test_temporal_goal_reward(self):
         """Test that the 'reward' property of the temporal goal works correctly."""
-        assert 10.0 == self.tg.reward
+        assert self.tg.reward == 10.0
 
     def test_temporal_goal_automaton(self):
         """Test that the 'automaton' property of the temporal goal works correctly."""
         assert isinstance(self.tg.automaton, RewardDFA)
+        assert self.tg.automaton.accepting_states == {3}
+        assert self.tg.automaton.get_transitions_from(0) == {
+            (0, sympy.parse_expr("s4 & ~s3"), 4),
+            (0, sympy.parse_expr("~s4 & ~s3"), 0),
+            (0, sympy.parse_expr("s3"), 1),
+        }
 
     def test_learning_wrapped_env(self):
         """Test that learning with the unwrapped env is feasible."""
         Q = q_function_learn(self.wrapped, nb_episodes=5000, eps=0.5)
         history = q_function_test(self.wrapped, Q, nb_episodes=10)
-        print("Reward history: {}".format(history))
+        print(f"Reward history: {history}")
         assert np.isclose(np.average(history), 11.0)
 
     @classmethod
