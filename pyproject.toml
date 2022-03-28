@@ -63,7 +63,7 @@ ipython = "^7.18.1"
 jupyter = "^1.0.0"
 mknotebooks = "^0.6.0"
 mkdocs-bibtex = { git = "https://github.com/marcofavorito/mkdocs-bibtex.git", branch = "master" }
-darglint = "^1.8.0"
+darglint = "^1.8.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
