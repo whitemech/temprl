@@ -39,7 +39,7 @@ numpy = "^1.19.0"
 pythomata = "0.3.2"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.0.1"
+pytest = "^7.1.1"
 pytest-cov = "^2.10.1"
 pytest-randomly = "^3.4.1"
 tox = "^3.19.0"
