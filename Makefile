@@ -81,7 +81,7 @@ bandit: ## run bandit
 	bandit temprl tests scripts
 
 safety: ## run safety
-	safety check
+	safety check -i 44715 -i 44716 -i 44717
 
 pylint: ## run pylint
 	pylint temprl tests scripts
