@@ -67,13 +67,13 @@ Install the package:
 - with `pip` from GitHub:
 
 
-        pip3 install git+https://github.com/sapienza-rl/temprl.git
+        pip3 install git+https://github.com/whitemech/temprl.git
 
 
 - or, clone the repository and install:
 
 
-        git clone htts://github.com/sapienza-rl/temprl.git
+        git clone htts://github.com/whitemech/temprl.git
         cd temprl
         pip install .
 
