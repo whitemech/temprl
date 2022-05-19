@@ -6,4 +6,7 @@
 
 ## Contributors
 
-None yet. [Why not be the first](./contributing.md)? 
+* [Roberto Cipollone](https://github.com/cipollone) <[cipollone@diag.uniroma1.it]([cipollone@diag.uniroma1.it)>
+* [Roberto Gallotta](https://github.com/gallorob) <[gallotta.1890251@studenti.uniroma1.it]([gallotta.1890251@studenti.uniroma1.it )>
+
+[Why not be another contributor](./contributing.md)? 

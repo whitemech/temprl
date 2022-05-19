@@ -1,5 +1,28 @@
 # History
 
+## 0.4.0 (2021-05-19)
+
+* The package now requires Python 3.8+. This allowed to upgrade 
+  some dependencies like `gym>=0.17.2` and `numpy>=1.22.2`.
+* Used `pythomata` at version `>=0.3.0`.
+* Introduced better abstract classes and interfaces for supporting reward machines.
+  * The base classes and interfaces can be found in `temprl.reward_machines.base`.
+    `AbstractRewardMachine` is not coupled with `pythomata.DFA`, giving the developer
+    more flexibility on how to implement its own reward machine. Analogously,
+    `AbstractRewardMachineSimulator` is a pure interface for the simulation of a 
+    reward machine, which is ultimately used by the `TemporalGoal` class.
+    Anyway, the library provides a concrete class `RewardMachineSimulator(AbstractRewardMachineSimulator)`
+    which should satisfy most of the use cases regarding the RM simulator.
+  * In `temprl.reward_machines.automata`, the library provides an implementation of `AbstractRewardMachine`,
+    called `RewardAutomaton`, which is based on `pythomata.DFA` to represent the reward machine structure.
+* Introduced `AbstractStepController`, which allows to filter out certain fluents observations from the RM perspective.
+  The library provides two implementations: `StatelessStepController`, which behaves the same regardless of the 
+  history of the trajectory, and `StatefulStepController`, which is based on a `pythomata.DFA` instance and accepts
+  a fluents configuration if after reading it the simulation is in an accepting state.
+* Improved linting by adding Pylint checks.
+* Other misc fixes to minor issues.
+
+
 ## 0.3.0 (2021-06-20)
 
 * Simplify APIs of `TemporalWrapper`: remove `feature_extractor` and 

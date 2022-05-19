@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 #
-# Copyright 2020-2021 Marco Favorito
+# Copyright 2020-2022 Marco Favorito
 #
 # ------------------------------
 #
@@ -21,4 +20,4 @@
 #
 """Top-level package for TempRL."""
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
