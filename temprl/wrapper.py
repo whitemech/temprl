@@ -111,13 +111,12 @@ class StepController:
             # always allow the first step
             self.started = True
             return True
-        elif not self.started:
+        if not self.started:
             # otherwise, if no step ever took place, check if it can start
             self.started = self.step_func(fluents)
             return self.started
-        else:
-            # else, simply check with the step function
-            return self.step_func(fluents)
+        # else, simply check with the step function
+        return self.step_func(fluents)
 
     def reset(self):
         """Reset the StepController."""

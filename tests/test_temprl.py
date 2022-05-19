@@ -121,7 +121,7 @@ class TestTempRLWithSimpleEnv:
         """Test that learning with the unwrapped env is feasible."""
         Q = q_function_learn(self.wrapped, nb_episodes=5000, eps=0.5)
         history = q_function_test(self.wrapped, Q, nb_episodes=10)
-        print("Reward history: {}".format(history))
+        print(f"Reward history: {history}")
         assert np.isclose(np.average(history), 11.0)
 
     @classmethod

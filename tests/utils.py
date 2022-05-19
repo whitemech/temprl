@@ -43,7 +43,7 @@ class Action(Enum):
         return 0 if self == self.NOP else -1 if self == self.LEFT else 1
 
 
-class GymTestEnv(gym.Env):
+class GymTestEnv(gym.Env[int, int]):
     """
     A class that implements a simple Gym environment.
 
@@ -98,7 +98,13 @@ class GymTestEnv(gym.Env):
 
         return self._current_state, reward, done, {}
 
-    def reset(self):
+    def reset(
+        self,
+        *,
+        seed: Optional[int] = None,
+        return_info: bool = False,
+        options: Optional[dict] = None,
+    ) -> int:
         """Reset the Gym env."""
         self._current_state = 0
         self.counter = 0
@@ -107,9 +113,7 @@ class GymTestEnv(gym.Env):
 
     def render(self, mode="human"):
         """Render the current state of the environment."""
-        print(
-            "Current state={}, action={}".format(self._current_state, self._last_action)
-        )
+        print(f"Current state={self._current_state}, action={self._last_action}")
 
 
 class GymTestObsWrapper(gym.ObservationWrapper):

@@ -43,7 +43,9 @@ class _MetaRewardMachine(ABCMeta):
         return instance
 
     @classmethod
-    def _check_initial_states_in_states(mcs, instance: "AbstractRewardMachine"):
+    def _check_initial_states_in_states(
+        mcs, instance: "AbstractRewardMachine"
+    ):  # pylint: disable=bad-mcs-classmethod-argument
         """Check the initial state of a RM is in the set of states."""
         enforce(
             instance.initial_state in instance.states,
