@@ -133,7 +133,7 @@ class TestTempRLWithSimpleEnv:
             (0, sympy.parse_expr("~s4 & ~s3"), 0),
             (0, sympy.parse_expr("s3"), 1),
         }
-        self.tg.reset(set())
+        self.tg.reset()
         assert self.tg.current_state == self.reward_machine.initial_state
 
     def test_learning_wrapped_env(self) -> None:

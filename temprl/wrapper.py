@@ -21,14 +21,17 @@
 
 """Main module."""
 import logging
-from typing import Callable, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import gym
+from gym.core import ActType
 from gym.spaces import Discrete, MultiDiscrete
 from gym.spaces import Tuple as GymTuple
 
 from temprl.reward_machines.base import AbstractRewardMachine, RewardMachineSimulator
-from temprl.types import FluentExtractor, Interpretation, State
+from temprl.step_controllers.base import AbstractStepController
+from temprl.step_controllers.stateless import StatelessStepController
+from temprl.types import FluentExtractor, Interpretation, Observation, State
 
 logger = logging.getLogger(__name__)
 
@@ -65,14 +68,13 @@ class TemporalGoal:
         """Get the current state."""
         return self._simulator.current_state
 
-    def reset(self, initial_obs: Interpretation) -> State:
+    def reset(self) -> None:
         """
         Reset the simulator.
 
-        :param initial_obs: the fluents in the initial state.
         :return: the temporal goal state.
         """
-        return self._simulator.reset(initial_obs)
+        return self._simulator.reset()
 
     def step(self, symbol: Interpretation) -> Tuple[State, float]:
         """
@@ -84,45 +86,6 @@ class TemporalGoal:
         return self._simulator.step(symbol)
 
 
-class StepController:
-    """A class that allows to control the steps to be done by the temporal goals."""
-
-    def __init__(
-        self, step_func: Callable[[Interpretation], bool], allow_first: bool = True
-    ):
-        """
-        Create the StepController.
-
-        :param step_func: A function that takes a set of fluents and returns a boolean
-        :param allow_first: If True, the first step always takes place
-        """
-        self.started = False
-        self.step_func = step_func
-        self.allow_first = allow_first
-
-    def check(self, fluents: Interpretation) -> bool:
-        """
-        Check if the step on the DFA can take place.
-
-        :param: fluents: A set of fluents
-        :return: True if the step can be taken, False otherwise
-        """
-        if self.allow_first and not self.started:
-            # always allow the first step
-            self.started = True
-            return True
-        if not self.started:
-            # otherwise, if no step ever took place, check if it can start
-            self.started = self.step_func(fluents)
-            return self.started
-        # else, simply check with the step function
-        return self.step_func(fluents)
-
-    def reset(self):
-        """Reset the StepController."""
-        self.started = False
-
-
 class TemporalGoalWrapper(gym.Wrapper):
     """Gym wrapper to include a temporal goal in the environment."""
 
@@ -131,7 +94,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         env: gym.Env,
         temp_goals: List[TemporalGoal],
         fluent_extractor: FluentExtractor,
-        step_controller: Optional[StepController] = None,
+        step_controller: Optional[AbstractStepController] = None,
     ):
         """
         Wrap a Gym environment with a temporal goal.
@@ -150,7 +113,9 @@ class TemporalGoalWrapper(gym.Wrapper):
         self.step_controller = (
             step_controller
             if step_controller
-            else StepController(step_func=lambda fluents: True, allow_first=True)
+            else StatelessStepController(
+                step_func=lambda fluents: True, allow_first=True
+            )
         )
         self.observation_space = self._get_observation_space()
 
@@ -161,13 +126,13 @@ class TemporalGoalWrapper(gym.Wrapper):
             (self.env.observation_space, MultiDiscrete(list(temp_goals_shape)))
         )
 
-    def step(self, action):
+    def step(self, action: ActType) -> Tuple[Observation, float, bool, dict]:
         """Do a step in the Gym environment."""
         obs, reward, done, info = super().step(action)
         fluents = self.fluent_extractor(obs, action)
         states_and_rewards = [
             tg.step(fluents)
-            if self.step_controller.check(fluents)
+            if self.step_controller.step(fluents)
             else (tg.current_state, 0.0)
             for tg in self.temp_goals
         ]
@@ -177,9 +142,18 @@ class TemporalGoalWrapper(gym.Wrapper):
         reward_prime = reward + total_goal_rewards
         return obs_prime, reward_prime, done, info
 
-    def reset(self, **_kwargs):
-        """Reset the Gym environment."""
-        obs = super().reset()
-        fluents = self.fluent_extractor(obs, None)
-        automata_states = [tg.reset(fluents) for tg in self.temp_goals]
+    def reset(self, **kwargs) -> Observation:
+        """
+        Reset the Gym environment.
+
+        The reward machine is synchronized starting from the second state of the trajectory.
+
+        :param kwargs: the keyword arguments of the reset function.
+        :return: the new initial state.
+        """
+        obs = super().reset(**kwargs)
+        for tg in self.temp_goals:
+            tg.reset()
+        automata_states = [tg.current_state for tg in self.temp_goals]
+        self.step_controller.reset()
         return obs, automata_states
