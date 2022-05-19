@@ -23,6 +23,7 @@
 """Tests for `temprl` package."""
 
 import numpy as np
+import sympy
 from gym.spaces import MultiDiscrete
 from pythomata.impl.symbolic import SymbolicDFA
 
@@ -116,6 +117,11 @@ class TestTempRLWithSimpleEnv:
     def test_temporal_goal_automaton(self):
         """Test that the 'automaton' property of the temporal goal works correctly."""
         assert isinstance(self.tg.automaton, AbstractRewardMachine)
+        assert self.tg.automaton.get_transitions_from(0) == {
+            (0, sympy.parse_expr("s4 & ~s3"), 4),
+            (0, sympy.parse_expr("~s4 & ~s3"), 0),
+            (0, sympy.parse_expr("s3"), 1),
+        }
 
     def test_learning_wrapped_env(self):
         """Test that learning with the unwrapped env is feasible."""
