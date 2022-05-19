@@ -19,4 +19,4 @@
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-"""Tests for the `temprl` package."""
+"""This package contains the interfaces and implementations for the step controller."""

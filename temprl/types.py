@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 #
-# Copyright 2020-2021 Marco Favorito
+# Copyright 2020-2022 Marco Favorito
 #
 # ------------------------------
 #
@@ -21,11 +20,15 @@
 #
 
 """This module contains the definition of custom types."""
-from typing import AbstractSet, Any, Callable, Hashable, Optional
+from typing import AbstractSet, Callable, Hashable, Optional, Tuple
 
-Interpretation = AbstractSet[Hashable]
-Observation = Any
-Action = Any
+# reward machine typing
+State = Hashable
+Symbol = Hashable
+Guard = Hashable
+TransitionType = Tuple[State, Guard, State]
+
+Interpretation = AbstractSet[Symbol]
+Observation = Hashable
+Action = Hashable
 FluentExtractor = Callable[[Observation, Optional[Action]], Interpretation]
-
-State = Any

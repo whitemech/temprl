@@ -19,4 +19,4 @@
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-"""Tests for the `temprl` package."""
+"""Submodule that contains interfaces and implementations for reward machine support."""

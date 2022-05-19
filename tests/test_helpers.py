@@ -19,4 +19,14 @@
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-"""Tests for the `temprl` package."""
+"""Tests for `temprl.helpers` module."""
+import pytest
+
+from temprl.helpers import enforce
+
+
+def test_enforce_negative() -> None:
+    """Test 'enforce' raises exception."""
+    error_message = "some error message here"
+    with pytest.raises(ValueError, match=error_message):
+        enforce(1 == 2, error_message, exception_cls=ValueError)

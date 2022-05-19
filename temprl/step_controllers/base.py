@@ -19,4 +19,25 @@
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-"""Tests for the `temprl` package."""
+"""This module contains the AbstractStepController interface."""
+
+from abc import abstractmethod
+
+from temprl.types import Interpretation
+
+
+class AbstractStepController:
+    """A class that allows to control the steps to be done by the temporal goals."""
+
+    @abstractmethod
+    def step(self, fluents: Interpretation) -> bool:
+        """
+        Update the step controller and check whether the step on the DFA can take place.
+
+        :param: fluents: A set of fluents
+        :return: True if the step can be taken, False otherwise
+        """
+
+    @abstractmethod
+    def reset(self) -> None:
+        """Reset the StepController."""

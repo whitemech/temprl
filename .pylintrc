@@ -3,7 +3,7 @@ ignore-patterns=
 ignore=
 
 [MESSAGES CONTROL]
-disable=C0103 # C0301,R0801,W1514,W1505
+disable=C0103,R0902 # C0301,R0801,W1514,W1505
 
 # See here for more options: https://www.codeac.io/documentation/pylint-configuration.html
 
@@ -20,7 +20,7 @@ max-locals=20
 # max-statements=80
 # max-parents=10
 # max-branches=24
-max-attributes=8
+# max-attributes=8
 
 [REFACTORING]
 # max-nested-blocks=6

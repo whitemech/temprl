@@ -19,4 +19,13 @@
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-"""Tests for the `temprl` package."""
+"""Helper functions."""
+from typing import Type
+
+
+def enforce(
+    condition: bool, message: str = "", exception_cls: Type[Exception] = AssertionError
+):
+    """User-defined assert."""
+    if not condition:
+        raise exception_cls(message)

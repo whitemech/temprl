@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 #
-# Copyright 2020-2021 Marco Favorito
+# Copyright 2020-2022 Marco Favorito
 #
 # ------------------------------
 #
@@ -43,7 +42,7 @@ class Action(Enum):
         return 0 if self == self.NOP else -1 if self == self.LEFT else 1
 
 
-class GymTestEnv(gym.Env):
+class GymTestEnv(gym.Env[int, int]):
     """
     A class that implements a simple Gym environment.
 
@@ -104,7 +103,7 @@ class GymTestEnv(gym.Env):
         seed: Optional[int] = None,
         return_info: bool = False,
         options: Optional[dict] = None,
-    ):
+    ) -> int:
         """Reset the Gym env."""
         self._current_state = 0
         self.counter = 0

@@ -103,8 +103,8 @@ and then go to [http://localhost:8000](http://localhost:8000)
 
 temprl is released under the GNU Lesser General Public License v3.0 or later (LGPLv3+).
 
-Copyright 2018-2020 Marco Favorito
+Copyright 2020-2022 Marco Favorito
 
 ## Authors
 
-- [Marco Favorito](https://whitemech.github.io/)
+- [Marco Favorito](https://marcofavorito.me/)
