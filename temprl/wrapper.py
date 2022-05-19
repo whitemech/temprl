@@ -22,55 +22,44 @@
 
 """Main module."""
 import logging
-from abc import ABC
 from typing import Callable, List, Optional, Tuple
 
 import gym
 from gym.spaces import Discrete, MultiDiscrete
 from gym.spaces import Tuple as GymTuple
-from pythomata.core import DFA
 
-from temprl.automata import RewardDFA, RewardDFASimulator
+from temprl.reward_machines.base import AbstractRewardMachine, RewardMachineSimulator
 from temprl.types import FluentExtractor, Interpretation, State
 
 logger = logging.getLogger(__name__)
 
 
-class TemporalGoal(ABC):
+class TemporalGoal:
     """Abstract class to represent a temporal goal."""
 
     def __init__(
         self,
-        reward: float,
-        automaton: DFA = None,
+        reward_machine: AbstractRewardMachine,
     ):
         """
         Initialize a temporal goal.
 
-        :param automaton: the pythomata.DFA instance. it will be
-                        | the preferred input against 'formula'.
-        :param reward: the reward associated to the temporal goal.
+        :param reward_machine: the reward
         """
-        self._automaton = RewardDFA(automaton, reward)
-        self._simulator = RewardDFASimulator(
-            self._automaton,
+        self._reward_machine = reward_machine
+        self._simulator = RewardMachineSimulator(
+            reward_machine,
         )
-        self._reward = reward
 
     @property
     def observation_space(self) -> Discrete:
         """Return the observation space of the temporal goal."""
-        return Discrete(len(self._automaton.states))
+        return Discrete(len(self._reward_machine.states))
 
     @property
-    def automaton(self):
+    def automaton(self) -> AbstractRewardMachine:
         """Get the automaton."""
-        return self._automaton
-
-    @property
-    def reward(self):
-        """Get the reward."""
-        return self._reward
+        return self._reward_machine
 
     def reset(self, initial_obs: Interpretation) -> State:
         """
@@ -92,7 +81,7 @@ class TemporalGoal(ABC):
 
     def current_dfa_state(self) -> State:
         """Get the current DFA state."""
-        return self._simulator._current_state
+        return self._simulator.current_state
 
 
 class StepController:

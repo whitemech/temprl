@@ -18,18 +18,5 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
-#
 
-"""This module contains the definition of custom types."""
-from typing import AbstractSet, Callable, Hashable, Optional, Tuple
-
-# reward machine typing
-State = Hashable
-Symbol = Hashable
-Guard = Hashable
-TransitionType = Tuple[State, Guard, State]
-
-Interpretation = AbstractSet[Symbol]
-Observation = Hashable
-Action = Hashable
-FluentExtractor = Callable[[Observation, Optional[Action]], Interpretation]
+"""Submodule that contains interfaces and implementations for reward machine support."""

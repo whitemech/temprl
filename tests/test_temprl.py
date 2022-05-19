@@ -26,7 +26,8 @@ import numpy as np
 from gym.spaces import MultiDiscrete
 from pythomata.impl.symbolic import SymbolicDFA
 
-from temprl.automata import RewardDFA
+from temprl.reward_machines.automata import RewardAutomaton
+from temprl.reward_machines.base import AbstractRewardMachine
 from temprl.wrapper import TemporalGoal, TemporalGoalWrapper
 from tests.utils import GymTestEnv, q_function_learn, q_function_test, wrap_observation
 
@@ -87,10 +88,11 @@ class TestTempRLWithSimpleEnv:
     def setup_class(cls):
         """Set the tests up."""
         cls.automaton = cls._build_automaton()
+        cls.reward = 10.0
+        cls.reward_machine = RewardAutomaton(cls.automaton, cls.reward)
         cls.env = GymTestEnv(n_states=5)
         cls.tg = TemporalGoal(
-            automaton=cls.automaton,
-            reward=10.0,
+            reward_machine=cls.reward_machine,
         )
         cls.wrapped = TemporalGoalWrapper(
             env=cls.env,
@@ -105,15 +107,15 @@ class TestTempRLWithSimpleEnv:
 
     def test_observation_space(self):
         """Test that the combined observation space is computed as expected."""
-        assert MultiDiscrete((5, 6)) == self.wrapped.observation_space
+        assert MultiDiscrete([5, 5]) == self.wrapped.observation_space
 
     def test_temporal_goal_reward(self):
         """Test that the 'reward' property of the temporal goal works correctly."""
-        assert self.tg.reward == 10.0
+        assert self.reward_machine.reward == 10.0
 
     def test_temporal_goal_automaton(self):
         """Test that the 'automaton' property of the temporal goal works correctly."""
-        assert isinstance(self.tg.automaton, RewardDFA)
+        assert isinstance(self.tg.automaton, AbstractRewardMachine)
 
     def test_learning_wrapped_env(self):
         """Test that learning with the unwrapped env is feasible."""

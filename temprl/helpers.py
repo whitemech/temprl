@@ -18,18 +18,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
-#
 
-"""This module contains the definition of custom types."""
-from typing import AbstractSet, Callable, Hashable, Optional, Tuple
+"""Helper functions."""
+from typing import Type
 
-# reward machine typing
-State = Hashable
-Symbol = Hashable
-Guard = Hashable
-TransitionType = Tuple[State, Guard, State]
 
-Interpretation = AbstractSet[Symbol]
-Observation = Hashable
-Action = Hashable
-FluentExtractor = Callable[[Observation, Optional[Action]], Interpretation]
+def enforce(
+    condition: bool, message: str = "", exception_cls: Type[Exception] = AssertionError
+):
+    """User-defined assert."""
+    if not condition:
+        raise exception_cls(message)
