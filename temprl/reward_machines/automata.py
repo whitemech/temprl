@@ -66,15 +66,6 @@ class RewardAutomaton(AbstractRewardMachine):
         dfa_symbol = {symbol_name: True for symbol_name in symbol}
         return self._automaton.get_successor(state, dfa_symbol)
 
-    @property
-    def accepting_states(self) -> AbstractSet[State]:
-        """
-        Get the set of accepting states.
-
-        :return: the set of accepting states.
-        """
-        return self._automaton.accepting_states
-
     def get_transitions_from(self, state: State) -> AbstractSet[TransitionType]:
         """
         Get the outgoing transitions from a state.

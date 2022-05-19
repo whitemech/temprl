@@ -60,6 +60,11 @@ class TemporalGoal:
         """Get the automaton."""
         return self._reward_machine
 
+    @property
+    def current_state(self) -> State:
+        """Get the current state."""
+        return self._simulator.current_state
+
     def reset(self, initial_obs: Interpretation) -> State:
         """
         Reset the simulator.
@@ -77,10 +82,6 @@ class TemporalGoal:
         :return: the generated reward signal.
         """
         return self._simulator.step(symbol)
-
-    def current_dfa_state(self) -> State:
-        """Get the current DFA state."""
-        return self._simulator.current_state
 
 
 class StepController:
@@ -167,7 +168,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         states_and_rewards = [
             tg.step(fluents)
             if self.step_controller.check(fluents)
-            else (tg.current_dfa_state(), 0.0)
+            else (tg.current_state, 0.0)
             for tg in self.temp_goals
         ]
         next_automata_states, temp_goal_rewards = zip(*states_and_rewards)
