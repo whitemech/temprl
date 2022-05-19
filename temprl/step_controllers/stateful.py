@@ -46,7 +46,7 @@ class StatefulStepController(AbstractStepController):
         :param: fluents: A set of fluents
         :return: True if the step can be taken, False otherwise
         """
-        self._simulator.step(fluents)
+        self._simulator.step({f: True for f in fluents})
         return self._simulator.is_true()
 
     def reset(self) -> None:
