@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2020-2021 Marco Favorito
+# Copyright 2020-2022 Marco Favorito
 #
 # ------------------------------
 #
@@ -38,7 +38,7 @@ from pathlib import Path
 
 HEADER_REGEX = r"""(#!/usr/bin/env python3
 )?#
-# Copyright 2020-2021 Marco Favorito
+# Copyright 2020-2022 Marco Favorito
 #
 # ------------------------------
 #
