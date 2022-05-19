@@ -34,7 +34,7 @@ include = []
 
 [tool.poetry.dependencies]
 python = "^3.7"
-gym = ">=0.17.2,<0.19"
+gym = ">=0.17.2"
 numpy = "^1.19.0"
 pythomata = "0.3.2"
 
@@ -44,7 +44,6 @@ pytest-cov = "^2.10.1"
 pytest-randomly = "^3.4.1"
 tox = "^3.19.0"
 codecov = "^2.1.9"
-black = "==20.8b1"
 mypy = "^0.782"
 isort = "^5.4.2"
 flake8 = "^3.8.3"
@@ -56,14 +55,15 @@ pylint = "^2.6.0"
 safety = "^1.9.0"
 vulture = "^2.1"
 bandit = "^1.6.2"
-mkdocs = "^1.1.2"
+mkdocs = "^1.3.0"
 markdown_include = "^0.6.0"
-mkdocs-material = "^5.5.11"
+mkdocs-material = "^7.2"
 ipython = "^7.18.1"
 jupyter = "^1.0.0"
 mknotebooks = "^0.6.0"
 mkdocs-bibtex = { git = "https://github.com/marcofavorito/mkdocs-bibtex.git", branch = "master" }
 darglint = "^1.8.0"
+black = "^22.3.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
