@@ -18,5 +18,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 """Submodule that contains interfaces and implementations for reward machine support."""

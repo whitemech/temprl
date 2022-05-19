@@ -18,6 +18,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 """Helper functions."""
 from typing import Type

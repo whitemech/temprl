@@ -18,6 +18,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with temprl.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 """Base classes and interfaces for reward machines."""
 from abc import ABC, ABCMeta, abstractmethod
