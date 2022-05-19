@@ -23,7 +23,7 @@
 """Main module."""
 import logging
 from abc import ABC
-from typing import List, Tuple, Callable, Set, Optional
+from typing import Callable, List, Optional, Tuple
 
 import gym
 from gym.spaces import Discrete, MultiDiscrete
@@ -96,10 +96,11 @@ class TemporalGoal(ABC):
 
 
 class StepController:
-    """ A class that allows to control the steps to be done by the temporal goals. """
-    def __init__(self,
-                 step_func: Callable[[Set[str]], bool],
-                 allow_first: bool = True):
+    """A class that allows to control the steps to be done by the temporal goals."""
+
+    def __init__(
+        self, step_func: Callable[[Interpretation], bool], allow_first: bool = True
+    ):
         """
         Create the StepController.
 
@@ -110,13 +111,12 @@ class StepController:
         self.step_func = step_func
         self.allow_first = allow_first
 
-    def check(self,
-              fluents: [Set[str]]) -> bool:
+    def check(self, fluents: Interpretation) -> bool:
         """
         Check if the step on the DFA can take place.
 
-        :param fluents: A set of fluents
-        :return:
+        :param: fluents: A set of fluents
+        :return: True if the step can be taken, False otherwise
         """
         if self.allow_first and not self.started:
             # always allow the first step
@@ -131,9 +131,7 @@ class StepController:
             return self.step_func(fluents)
 
     def reset(self):
-        """
-        Reset the StepController.
-        """
+        """Reset the StepController."""
         self.started = False
 
 
@@ -145,7 +143,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         env: gym.Env,
         temp_goals: List[TemporalGoal],
         fluent_extractor: FluentExtractor,
-        step_controller: Optional[StepController]
+        step_controller: Optional[StepController] = None,
     ):
         """
         Wrap a Gym environment with a temporal goal.
@@ -155,25 +153,36 @@ class TemporalGoalWrapper(gym.Wrapper):
         :param fluent_extractor: the extractor of the fluents.
           A callable that takes in input an observation and the last action
           taken, and returns the set of fluents true in the current state.
+        :param step_controller: the step controller that decides when a
+          transition to the DFA has to take place.
         """
         super().__init__(env)
         self.temp_goals = temp_goals
         self.fluent_extractor: FluentExtractor = fluent_extractor
-        self.step_controller = step_controller if step_controller else StepController(step_func=lambda fluents: True,
-                                                                                      allow_first=True)
+        self.step_controller = (
+            step_controller
+            if step_controller
+            else StepController(step_func=lambda fluents: True, allow_first=True)
+        )
         self.observation_space = self._get_observation_space()
 
     def _get_observation_space(self) -> gym.spaces.Space:
         """Return the observation space."""
         temp_goals_shape = tuple(tg.observation_space.n for tg in self.temp_goals)
-        return GymTuple((self.env.observation_space, MultiDiscrete(temp_goals_shape)))
+        return GymTuple(
+            (self.env.observation_space, MultiDiscrete(list(temp_goals_shape)))
+        )
 
     def step(self, action):
         """Do a step in the Gym environment."""
         obs, reward, done, info = super().step(action)
         fluents = self.fluent_extractor(obs, action)
-        states_and_rewards = [tg.step(fluents) if self.step_controller.check(fluents) else (tg.current_dfa_state(), 0.)
-                              for tg in self.temp_goals]
+        states_and_rewards = [
+            tg.step(fluents)
+            if self.step_controller.check(fluents)
+            else (tg.current_dfa_state(), 0.0)
+            for tg in self.temp_goals
+        ]
         next_automata_states, temp_goal_rewards = zip(*states_and_rewards)
         total_goal_rewards = sum(temp_goal_rewards)
         obs_prime = (obs, next_automata_states)

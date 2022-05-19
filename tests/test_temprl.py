@@ -109,7 +109,7 @@ class TestTempRLWithSimpleEnv:
 
     def test_temporal_goal_reward(self):
         """Test that the 'reward' property of the temporal goal works correctly."""
-        assert 10.0 == self.tg.reward
+        assert self.tg.reward == 10.0
 
     def test_temporal_goal_automaton(self):
         """Test that the 'automaton' property of the temporal goal works correctly."""
