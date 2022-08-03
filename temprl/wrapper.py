@@ -24,6 +24,7 @@ import logging
 from typing import List, Optional, Tuple
 
 import gym
+from gym.core import ActType
 from gym.spaces import Discrete, MultiDiscrete
 from gym.spaces import Tuple as GymTuple
 
@@ -125,7 +126,7 @@ class TemporalGoalWrapper(gym.Wrapper):
             (self.env.observation_space, MultiDiscrete(list(temp_goals_shape)))
         )
 
-    def step(self, action) -> Tuple[Observation, float, bool, dict]:
+    def step(self, action: ActType) -> Tuple[Observation, float, bool, dict]:
         """Do a step in the Gym environment."""
         obs, reward, done, info = super().step(action)
         fluents = self.fluent_extractor(obs, action)
