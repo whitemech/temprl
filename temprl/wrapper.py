@@ -138,7 +138,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         ]
         next_automata_states, temp_goal_rewards = zip(*states_and_rewards)
         total_goal_rewards = sum(temp_goal_rewards)
-        obs_prime = (obs, next_automata_states)
+        obs_prime = (obs, list(next_automata_states))
         reward_prime = reward + total_goal_rewards
         return obs_prime, reward_prime, done, info
 
