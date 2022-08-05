@@ -24,6 +24,7 @@ import logging
 from typing import List, Optional, Tuple
 
 import gym
+import numpy as np
 from gym.spaces import Discrete, MultiDiscrete
 from gym.spaces import Tuple as GymTuple
 
@@ -137,7 +138,7 @@ class TemporalGoalWrapper(gym.Wrapper):
         ]
         next_automata_states, temp_goal_rewards = zip(*states_and_rewards)
         total_goal_rewards = sum(temp_goal_rewards)
-        obs_prime = (obs, list(next_automata_states))
+        obs_prime = (obs, np.array(next_automata_states, dtype=int))
         reward_prime = reward + total_goal_rewards
         return obs_prime, reward_prime, done, info
 
@@ -153,6 +154,8 @@ class TemporalGoalWrapper(gym.Wrapper):
         obs = super().reset(**kwargs)
         for tg in self.temp_goals:
             tg.reset()
-        automata_states = [tg.current_state for tg in self.temp_goals]
+        automata_states = np.array(
+            [tg.current_state for tg in self.temp_goals], dtype=int
+        )
         self.step_controller.reset()
         return obs, automata_states
